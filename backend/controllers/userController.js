@@ -1,7 +1,11 @@
 const ErrorHandler = require("../utils/errorhander");
 const catchAsyncError = require("../middleware/catchAsyncError");
+
 const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
+const Balance = require("../models/mainBalanceModel.js");
+const Bonus = require("../models/bonusBalanceModel.js");
+
 const otpGenerator = require("otp-generator");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
@@ -66,10 +70,19 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
     runValidators: true,
     useFindAndModify: false,
   });
+  const balance = await Balance.create({
+    user: req.user._id,
+  });
+  const bonus = await Bonus.create({
+    user: req.user._id,
+  });
 
-  res
-    .status(200)
-    .json({ success: true, message: "OTP is successfully verified" });
+  res.status(200).json({
+    success: true,
+    message: "OTP is successfully verified",
+    balance,
+    bonus,
+  });
 });
 
 //Login User
