@@ -14,6 +14,7 @@ const receivePoints = async (email, points, role) => {
   }
   mainBalance.Balance += points;
   await mainBalance.save();
+  return receiver;
 };
 
 module.exports = receivePoints;
