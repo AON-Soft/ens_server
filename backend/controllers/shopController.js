@@ -61,3 +61,9 @@ exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
 
   res.status(201).json({ success: true, updatedShop });
 });
+
+exports.getShopDetails = catchAsyncError(async (req, res, next) => {
+  const shop = await Shop.findById(req.shop.id);
+
+  res.status(200).json({ success: true, shop });
+});
