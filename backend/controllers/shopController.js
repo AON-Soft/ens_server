@@ -2,6 +2,7 @@ const catchAsyncError = require("../middleware/catchAsyncError");
 
 const Shop = require("../models/shopModel");
 const User = require("../models/userModel");
+const ErrorHandler = require("../utils/errorhander");
 
 const sendTokenForShop = require("../utils/shopjwtToken");
 exports.registerShop = catchAsyncError(async (req, res, next) => {
@@ -67,10 +68,26 @@ exports.getShopDetails = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, shop });
 });
+
 exports.logoutShop = catchAsyncError(async (req, res, next) => {
   res.cookie("shopToken", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
   });
   res.status(200).json({ success: true, message: "Logged Out Shop" });
+});
+
+exports.deleteShop = catchAsyncError(async (req, res, next) => {
+  const shop = await Shop.findById(req.params.id);
+
+  console.log("=============params=============", shop);
+
+  if (!shop) {
+    return next(
+      new ErrorHandler(`Shop doesn't exist with Name: ${req.params.name}`, 400)
+    );
+  }
+
+  await shop.deleteOne();
+  res.status(200).json({ success: true, message: "Shop Deleted Successfully" });
 });
