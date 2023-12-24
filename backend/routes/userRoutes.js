@@ -30,11 +30,11 @@ router.route("/me/update").put(isAuthenticatedUser, updateProfile);
 
 router
   .route("/admin/users")
-  .get(isAuthenticatedUser, isAuthorizeRoles("admin"), getAllUsers);
+  .get(isAuthenticatedUser, isAuthorizeRoles("Admin"), getAllUsers);
 router
   .route("/admin/user/:id")
-  .get(isAuthenticatedUser, isAuthorizeRoles("admin"), getSingleUser)
-  .put(isAuthenticatedUser, isAuthorizeRoles("admin"), updateUserRole)
-  .delete(isAuthenticatedUser, isAuthorizeRoles("admin"), deleteUser);
+  .get(isAuthenticatedUser, isAuthorizeRoles("Admin"), getSingleUser)
+  .put(isAuthenticatedUser, isAuthorizeRoles("Admin"), updateUserRole)
+  .delete(isAuthenticatedUser, isAuthorizeRoles("Admin"), deleteUser);
 
 module.exports = router;

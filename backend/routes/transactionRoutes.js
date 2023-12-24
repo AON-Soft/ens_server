@@ -10,11 +10,6 @@ const router = express.Router();
 
 router
   .route("/admin-to-agent/pointAdd")
-  .post(
-    isAuthenticatedUser,
-    isAuthorizeRoles("Admin"),
-    addPointAdminToAgent,
-    createTransaction
-  );
+  .post(isAuthenticatedUser, isAuthorizeRoles("Admin"), createTransaction);
 
 module.exports = router;

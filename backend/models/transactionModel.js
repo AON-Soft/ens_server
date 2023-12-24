@@ -33,6 +33,22 @@ const transactionSchema = new mongoose.Schema({
     enum: ["Cash Out", "Send Points", "Bill Payment"],
     required: true,
   },
+  transactionRelation: {
+    type: String,
+    enum: [
+      "AdminToAdmin",
+      "AdminToAgent",
+      "AgentToAgent",
+      "AgentToAdmin",
+      "AgentToUser",
+      "UserToUser",
+      "UserToAgent",
+    ],
+  },
+  serviceCharge: {
+    type: Number,
+    default: 0,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
