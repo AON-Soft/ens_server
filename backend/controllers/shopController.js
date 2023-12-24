@@ -63,7 +63,14 @@ exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getShopDetails = catchAsyncError(async (req, res, next) => {
-  const shop = await Shop.findById(req.shop.id);
+  const shop = await Shop.findById(req.shop._id);
 
   res.status(200).json({ success: true, shop });
+});
+exports.logoutShop = catchAsyncError(async (req, res, next) => {
+  res.cookie("shopToken", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+  res.status(200).json({ success: true, message: "Logged Out Shop" });
 });
