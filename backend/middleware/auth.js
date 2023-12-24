@@ -2,6 +2,7 @@ const ErrorHander = require("../utils/errorhander");
 const catchAsyncError = require("./catchAsyncError");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
+const Shop = require("../models/shopModel");
 
 exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
   const { shopToken } = req.cookies;
@@ -10,7 +11,7 @@ exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHander("Please Login to access this resource", 401));
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  const decodedData = jwt.verify(shopToken, process.env.JWT_SECRET);
 
   req.shop = await Shop.findById(decodedData.id);
   next();

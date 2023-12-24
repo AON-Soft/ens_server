@@ -40,3 +40,24 @@ exports.loginShop = catchAsyncError(async (req, res, next) => {
 
   sendTokenForShop(shop, 200, res);
 });
+
+exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
+  console.log("=======================", req.shop);
+  const shop = await Shop.findById(req.shop._id);
+  const newUserData = {
+    name: req.body.name,
+    info: req.body.info,
+    category: req.body.category,
+    address: req.body.address,
+  };
+
+  //we will add cloudinary later
+
+  const updatedShop = await Shop.findByIdAndUpdate(shop._id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.status(201).json({ success: true, updatedShop });
+});
