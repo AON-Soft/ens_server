@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
 
 const shopSchema = new mongoose.Schema({
   name: {
@@ -57,5 +58,11 @@ const shopSchema = new mongoose.Schema({
     index: { expires: 300 },
   },
 });
+
+shopSchema.methods.getJWTToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE,
+  });
+};
 
 module.exports = mongoose.model("shop", shopSchema);
