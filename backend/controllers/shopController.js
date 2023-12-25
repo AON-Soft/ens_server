@@ -80,8 +80,6 @@ exports.logoutShop = catchAsyncError(async (req, res, next) => {
 exports.deleteShop = catchAsyncError(async (req, res, next) => {
   const shop = await Shop.findById(req.params.id);
 
-  console.log("=============params=============", shop);
-
   if (!shop) {
     return next(
       new ErrorHandler(`Shop doesn't exist with Name: ${req.params.name}`, 400)
