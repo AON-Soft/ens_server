@@ -26,3 +26,17 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, product });
 });
+
+exports.deleteProduct = catchAsyncError(async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    return next(new ErrorHandler("Product not found", 404));
+  }
+
+  await Product.deleteOne({ _id: req.params.id });
+
+  res
+    .status(200)
+    .json({ success: true, message: "Product deleted sucesfully" });
+});

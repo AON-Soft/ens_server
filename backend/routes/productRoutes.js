@@ -9,6 +9,7 @@ const {
 const {
   createProduct,
   updateProduct,
+  deleteProduct,
 } = require("../controllers/productController");
 
 const router = express.Router();
@@ -29,6 +30,12 @@ router
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
     updateProduct
+  )
+  .delete(
+    isAuthenticatedUser,
+    isAuthenticatedShop,
+    isAuthorizeRoles("Shop Keeper"),
+    deleteProduct
   );
 
 module.exports = router;
