@@ -6,7 +6,10 @@ const {
   isAuthorizeRoles,
 } = require("../middleware/auth");
 
-const { createProduct } = require("../controllers/productController");
+const {
+  createProduct,
+  updateProduct,
+} = require("../controllers/productController");
 
 const router = express.Router();
 
@@ -17,6 +20,15 @@ router
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
     createProduct
+  );
+
+router
+  .route("/shop/product/:id")
+  .put(
+    isAuthenticatedUser,
+    isAuthenticatedShop,
+    isAuthorizeRoles("Shop Keeper"),
+    updateProduct
   );
 
 module.exports = router;
