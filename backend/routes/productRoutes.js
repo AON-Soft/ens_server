@@ -10,10 +10,12 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  getAllProducts,
 } = require("../controllers/productController");
 
 const router = express.Router();
 
+router.route("/shop/products/:id").get(getAllProducts);
 router
   .route("/shop/product/new")
   .post(
