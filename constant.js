@@ -1,5 +1,5 @@
 module.exports.PORT = process.env.PORT || 5000;
-module.exports.MONGO_URI = process.env.NODE_ENV=="production"? process.env.DB_URI : 'mongodb+srv://admin:admin@cluster0.xklu8.mongodb.net/';
+module.exports.MONGO_URI = process.env.NODE_ENV=="production"? process.env.MONGO_URI : 'mongodb+srv://admin:admin@cluster0.xklu8.mongodb.net/ens_server';
 module.exports.JWT_SECRET = process.env.JWT_SECRET? process.env.JWT_SECRET : 'fjhhIOHfjkflsjagju0fujljldfgl';
 module.exports.JWT_EXPIRE = process.env.JWT_EXPIRE? process.env.JWT_EXPIRE : '5d';
 module.exports.COOKIE_EXPIRE = process.env.COOKIE_EXPIRE? process.env.COOKIE_EXPIRE : '2';
