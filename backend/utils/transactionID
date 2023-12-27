@@ -1,0 +1,10 @@
+const uniqueTransactionID = () => {
+  const randomNumericPart = Math.floor(100000 + Math.random() * 900000);
+  const timestampPart = Date.now().toString().slice(-4);
+
+  const transactionID = `${randomNumericPart}${timestampPart}`.slice(0, 10);
+
+  return transactionID;
+};
+
+module.exports = uniqueTransactionID;
