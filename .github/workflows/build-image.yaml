@@ -14,7 +14,7 @@ jobs:
         #   packages: write
         defaults:
           run:
-            working-directory: './backend'
+            working-directory: './'
         steps:
           - name: 'Checkout GitHub Action'
             uses: actions/checkout@main
@@ -30,7 +30,7 @@ jobs:
               username: aon-soft
               password: ${{secrets.ACCESS_TOKEN}} 
 
-          - name: 'Build Inventory Image'
+          - name: 'Build And Push Image'
             run: |
               docker build . --tag ghcr.io/aon-soft/ens_backend:latest
               docker push ghcr.io/aon-soft/ens_backend:latest
