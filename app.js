@@ -16,6 +16,11 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
+// health checker
+app.get(`${API_PREFIX}/api/v1/health`, (req, res) => {
+  res.send("OK");
+});
+
 
 
 app.use(`${API_PREFIX}/api/v1`, user);
