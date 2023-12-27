@@ -37,7 +37,6 @@ jobs:
 
 
       restart-deployment:
-        needs: build-and-push
         runs-on: ubuntu-latest
         steps:
           - name: Set up kubectl
