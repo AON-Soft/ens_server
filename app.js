@@ -9,15 +9,19 @@ const shop = require("./routes/shopRoutes.js");
 const product = require("./routes/productRoutes.js");
 
 const errorMiddleware = require("./middleware/error");
+const { API_PREFIX } = require("./constant.js");
 
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/v1", user);
-app.use("/api/v1", transaction);
-app.use("/api/v1", shop);
-app.use("/api/v1", product);
+
+
+
+app.use(`${API_PREFIX}/api/v1`, user);
+app.use(`${API_PREFIX}/api/v1`, transaction);
+app.use(`${API_PREFIX}/api/v1`, shop);
+app.use(`${API_PREFIX}/api/v1`, product);
 
 app.use(errorMiddleware);
 
