@@ -54,9 +54,11 @@ jobs:
           #     cat $HOME/.kube/config
 
 
-          - name: Save DigitalOcean kubeconfig with short-lived credentials
+          - name: Log All the Cluster list
             run: doctl kubernetes cluster list
 
+          - name: Save DigitalOcean kubeconfig with short-lived credentials
+            run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 4d6e88d7-3691-41e6-851a-8bea4d4fd216
 
           - name: Trigger Kubernetes Deployment Restart
             run: |
