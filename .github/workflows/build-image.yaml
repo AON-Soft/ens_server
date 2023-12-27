@@ -45,10 +45,14 @@ jobs:
               token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
               k8s-configuration-file: ./k8s/kubeconfig.yml
 
+          - name: Check Current Dir
+            run: |
+              ls -al
+
           - name: Debug Kubeconfig
             run: |
               cat $HOME/.kube/config
-              
+
           - name: Trigger Kubernetes Deployment Restart
             run: |
               kubectl rollout restart deployment ens-server-depl
