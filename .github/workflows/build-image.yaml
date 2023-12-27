@@ -1,0 +1,36 @@
+name: Deploy Images to GHCR
+
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+      push-store-image:
+        runs-on: ubuntu-latest
+        # permissions:
+        #   packages: write
+        defaults:
+          run:
+            working-directory: './backend'
+        steps:
+          - name: 'Checkout GitHub Action'
+            uses: actions/checkout@main
+
+          - name: 'Echo GitHub Actor'
+            run: echo aon-soft
+
+
+          - name: 'Login to GitHub Container Registry'
+            uses: docker/login-action@v1
+            with:
+              registry: ghcr.io
+              username: aon-soft
+              password: ${{secrets.ACCESS_TOKEN}} 
+
+          - name: 'Build Inventory Image'
+            run: |
+              docker build . --tag ghcr.io/aon-soft/ens_backend:latest
+              docker push ghcr.io/aon-soft/ens_backend:latest
