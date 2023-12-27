@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const morgan = require("morgan");
 
 const user = require("./routes/userRoutes");
 const transaction = require("./routes/transactionRoutes.js");
@@ -14,13 +15,12 @@ const { API_PREFIX } = require("./constant.js");
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(morgan("dev"));
 
 // health checker
 app.get(`${API_PREFIX}/api/v1/health`, (req, res) => {
   res.send("OK");
 });
-
 
 
 app.use(`${API_PREFIX}/api/v1`, user);
