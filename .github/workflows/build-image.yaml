@@ -43,7 +43,7 @@ jobs:
             uses: digitalocean/action-doctl@v2
             with:
               token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-              k8s-configuration-file: ./k8s/kubeconfig.yml
+              k8s-configuration-file: ./k8s/kubeconfig.yaml
               
 
           - name: Log All the Cluster list
@@ -52,7 +52,7 @@ jobs:
           - name: Save DigitalOcean kubeconfig with short-lived credentials
             run: |
               doctl kubernetes cluster kubeconfig save --expiry-seconds 600 4d6e88d7-3691-41e6-851a-8bea4d4fd216
-              cat ./k8s/kubeconfig.yml  # Print the content of the kubeconfig file for debugging
+              cat ./k8s/kubeconfig.yaml  # Print the content of the kubeconfig file for debugging
 
 
           - name: Trigger Kubernetes Deployment Restart
