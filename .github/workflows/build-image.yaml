@@ -44,22 +44,18 @@ jobs:
             with:
               token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
               k8s-configuration-file: ./k8s/kubeconfig.yml
-
-          # - name: Check Current Dir
-          #   run: |
-          #     ls -al
-
-          # - name: Debug Kubeconfig
-          #   run: |
-          #     cat $HOME/.kube/config
-
+              
 
           - name: Log All the Cluster list
             run: doctl kubernetes cluster list
 
           - name: Save DigitalOcean kubeconfig with short-lived credentials
-            run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 4d6e88d7-3691-41e6-851a-8bea4d4fd216
+            run: |
+              doctl kubernetes cluster kubeconfig save --expiry-seconds 600 4d6e88d7-3691-41e6-851a-8bea4d4fd216
+              cat ./k8s/kubeconfig.yml  # Print the content of the kubeconfig file for debugging
+
 
           - name: Trigger Kubernetes Deployment Restart
             run: |
+              kubectl get pods  # Print information about pods for debugging
               kubectl rollout restart deployment ens-server-depl
