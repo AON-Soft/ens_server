@@ -55,7 +55,6 @@ jobs:
           - name: Save DigitalOcean kubeconfig with short-lived credentials
             run: |
               doctl kubernetes cluster kubeconfig save --expiry-seconds 600 4d6e88d7-3691-41e6-851a-8bea4d4fd216
-              cat ./kube/kubeconfig.yaml  # Print the content of the kubeconfig file for debugging
 
 
           - name: Trigger Kubernetes Deployment Restart
