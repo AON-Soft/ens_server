@@ -14,7 +14,14 @@ const crypto = require("crypto");
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
   const { name, email, password, mobile, role } = req.body;
-
+  setTimeout(async () => {
+    const user = await User.findOne({ email });
+    if (user && !user.otpVerified) {
+      await User.deleteOne({ email });
+      console.log(`User ${email} deleted due to timeout.`);
+    }
+  }, 5 * 60 * 1000);
+  
   const user = await User.create({
     name,
     email,
@@ -35,14 +42,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
   await Otp.create({ email, otp });
 
   sendToken(user, 201, res);
-
-  setTimeout(async () => {
-    const user = await User.findOne({ email });
-    if (user && !user.otpVerified) {
-      await User.deleteOne({ email });
-      console.log(`User ${email} deleted due to timeout.`);
-    }
-  }, 5 * 60 * 1000);
 });
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
