@@ -42,11 +42,11 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       upperCaseAlphabets: false,
       specialChars: false,
     });
-
+    const getOtp = otp;
     console.log("==============OTP=======================", otp);
     //**********OTP must have to be sent on mobile. We will fix it**********//
 
-    await Otp.create({ email, otp });
+    await Otp.create({ email, otp, getOtp });
   } else {
     const otp = otpGenerator.generate(4, {
       digits: true,
@@ -59,6 +59,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     //**********OTP must have to be sent on mobile. We will fix it**********//
 
     getUser.otp = otp;
+    getUser.getOtp = otp;
     await getUser.save();
   }
 
@@ -304,4 +305,15 @@ exports.deleteUser = catchAsyncError(async (req, res, next) => {
 
   await user.deleteOne();
   res.status(200).json({ success: true, message: "User Deleted Successfully" });
+});
+
+exports.getOtp = catchAsyncError(async (req, res, next) => {
+  const otp = await Otp.find();
+  console.log("===========otp===========", otp);
+
+  if (!otp || otp.length === 0) {
+    return next(new ErrorHandler(`OTP expired`, 400));
+  }
+  getOtp = otp.getOtp;
+  res.status(200).json({ success: true, otp });
 });
