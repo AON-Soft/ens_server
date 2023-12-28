@@ -19,7 +19,7 @@ app.use(morgan("dev"));
 
 // health checker
 app.get(`${API_PREFIX}/api/v1/health`, (req, res) => {
-  res.send("OK");
+  res.send("OK : Check CD");
 });
 
 
