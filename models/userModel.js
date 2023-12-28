@@ -100,9 +100,10 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  otpVerified: {
-    type: Boolean,
-    default: false,
+  status: {
+    type: String,
+    default: "pending",
+    enum: ["pending", "active", "hold", "rejectd"],
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,

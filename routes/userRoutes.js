@@ -14,12 +14,16 @@ const {
   deleteUser,
   verifyOTP,
 } = require("../controllers/userController");
-const { isAuthenticatedUser, isAuthorizeRoles } = require("../middleware/auth");
+const {
+  isAuthenticatedUser,
+  isAuthorizeRoles,
+  isAuthenticatedUserTemp,
+} = require("../middleware/auth");
 
 const router = express.Router();
 
 router.route("/register").post(registerUser);
-router.route("/verify/register").post(isAuthenticatedUser, verifyOTP);
+router.route("/verify/register").post(isAuthenticatedUserTemp, verifyOTP);
 router.route("/login").post(loginUser);
 router.route("/password/forgot").post(forgotPassword);
 router.route("/password/reset/:token").put(resetPassword);

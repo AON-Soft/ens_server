@@ -15,6 +15,10 @@ const otpSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please Enter your OTP"],
     },
+    otpVerified: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
