@@ -37,6 +37,7 @@ jobs:
 
 
       restart-deployment:
+        needs: push-store-image
         runs-on: ubuntu-latest
         steps:
           - name: Set up kubectl
