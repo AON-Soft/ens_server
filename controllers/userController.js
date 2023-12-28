@@ -3,53 +3,79 @@ const catchAsyncError = require("../middleware/catchAsyncError");
 
 const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
-const Balance = require("../models/mainBalanceModel.js");
-const Bonus = require("../models/bonusBalanceModel.js");
 
 const otpGenerator = require("otp-generator");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
+const sendTempToken = require("../utils/jwtToken");
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
   const { name, email, password, mobile, role } = req.body;
-  setTimeout(async () => {
-    const user = await User.findOne({ email });
-    if (user && !user.otpVerified) {
-      await User.deleteOne({ email });
-      console.log(`User ${email} deleted due to timeout.`);
-    }
-  }, 5 * 60 * 1000);
-  
-  const user = await User.create({
+
+  const existingUserEmail = await User.findOne({ email: email });
+  const existingUserMobile = await User.findOne({ mobile: mobile });
+
+  if (existingUserEmail || existingUserMobile) {
+    return next(
+      new ErrorHandler(
+        `This email - ${email}  or mobile - ${mobile} is already registered`,
+        401
+      )
+    );
+  }
+
+  const user = {
     name,
     email,
     password,
     mobile,
     role,
-  });
-  const otp = otpGenerator.generate(4, {
-    digits: true,
-    lowerCaseAlphabets: false,
-    upperCaseAlphabets: false,
-    specialChars: false,
-  });
+  };
 
-  console.log("==============OTP=======================", otp);
-  //**********OTP must have to be sent on mobile. We will fix it**********//
+  const getUser = await Otp.findOne({ email: email });
+  if (!getUser) {
+    const otp = otpGenerator.generate(4, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
 
-  await Otp.create({ email, otp });
+    console.log("==============OTP=======================", otp);
+    //**********OTP must have to be sent on mobile. We will fix it**********//
 
-  sendToken(user, 201, res);
+    await Otp.create({ email, otp });
+  } else {
+    const otp = otpGenerator.generate(4, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+
+    console.log("==============OTP=======================", otp);
+    //**********OTP must have to be sent on mobile. We will fix it**********//
+
+
+    getUser.otp = otp;
+    await getUser.save();
+  }
+
+  sendTempToken(user, 201, res);
 });
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
-  const { email, otpVerified } = req.user;
+  const { name, email, password, mobile, role } = req.user;
+
   const otpInfo = await Otp.findOne({ email }).select("+otp");
 
   if (!otpInfo) {
     return next(new ErrorHandler("OTP is Expired", 403));
+  }
+  if (otpInfo.otpVerified) {
+    return next(new ErrorHandler("OTP is already verified", 400));
   }
 
   const isOtpMatched = await otpInfo.compareOtp(otp);
@@ -57,30 +83,28 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("OTP doesn't matched", 401));
   }
 
-  if (otpVerified) {
-    return next(new ErrorHandler("OTP is already verified", 400));
-  }
+  const user = await User.create({
+    name,
+    email,
+    password,
+    mobile,
+    role,
+    status: "active",
+  });
 
   const newOtpVerified = {
     otpVerified: true,
   };
-  await User.findByIdAndUpdate(req.user._id, newOtpVerified, {
+  await Otp.findByIdAndUpdate(otpInfo._id, newOtpVerified, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
-  });
-  const balance = await Balance.create({
-    user: req.user._id,
-  });
-  const bonus = await Bonus.create({
-    user: req.user._id,
   });
 
   res.status(200).json({
     success: true,
     message: "OTP is successfully verified",
-    balance,
-    bonus,
+    user,
   });
 });
 

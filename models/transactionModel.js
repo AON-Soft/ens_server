@@ -10,15 +10,21 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  serviceCharge: {
+    type: Number,
+    required: true,
+  },
   sender: {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     name: String,
     email: String,
+    transacion: String,
   },
   receiver: {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     name: String,
     email: String,
+    transacion: String,
   },
   paymentType: {
     type: String,
@@ -30,24 +36,23 @@ const transactionSchema = new mongoose.Schema({
   },
   transactionType: {
     type: String,
-    enum: ["Cash Out", "Send Points", "Bill Payment"],
+    enum: ["PointsIn", "PointsOut", "Payment", "SendPoints"],
     required: true,
   },
   transactionRelation: {
     type: String,
     enum: [
-      "AdminToAdmin",
-      "AdminToAgent",
+      "UserToUser",
+      "UserToAgent",
+      "UserToShopKeeper",
       "AgentToAgent",
       "AgentToAdmin",
       "AgentToUser",
-      "UserToUser",
-      "UserToAgent",
+      "AgentToShopKeeper",
+      "AdminToAdmin",
+      "AdminToAgent",
+      "ShopKeeperToAgent",
     ],
-  },
-  serviceCharge: {
-    type: Number,
-    default: 0,
   },
   createdAt: {
     type: Date,

@@ -17,14 +17,27 @@ exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
   next();
 });
 
+exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
+  const { token } = req.cookies;
+
+  if (!token) {
+    return next(new ErrorHander("Please Login to access this resource", 401));
+  }
+  const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
+  const decodedData = jwt.verify(token, secret);
+
+  req.user = decodedData;
+  next();
+});
+
 exports.isAuthenticatedUser = catchAsyncError(async (req, res, next) => {
   const { token } = req.cookies;
 
   if (!token) {
     return next(new ErrorHander("Please Login to access this resource", 401));
   }
-
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
+  const decodedData = jwt.verify(token, secret);
 
   req.user = await User.findById(decodedData.id);
   next();

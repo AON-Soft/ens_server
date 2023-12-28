@@ -50,6 +50,40 @@ const userSchema = new mongoose.Schema({
     default: "User",
     enum: ["Admin", "Agent", "User", "Shop Keeper"],
   },
+  balance: {
+    type: Number,
+    default: 0,
+    validate: {
+      validator: function (v) {
+        // Validate that the value is a valid number
+        return !isNaN(parseFloat(v)) && isFinite(v);
+      },
+      message: (props) => `${props.value} is not a valid number for balance!`,
+    },
+  },
+  dueBalance: {
+    type: Number,
+    default: 0,
+    validate: {
+      validator: function (v) {
+        // Validate that the value is a valid number
+        return !isNaN(parseFloat(v)) && isFinite(v);
+      },
+      message: (props) => `${props.value} is not a valid number for balance!`,
+    },
+  },
+  bonusBalance: {
+    type: Number,
+    default: 0,
+    validate: {
+      validator: function (v) {
+        // Validate that the value is a valid number
+        return !isNaN(parseFloat(v)) && isFinite(v);
+      },
+      message: (props) => `${props.value} is not a valid number for balance!`,
+    },
+  },
+
   parent: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -66,12 +100,13 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  otpVerified: {
-    type: Boolean,
-    default: false,
+  status: {
+    type: String,
+    default: "pending",
+    enum: ["pending", "active", "hold", "rejectd"],
   },
   resetPasswordToken: String,
-  resetPaswordExpire: Date,
+  resetPasswordExpire: Date,
 });
 
 userSchema.pre("save", async function (next) {
@@ -83,9 +118,13 @@ userSchema.pre("save", async function (next) {
 
 //jwt token
 userSchema.methods.getJWTToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
+  return jwt.sign(
+    { id: this._id },
+    process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl",
+    {
+      expiresIn: process.env.JWT_EXPIRE || "5d",
+    }
+  );
 };
 
 //compare pasword
