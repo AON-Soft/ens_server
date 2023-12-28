@@ -1,15 +1,13 @@
 const express = require("express");
 
 const { isAuthenticatedUser, isAuthorizeRoles } = require("../middleware/auth");
-const {
-  addPointAdminToAgent,
-  createTransaction,
-} = require("../controllers/transactionController");
+const { sendPoints } = require("../middleware/sendPoints");
+const { createTransaction } = require("../controllers/transactionController");
 
 const router = express.Router();
 
 router
-  .route("/admin-to-agent/pointAdd")
-  .post(isAuthenticatedUser, isAuthorizeRoles("Admin"), createTransaction);
+  .route("/send/points")
+  .post(isAuthenticatedUser, sendPoints, createTransaction);
 
 module.exports = router;

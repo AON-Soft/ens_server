@@ -3,8 +3,6 @@ const catchAsyncError = require("../middleware/catchAsyncError");
 
 const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
-const Balance = require("../models/mainBalanceModel.js");
-const Bonus = require("../models/bonusBalanceModel.js");
 
 const otpGenerator = require("otp-generator");
 const sendToken = require("../utils/jwtToken");
@@ -14,6 +12,14 @@ const crypto = require("crypto");
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
   const { name, email, password, mobile, role } = req.body;
+
+  setTimeout(async () => {
+    const user = await User.findOne({ email });
+    if (user && !user.otpVerified) {
+      await User.deleteOne({ email });
+      console.log(`User ${email} deleted due to timeout.`);
+    }
+  }, 5 * 60 * 1000);
 
   const user = await User.create({
     name,
@@ -35,14 +41,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
   await Otp.create({ email, otp });
 
   sendToken(user, 201, res);
-
-  setTimeout(async () => {
-    const user = await User.findOne({ email });
-    if (user && !user.otpVerified) {
-      await User.deleteOne({ email });
-      console.log(`User ${email} deleted due to timeout.`);
-    }
-  }, 5 * 60 * 1000);
 });
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
@@ -65,23 +63,16 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const newOtpVerified = {
     otpVerified: true,
   };
-  await User.findByIdAndUpdate(req.user._id, newOtpVerified, {
+  const user = await User.findByIdAndUpdate(req.user._id, newOtpVerified, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
-  });
-  const balance = await Balance.create({
-    user: req.user._id,
-  });
-  const bonus = await Bonus.create({
-    user: req.user._id,
   });
 
   res.status(200).json({
     success: true,
     message: "OTP is successfully verified",
-    balance,
-    bonus,
+    user,
   });
 });
 

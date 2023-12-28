@@ -1,68 +1,29 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 
-const Transaction = require("../models/transactionModel");
-
-const sendPoints = require("../utils/sendPoints");
-const receivePoints = require("../utils/receivePoints");
-const uniquetransactionID = require("../utils/transactionID");
-
+const Transaction = require("../models/transactionModel.js");
+const mongoose = require("mongoose");
+const User = require("../models/userModel.js");
 exports.createTransaction = catchAsyncError(async (req, res, next) => {
-  const receiver = req.dataOptions.receiver;
-  try {
-    const transactionID = await uniquetransactionID();
-    const body = {
-      transactionID: transactionID,
-      transactionAmount: req.dataOptions.points,
-      receiver: {
-        user: receiver._id,
-        name: receiver.name,
-        email: receiver.email,
-      },
-      sender: {
-        user: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-      },
-      paymentType: "Points",
-      transactionType: "Send Points",
-    };
-    const transaction = await Transaction.create(body);
-
-    res.status(202).json({
-      message: `Succesffully transfered ${req.dataOptions.points} points to ${receiver.email} `,
-      transaction,
-    });
-  } catch (error) {
-    console.error("Error receiving points:", error);
-    await receivePoints(req.user.email, req.dataOptions.points, req.user.role);
-    await sendPoints(receiver.email, req.dataOptions.points, receiver.role);
-    res.status(500).json({
-      error: "Internal server error",
-      message: "Error from TransactionID section ",
-    });
-  }
-});
-
-exports.addPointAdminToAgent = catchAsyncError(async (req, res, next) => {
-  try {
-    const { email, points } = req.body;
-
-    if (!email || !points || isNaN(points)) {
-      return res.status(400).json({ error: "Invalid input data" });
-    }
-
-    await sendPoints(req.user.email, points, "Admin");
-
-    try {
-      const receiver = await receivePoints(email, points, "Agent");
-      req.dataOptions = { points, receiver };
-      next();
-    } catch (receiveError) {
-      console.error("Error receiving points:", receiveError);
-      await receivePoints(req.user.email, points, "Admin");
-    }
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  const transaction = new Transaction({
+    transactionID: req.transactionID,
+    transactionAmount: req.transactionAmount,
+    serviceCharge: req.serviceCharge,
+    sender: {
+      user: req.sender._id,
+      name: req.sender.name,
+      email: req.sender.email,
+      transacion: "Debit",
+    },
+    receiver: {
+      user: req.receiver._id,
+      name: req.receiver.name,
+      email: req.receiver.email,
+      transacion: "Credit",
+    },
+    paymentType: "Points",
+    transactionType: "SendPoints",
+    transactionRelation: `${req.sender.role}To${req.receiver.role}`,
+  });
+  await transaction.save();
+  res.status(200).json({ success: true, message: "working", transaction });
 });
