@@ -58,6 +58,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     console.log("==============OTP=======================", otp);
     //**********OTP must have to be sent on mobile. We will fix it**********//
 
+
     getUser.otp = otp;
     await getUser.save();
   }
