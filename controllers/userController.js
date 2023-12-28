@@ -5,10 +5,10 @@ const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
 
 const otpGenerator = require("otp-generator");
-const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
-const sendTempToken = require("../utils/jwtToken");
+const sendTempToken = require("../utils/tempJwtToken.js");
+const sendToken = require("../utils/jwtToken.js");
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -58,7 +58,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     console.log("==============OTP=======================", otp);
     //**********OTP must have to be sent on mobile. We will fix it**********//
 
-
     getUser.otp = otp;
     getUser.getOtp = otp;
     await getUser.save();
@@ -101,12 +100,7 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
     runValidators: true,
     useFindAndModify: false,
   });
-
-  res.status(200).json({
-    success: true,
-    message: "OTP is successfully verified",
-    user,
-  });
+  sendToken(user, 200, res);
 });
 
 //Login User
@@ -118,12 +112,12 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
   }
 
   const user = await User.findOne({ email }).select("+password");
-
   if (!user) {
     return next(new ErrorHandler("Invalid Email & Password", 401));
   }
 
   const isPasswordMatched = await user.comparePassword(password);
+  console.log("============login===========", isPasswordMatched);
 
   if (!isPasswordMatched) {
     return next(new ErrorHandler("Invalid Email & Password", 401));

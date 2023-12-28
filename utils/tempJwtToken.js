@@ -1,5 +1,14 @@
-const sendToken = (user, statusCode, res) => {
-  const token = user.getJWTToken();
+const jwt = require("jsonwebtoken");
+
+const sendTempToken = (user, statusCode, res) => {
+  const token = jwt.sign(
+    user,
+    process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl",
+    {
+      expiresIn: process.env.JWT_EXPIRE || "5d",
+    }
+  );
+
   const cookieExpire = process.env.COOKIE_EXPIRE
     ? process.env.COOKIE_EXPIRE
     : 2;
@@ -15,4 +24,4 @@ const sendToken = (user, statusCode, res) => {
     .json({ success: true, user, token });
 };
 
-module.exports = sendToken;
+module.exports = sendTempToken;
