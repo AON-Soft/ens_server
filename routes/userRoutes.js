@@ -13,6 +13,7 @@ const {
   updateUserRole,
   deleteUser,
   verifyOTP,
+  getOtp,
 } = require("../controllers/userController");
 const {
   isAuthenticatedUser,
@@ -40,5 +41,7 @@ router
   .get(isAuthenticatedUser, isAuthorizeRoles("Admin"), getSingleUser)
   .put(isAuthenticatedUser, isAuthorizeRoles("Admin"), updateUserRole)
   .delete(isAuthenticatedUser, isAuthorizeRoles("Admin"), deleteUser);
+
+router.route("/getOtp").get(getOtp);
 
 module.exports = router;
