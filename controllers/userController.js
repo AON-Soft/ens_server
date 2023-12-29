@@ -8,7 +8,7 @@ const otpGenerator = require("otp-generator");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
-const sendTempToken = require("../utils/jwtToken");
+const sendTempToken = require("../utils/tempJwtToken.js");
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -58,7 +58,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     console.log("==============OTP=======================", otp);
     //**********OTP must have to be sent on mobile. We will fix it**********//
 
-
     getUser.otp = otp;
     getUser.getOtp = otp;
     await getUser.save();
@@ -102,11 +101,7 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
     useFindAndModify: false,
   });
 
-  res.status(200).json({
-    success: true,
-    message: "OTP is successfully verified",
-    user,
-  });
+  sendToken(user, 200, res);
 });
 
 //Login User
