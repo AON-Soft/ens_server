@@ -32,7 +32,7 @@ jobs:
 
           - name: 'Build And Push Image'
             run: |
-              docker build . --tag ghcr.io/aon-soft/ens_backend:latest
+              docker build --no-cache --tag ghcr.io/aon-soft/ens_backend:latest . 
               docker push ghcr.io/aon-soft/ens_backend:latest
 
 

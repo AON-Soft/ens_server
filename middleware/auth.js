@@ -25,6 +25,7 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
+
   if (!token) {
     return next(
       new ErrorHander(
@@ -34,6 +35,7 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
     );
   }
   const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
+  console.log("=============auth============", secret);
   const decodedData = jwt.verify(token, secret);
 
   req.user = decodedData;

@@ -7,11 +7,11 @@ const crypto = require("crypto");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const sendTempToken = require("../utils/tempJwtToken.js");
-const ErrorHandler = require("../utils/errorhander");
+const ErrorHandler = require("../utils/errorhander.js");
 
 const catchAsyncError = require("../middleware/catchAsyncError.js");
 
-//Register a User
+//Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
   const { name, email, password, mobile, role } = req.body;
 
@@ -66,6 +66,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   sendTempToken(user, 201, res);
 });
+
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
   const { name, email, password, mobile, role } = req.user;

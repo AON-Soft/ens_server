@@ -1,27 +1,12 @@
 const jwt = require("jsonwebtoken");
+const { JWT_EXPIRE, JWT_SECRET } = require("../constant");
 
 const sendTempToken = (user, statusCode, res) => {
-  const token = jwt.sign(
-    user,
-    process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl",
-    {
-      expiresIn: process.env.JWT_EXPIRE || "5d",
-    }
-  );
+  const token = jwt.sign(user, JWT_SECRET, {
+    expiresIn: JWT_EXPIRE,
+  });
 
-  const cookieExpire = process.env.COOKIE_EXPIRE
-    ? process.env.COOKIE_EXPIRE
-    : 2;
-
-  const options = {
-    expires: new Date(Date.now() + cookieExpire * 24 * 60 * 60 * 1000),
-    httpOnly: true,
-  };
-
-  res
-    .status(statusCode)
-    .cookie("token", token, options)
-    .json({ success: true, user, token });
+  res.status(statusCode).json({ success: true, user, token });
 };
 
 module.exports = sendTempToken;
