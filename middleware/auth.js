@@ -18,10 +18,20 @@ exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
 });
 
 exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
-  const { token } = req.cookies;
+  const authHeader = req.headers["authorization"];
 
+  if (typeof authHeader === "undefined") {
+    return next(new ErrorHander("Authorization Header is Undefined", 401));
+  }
+
+  const token = authHeader.split(" ")[1];
   if (!token) {
-    return next(new ErrorHander("Please register first Or Your Cookies is not working", 401));
+    return next(
+      new ErrorHander(
+        "Please register first Or Your Cookies is not working",
+        401
+      )
+    );
   }
   const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
   const decodedData = jwt.verify(token, secret);
@@ -31,7 +41,13 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
 });
 
 exports.isAuthenticatedUser = catchAsyncError(async (req, res, next) => {
-  const { token } = req.cookies;
+  //   const { token } = req.cookies;
+
+  const authHeader = req.headers["authorization"];
+
+  if (typeof authHeader === "undefined") {
+    return next(new ErrorHander("Authorization Header is Undefined", 401));
+  }
 
   if (!token) {
     return next(new ErrorHander("Please Login to access this resource", 401));
