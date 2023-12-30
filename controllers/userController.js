@@ -6,7 +6,7 @@ const crypto = require("crypto");
 
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
-const sendTempToken = require("../utils/tempJwtToken.js");
+const sendTempToken = require("../utils/TempJwtToken.js");
 const ErrorHandler = require("../utils/errorhander.js");
 
 const catchAsyncError = require("../middleware/catchAsyncError.js");
