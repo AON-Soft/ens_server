@@ -1,14 +1,15 @@
-const ErrorHandler = require("../utils/errorhander");
-const catchAsyncError = require("../middleware/catchAsyncError");
-
 const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
 
 const otpGenerator = require("otp-generator");
+const crypto = require("crypto");
+
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
-const crypto = require("crypto");
 const sendTempToken = require("../utils/tempJwtToken.js");
+const ErrorHandler = require("../utils/errorhander");
+
+const catchAsyncError = require("../middleware/catchAsyncError.js");
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
