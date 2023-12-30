@@ -1,8 +1,8 @@
 const ErrorHander = require("../utils/errorhander");
-const catchAsyncError = require("./catchAsyncError");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const Shop = require("../models/shopModel");
+const catchAsyncError = require("./catchAsyncError");
 
 exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
   const { shopToken } = req.cookies;
@@ -25,6 +25,7 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
+
   if (!token) {
     return next(
       new ErrorHander(
@@ -34,6 +35,7 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
     );
   }
   const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
+  console.log("=============auth============", secret);
   const decodedData = jwt.verify(token, secret);
 
   req.user = decodedData;

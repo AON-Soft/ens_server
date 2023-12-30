@@ -1,17 +1,15 @@
-const ErrorHandler = require("../utils/errorhander");
-const catchAsyncError = require("../middleware/catchAsyncError");
-
 const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
 
 const otpGenerator = require("otp-generator");
-const sendToken = require("../utils/jwtToken");
-const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
 
+const sendToken = require("../utils/jwtToken");
+const sendEmail = require("../utils/sendEmail.js");
+const sendTempToken = require("../utils/tempJwtToken.js");
+const ErrorHandler = require("../utils/errorhander.js");
 
-const sendTempToken = require("./tempJwtToken.js");
-
+const catchAsyncError = require("../middleware/catchAsyncError.js");
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -68,8 +66,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   sendTempToken(user, 201, res);
 });
-
-
 
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
