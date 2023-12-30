@@ -8,7 +8,7 @@ const otpGenerator = require("otp-generator");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
-const sendTempToken = require("../utils/tempJwtToken.js");
+const sendTempToken = require("./../utils/tempJwtToken.js");
 
 //Register a User
 exports.registerUser = catchAsyncError(async (req, res, next) => {
