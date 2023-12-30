@@ -68,6 +68,9 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   sendTempToken(user, 201, res);
 });
+
+
+
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
   const { name, email, password, mobile, role } = req.user;
