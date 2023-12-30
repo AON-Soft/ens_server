@@ -10,9 +10,7 @@ const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
 
 
-const path = require('path');
-const dirPath = path.join(__dirname,"../",'utils/tempJwtToken.js');
-const sendTempToken = require(dirPath);
+const sendTempToken = require("./tempJwtToken.js");
 
 
 //Register a User: /api/v1/register
