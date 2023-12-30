@@ -8,7 +8,11 @@ const otpGenerator = require("otp-generator");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const crypto = require("crypto");
-const sendTempToken = require("./../utils/tempJwtToken.js");
+
+
+const path = require('path');
+const dirPath = path.join(__dirname,"../",'utils/tempJwtToken.js');
+const sendTempToken = require(dirPath);
 
 
 //Register a User: /api/v1/register
