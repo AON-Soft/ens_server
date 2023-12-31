@@ -4,10 +4,14 @@ const Shop = require("../models/shopModel");
 const User = require("../models/userModel");
 const ErrorHandler = require("../utils/errorhander");
 
-const sendTokenForShop = require("../utils/shopjwtToken");
 exports.registerShop = catchAsyncError(async (req, res, next) => {
+  const getShop = await Shop.findOne({ createdBy: req.user._id });
+  if (getShop) {
+    return next(new ErrorHandler("This Email is already registerd for a shop"));
+  }
+  console.log("=================ese gchi=================");
   const { name, info, logo, banner, category, address } = req.body;
-
+  const createdBy = req.user._id;
   const shop = await Shop.create({
     name,
     info,
@@ -15,31 +19,9 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
     banner,
     category,
     address,
+    createdBy,
   });
-  sendTokenForShop(shop, 200, res);
-});
-
-exports.loginShop = catchAsyncError(async (req, res, next) => {
-  let shop = await Shop.findById(req.params.id);
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return next(new ErrorHandler("Please Enter Email & Password", 400));
-  }
-
-  const user = await User.findOne({ email }).select("+password");
-
-  if (!user) {
-    return next(new ErrorHandler("Invalid Email & Password", 401));
-  }
-
-  const isPasswordMatched = await user.comparePassword(password);
-
-  if (!isPasswordMatched) {
-    return next(new ErrorHandler("Invalid Email & Password", 401));
-  }
-
-  sendTokenForShop(shop, 200, res);
+  res.status(200).json({ success: true, shop });
 });
 
 exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
@@ -63,18 +45,25 @@ exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
   res.status(201).json({ success: true, updatedShop });
 });
 
+exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
+  const { latitude, longitude } = req.body;
+
+  req.shop.location = {
+    type: "Point",
+    coordinates: [longitude, latitude],
+  };
+
+  await req.shop.save();
+
+  res
+    .status(200)
+    .json({ success: true, message: "Shop location updated successfully" });
+});
+
 exports.getShopDetails = catchAsyncError(async (req, res, next) => {
   const shop = await Shop.findById(req.shop._id);
 
   res.status(200).json({ success: true, shop });
-});
-
-exports.logoutShop = catchAsyncError(async (req, res, next) => {
-  res.cookie("shopToken", null, {
-    expires: new Date(Date.now()),
-    httpOnly: true,
-  });
-  res.status(200).json({ success: true, message: "Logged Out Shop" });
 });
 
 exports.deleteShop = catchAsyncError(async (req, res, next) => {
@@ -88,4 +77,34 @@ exports.deleteShop = catchAsyncError(async (req, res, next) => {
 
   await shop.deleteOne();
   res.status(200).json({ success: true, message: "Shop Deleted Successfully" });
+});
+
+exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
+  const longitude = parseFloat(req.query.longitude);
+  const latitude = parseFloat(req.query.latitude);
+
+  if (isNaN(longitude) || isNaN(latitude)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid coordinates" });
+  }
+
+  const shops = await Shop.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: [longitude, latitude],
+        },
+        distanceField: "distance",
+        maxDistance: 5000, // 5km in meters
+        spherical: true,
+      },
+    },
+    { $sort: { distance: 1 } }, // Sorting by distance in ascending order
+  ]);
+  if (!shops || shops.length === 0) {
+    return next(new ErrorHandler("No Shops are available in your area"));
+  }
+  res.status(200).json({ success: true, data: shops });
 });
