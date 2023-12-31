@@ -47,6 +47,17 @@ const shopSchema = new mongoose.Schema({
     enum: ["Pending", "Approved", "Rejected"],
     default: "Pending",
   },
+  location: {
+    type: {
+      type: String,
+      default: "Point",
+      enum: ["Point"],
+    },
+    coordinates: {
+      type: [Number],
+      index: "2dsphere",
+    },
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

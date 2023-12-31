@@ -5,15 +5,11 @@ const Shop = require("../models/shopModel");
 const catchAsyncError = require("./catchAsyncError");
 
 exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
-  const { shopToken } = req.cookies;
-
-  if (!shopToken) {
-    return next(new ErrorHander("Please Login to access this resource", 401));
+  const getShop = await Shop.findOne({ createdBy: req.user._id });
+  if (!getShop) {
+    return next(new ErrorHander("Shop not found", 404));
   }
-
-  const decodedData = jwt.verify(shopToken, process.env.JWT_SECRET);
-
-  req.shop = await Shop.findById(decodedData.id);
+  req.shop = getShop;
   next();
 });
 
@@ -35,7 +31,6 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
     );
   }
   const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
-  console.log("=============auth============", secret);
   const decodedData = jwt.verify(token, secret);
 
   req.user = decodedData;
@@ -44,13 +39,13 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
 
 exports.isAuthenticatedUser = catchAsyncError(async (req, res, next) => {
   //   const { token } = req.cookies;
-
   const authHeader = req.headers["authorization"];
 
   if (typeof authHeader === "undefined") {
     return next(new ErrorHander("Authorization Header is Undefined", 401));
   }
 
+  const token = authHeader.split(" ")[1];
   if (!token) {
     return next(new ErrorHander("Please Login to access this resource", 401));
   }
@@ -58,6 +53,7 @@ exports.isAuthenticatedUser = catchAsyncError(async (req, res, next) => {
   const decodedData = jwt.verify(token, secret);
 
   req.user = await User.findById(decodedData.id);
+
   next();
 });
 
