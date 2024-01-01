@@ -1,4 +1,5 @@
 const Product = require("../models/productModel");
+const Categories = require("../models/categoryModel");
 const Shop = require("../models/shopModel");
 const ErrorHandler = require("../utils/errorhander");
 const catchAsyncError = require("../middleware/catchAsyncError");
@@ -7,6 +8,15 @@ const ApiFeatures = require("../utils/apifeature");
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   req.body.user = req.user.id;
   req.body.shop = req.shop.id;
+
+  const categoryName = await Categories.findById(
+    req.body.categoryInfo.categoryID
+  );
+  if (!categoryName) {
+    return next(new ErrorHandler("Category Not Found", 404));
+  }
+
+  req.body.categoryInfo.category = categoryName.name;
   const product = await Product.create(req.body);
 
   res.status(201).json({ success: true, product });
