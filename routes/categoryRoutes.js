@@ -4,7 +4,10 @@ const {
   isAuthenticatedShop,
   isAuthorizeRoles,
 } = require("../middleware/auth");
-const { createCategory } = require("../controllers/categoryController");
+const {
+  createCategory,
+  updateCategory,
+} = require("../controllers/categoryController");
 
 const router = express.Router();
 
@@ -15,6 +18,15 @@ router
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
     createCategory
+  );
+
+router
+  .route("/shop/category/:id")
+  .put(
+    isAuthenticatedUser,
+    isAuthenticatedShop,
+    isAuthorizeRoles("Shop Keeper"),
+    updateCategory
   );
 
 module.exports = router;

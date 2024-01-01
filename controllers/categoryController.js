@@ -12,3 +12,19 @@ exports.createCategory = catchAsyncError(async (req, res, next) => {
 
   res.status(201).json({ success: true, category });
 });
+
+exports.updateCategory = catchAsyncError(async (req, res, next) => {
+  let category = await Categories.findById(req.params.id);
+
+  if (!category) {
+    return next(new ErrorHandler("category not found", 404));
+  }
+
+  category = await Categories.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.status(200).json({ success: true, category });
+});
