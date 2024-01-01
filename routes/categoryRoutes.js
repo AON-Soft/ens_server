@@ -7,6 +7,7 @@ const {
 const {
   createCategory,
   updateCategory,
+  deleteCategory,
 } = require("../controllers/categoryController");
 
 const router = express.Router();
@@ -27,6 +28,12 @@ router
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
     updateCategory
+  )
+  .delete(
+    isAuthenticatedUser,
+    isAuthenticatedShop,
+    isAuthorizeRoles("Shop Keeper"),
+    deleteCategory
   );
 
 module.exports = router;

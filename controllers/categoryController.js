@@ -28,3 +28,17 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, category });
 });
+
+exports.deleteCategory = catchAsyncError(async (req, res, next) => {
+  const category = await Categories.findById(req.params.id);
+
+  if (!category) {
+    return next(new ErrorHandler("category not found", 404));
+  }
+
+  await Categories.deleteOne({ _id: req.params.id });
+
+  res
+    .status(200)
+    .json({ success: true, message: "category deleted sucesfully" });
+});
