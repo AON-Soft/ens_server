@@ -1,5 +1,6 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 const Categories = require("../models/categoryModel");
+const ApiFeatures = require("../utils/apifeature");
 const ErrorHandler = require("../utils/errorhander");
 
 exports.createCategory = catchAsyncError(async (req, res, next) => {
@@ -41,4 +42,25 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
   res
     .status(200)
     .json({ success: true, message: "category deleted sucesfully" });
+});
+
+exports.getAllCategories = catchAsyncError(async (req, res, next) => {
+  const apiFeature = new ApiFeatures(
+    Categories.find({ shop: req.params.id }),
+    req.query
+  )
+    .search()
+    .filter();
+
+  const categories = await apiFeature.queryResults();
+  if (!categories || categories.length === 0) {
+    return next(
+      new ErrorHandler("Categories not found or No Categories are Added", 404)
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    categories,
+  });
 });

@@ -8,6 +8,7 @@ const {
   createCategory,
   updateCategory,
   deleteCategory,
+  getAllCategories,
 } = require("../controllers/categoryController");
 
 const router = express.Router();
@@ -35,5 +36,6 @@ router
     isAuthorizeRoles("Shop Keeper"),
     deleteCategory
   );
+router.route("/category/shop/:id").get(isAuthenticatedUser, getAllCategories);
 
 module.exports = router;
