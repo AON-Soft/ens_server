@@ -110,6 +110,10 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
 exports.loginUser = catchAsyncError(async (req, res, next) => {
   const { email, password, role } = req.body;
 
+  console.log(role)
+
+  
+
   if (!email || !password) {
     return next(new ErrorHandler("Please Enter Email & Password", 400));
   }
@@ -139,7 +143,8 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
 });
 
 //Logout
-exports.logout = catchAsyncError(async (req, res, next) => {
+exports.logout = catchAsyncError(async (_, res, a) => {
+  console.log(a);
   res.cookie("token", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
@@ -223,7 +228,7 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 });
 
 //Get User Details
-exports.getUserDetails = catchAsyncError(async (req, res, next) => {
+exports.getUserDetails = catchAsyncError(async (req, res) => {
   const user = await User.findById(req.user.id);
 
   res.status(200).json({ success: true, user });
@@ -250,7 +255,7 @@ exports.updatePassword = catchAsyncError(async (req, res, next) => {
 });
 
 //Update User Profile
-exports.updateProfile = catchAsyncError(async (req, res, next) => {
+exports.updateProfile = catchAsyncError(async (req, res, _) => {
   const newUserData = {
     name: req.body.name,
     email: req.body.email,
@@ -264,11 +269,13 @@ exports.updateProfile = catchAsyncError(async (req, res, next) => {
     useFindAndModify: false,
   });
 
+  console.log('data', user)
+
   res.status(200).json({ success: true });
 });
 
 //Get All Users(admin)
-exports.getAllUsers = catchAsyncError(async (req, res, next) => {
+exports.getAllUsers = catchAsyncError(async (_, res) => {
   const users = await User.find();
 
   res.status(200).json({ success: true, users });
@@ -286,7 +293,7 @@ exports.getSingleUser = catchAsyncError(async (req, res, next) => {
 });
 
 //Update User Role ---Admin
-exports.updateUserRole = catchAsyncError(async (req, res, next) => {
+exports.updateUserRole = catchAsyncError(async (req, res, _) => {
   const newUserData = {
     name: req.body.name,
     email: req.body.email,
@@ -298,6 +305,8 @@ exports.updateUserRole = catchAsyncError(async (req, res, next) => {
     runValidators: true,
     useFindAndModify: false,
   });
+
+  console.log(user);
 
   res.status(200).json({ success: true });
 });
@@ -316,13 +325,13 @@ exports.deleteUser = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, message: "User Deleted Successfully" });
 });
 
-exports.getOtp = catchAsyncError(async (req, res, next) => {
+exports.getOtp = catchAsyncError(async (_, res, next) => {
   const otp = await Otp.find();
   console.log("===========otp===========", otp);
 
   if (!otp || otp.length === 0) {
     return next(new ErrorHandler(`OTP expired`, 400));
   }
-  getOtp = otp.getOtp;
+  // getOtp = otp.getOtp;
   res.status(200).json({ success: true, otp });
 });

@@ -1,9 +1,9 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 
 const Transaction = require("../models/transactionModel.js");
-const mongoose = require("mongoose");
-const User = require("../models/userModel.js");
-exports.createTransaction = catchAsyncError(async (req, res, next) => {
+// const mongoose = require("mongoose");
+// const User = require("../models/userModel.js");
+exports.createTransaction = catchAsyncError(async (req, res) => {
   const transaction = new Transaction({
     transactionID: req.transactionID,
     transactionAmount: req.transactionAmount,

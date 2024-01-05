@@ -1,6 +1,6 @@
 const Product = require("../models/productModel");
 const Categories = require("../models/categoryModel");
-const Shop = require("../models/shopModel");
+// const Shop = require("../models/shopModel");
 const ErrorHandler = require("../utils/errorhander");
 const catchAsyncError = require("../middleware/catchAsyncError");
 const ApiFeatures = require("../utils/apifeature");

@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { isAuthenticatedUser, isAuthorizeRoles } = require("../middleware/auth");
+const { isAuthenticatedUser } = require("../middleware/auth");
 const { sendPoints } = require("../middleware/sendPoints");
 const { createTransaction } = require("../controllers/transactionController");
 
