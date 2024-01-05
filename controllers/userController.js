@@ -162,7 +162,8 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
 
   const resetPasswordUrl = `${req.protocol}://${req.get(
     "host"
-  )}/api/v1/password/reset/${resetToken}`;
+  )}/ens/api/v1/password/reset/${resetToken}`;
+  console.log("=================================", resetPasswordUrl);
 
   const message = `Your password reset token is :- \n\n\n ${resetPasswordUrl} \n\n if you have not request this email then, please ignore it`;
 
@@ -179,7 +180,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
     });
   } catch (error) {
     user.resetPasswordToken = undefined;
-    user.resetPaswordExpire = undefined;
+    user.resetPasswordExpire = undefined;
 
     await user.save({ validateBeforeSave: false });
 
@@ -193,10 +194,11 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
     .createHash("sha256")
     .update(req.params.token)
     .digest("hex");
+  console.log("=======================", resetPasswordToken);
 
   const user = await User.findOne({
     resetPasswordToken,
-    resetPaswordExpire: { $gt: Date.now() },
+    resetPasswordExpire: { $gt: Date.now() },
   });
 
   if (!user) {

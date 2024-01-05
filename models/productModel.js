@@ -37,10 +37,17 @@ const productSchema = new mongoose.Schema({
       },
     },
   ],
-  category: {
-    type: String,
-    required: [true, "Please Enter Product Category"],
-    trim: true,
+  categoryInfo: {
+    categoryID: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Categories",
+      required: true,
+    },
+    category: {
+      type: String,
+      required: [true, "Please Enter Product Category"],
+      trim: true,
+    },
   },
   subCategory: {
     type: String,
