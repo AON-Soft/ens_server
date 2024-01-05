@@ -4,7 +4,7 @@ const User = require("../models/userModel");
 const Shop = require("../models/shopModel");
 const catchAsyncError = require("./catchAsyncError");
 
-exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
+exports.isAuthenticatedShop = catchAsyncError(async (req, _, next) => {
   const getShop = await Shop.findOne({ createdBy: req.user._id });
   if (!getShop) {
     return next(new ErrorHander("Shop not found", 404));
@@ -13,7 +13,7 @@ exports.isAuthenticatedShop = catchAsyncError(async (req, res, next) => {
   next();
 });
 
-exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
+exports.isAuthenticatedUserTemp = catchAsyncError(async (req, _, next) => {
   const authHeader = req.headers["authorization"];
 
   if (typeof authHeader === "undefined") {
@@ -37,7 +37,7 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, res, next) => {
   next();
 });
 
-exports.isAuthenticatedUser = catchAsyncError(async (req, res, next) => {
+exports.isAuthenticatedUser = catchAsyncError(async (req, _, next) => {
   //   const { token } = req.cookies;
   const authHeader = req.headers["authorization"];
 
@@ -58,7 +58,7 @@ exports.isAuthenticatedUser = catchAsyncError(async (req, res, next) => {
 });
 
 exports.isAuthorizeRoles = (...roles) => {
-  return (req, res, next) => {
+  return (req, _, next) => {
     roles.forEach((role) => {
       if (!role.includes(req.user.role)) {
         return next(

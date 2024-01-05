@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
 const morgan = require("morgan");
 
 const user = require("./routes/userRoutes");
@@ -20,7 +19,7 @@ app.use(morgan("dev"));
 
 // 
 // health checker
-app.get(`${API_PREFIX}/api/v1/health`, (req, res) => {
+app.get(`${API_PREFIX}/api/v1/health`, (_, res) => {
   res.send("OK : Check CD");
 });
 
@@ -28,7 +27,7 @@ app.use(`${API_PREFIX}/api/v1`, user);
 app.use(`${API_PREFIX}/api/v1`, transaction);
 app.use(`${API_PREFIX}/api/v1`, shop);
 app.use(`${API_PREFIX}/api/v1`, product);
-app.use(`${API_PREFIX}/api/v1`,       category);
+app.use(`${API_PREFIX}/api/v1`,         category);
 
 app.use(errorMiddleware);
 

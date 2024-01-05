@@ -1,6 +1,6 @@
 const Product = require("../models/productModel");
 const Categories = require("../models/categoryModel");
-const Shop = require("../models/shopModel");
+// const Shop = require("../models/shopModel");
 const ErrorHandler = require("../utils/errorhander");
 const catchAsyncError = require("../middleware/catchAsyncError");
 const ApiFeatures = require("../utils/apifeature");
@@ -52,7 +52,7 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "Product deleted sucesfully" });
 });
 
-exports.getAllProducts = catchAsyncError(async (req, res, next) => {
+exports.getAllProducts = catchAsyncError(async (req, res) => {
   const shop = req.params.id;
   const resultPerPage = 12;
 

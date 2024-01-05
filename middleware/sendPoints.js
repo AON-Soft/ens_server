@@ -10,9 +10,12 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body;
   const sender = req.user;
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+
   try {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+
 
     const receiver = await User.findOne({ email: receiverEmail }).session(
       session

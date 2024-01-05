@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "eslint .",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "prepare": "husky install"
+    "prepare": "husky install" 
   },
   "engines": {
     "node": "18.x"
@@ -41,14 +41,15 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged && npm test -- --bail=false"
     }
-  },
+  },  
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "*.js": [
-      "eslint --fix",
+      "eslint",
       "git add"
     ]
   }
+  
 }

@@ -1,7 +1,7 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 
 const Shop = require("../models/shopModel");
-const User = require("../models/userModel");
+// const User = require("../models/userModel");
 const ErrorHandler = require("../utils/errorhander");
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
@@ -24,7 +24,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, shop });
 });
 
-exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
+exports.updateShopProfile = catchAsyncError(async (req, res) => {
   console.log("=======================", req.shop);
   const shop = await Shop.findById(req.shop._id);
   const newUserData = {
@@ -45,7 +45,7 @@ exports.updateShopProfile = catchAsyncError(async (req, res, next) => {
   res.status(201).json({ success: true, updatedShop });
 });
 
-exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
+exports.updateShopLocation = catchAsyncError(async (req, res) => {
   const { latitude, longitude } = req.body;
 
   req.shop.location = {
@@ -60,7 +60,7 @@ exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "Shop location updated successfully" });
 });
 
-exports.getShopDetails = catchAsyncError(async (req, res, next) => {
+exports.getShopDetails = catchAsyncError(async (req, res) => {
   const shop = await Shop.findById(req.shop._id);
 
   res.status(200).json({ success: true, shop });
