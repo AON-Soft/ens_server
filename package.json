@@ -12,7 +12,6 @@
   },
   "engines": {
     "node": "18.x"
-  
   },
   "keywords": [],
   "author": "",
@@ -20,7 +19,6 @@
   "dependencies": {
     "amqplib": "^0.10.3",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
@@ -29,12 +27,12 @@
     "mongoose": "^8.0.0",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.7",
-    "nodemon": "^3.0.1",
     "otp-generator": "^4.0.1",
     "validator": "^13.11.0"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-plugin-node": "^11.1.0"
+    "eslint-plugin-node": "^11.1.0",
+    "nodemon": "^3.0.2"
   }
 }
