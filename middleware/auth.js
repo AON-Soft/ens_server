@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const Shop = require("../models/shopModel");
 const catchAsyncError = require("./catchAsyncError");
+const { JWT_SECRET } = require("../constant");
 
 exports.isAuthenticatedShop = catchAsyncError(async (req, _, next) => {
   const getShop = await Shop.findOne({ createdBy: req.user._id });
@@ -30,7 +31,7 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, _, next) => {
       )
     );
   }
-  const secret = process.env.JWT_SECRET || "fjhhIOHfjkflsjagju0fujljldfgl";
+  const secret = JWT_SECRET;
   const decodedData = jwt.verify(token, secret);
 
   req.user = decodedData;
