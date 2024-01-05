@@ -28,7 +28,7 @@ app.use(`${API_PREFIX}/api/v1`, user);
 app.use(`${API_PREFIX}/api/v1`, transaction);
 app.use(`${API_PREFIX}/api/v1`, shop);
 app.use(`${API_PREFIX}/api/v1`, product);
-app.use(`${API_PREFIX}/api/v1`, category);
+app.use(`${API_PREFIX}/api/v1`,       category);
 
 app.use(errorMiddleware);
 
