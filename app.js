@@ -15,9 +15,10 @@ const { API_PREFIX } = require("./constant.js");
 
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(morgan("dev"));
 
+// 
 // health checker
 app.get(`${API_PREFIX}/api/v1/health`, (req, res) => {
   res.send("OK : Check CD");
