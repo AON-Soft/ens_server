@@ -143,7 +143,8 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
 });
 
 //Logout
-exports.logout = catchAsyncError(async (_, res, ___) => {
+exports.logout = catchAsyncError(async (_, res, a) => {
+  console.log(a);
   res.cookie("token", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
@@ -227,7 +228,7 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 });
 
 //Get User Details
-exports.getUserDetails = catchAsyncError(async (req, res, next) => {
+exports.getUserDetails = catchAsyncError(async (req, res) => {
   const user = await User.findById(req.user.id);
 
   res.status(200).json({ success: true, user });
@@ -268,11 +269,13 @@ exports.updateProfile = catchAsyncError(async (req, res, _) => {
     useFindAndModify: false,
   });
 
+  console.log('data', user)
+
   res.status(200).json({ success: true });
 });
 
 //Get All Users(admin)
-exports.getAllUsers = catchAsyncError(async (_, res, _) => {
+exports.getAllUsers = catchAsyncError(async (_, res) => {
   const users = await User.find();
 
   res.status(200).json({ success: true, users });
