@@ -45,22 +45,30 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllCategories = catchAsyncError(async (req, res, next) => {
+  const shopId = req.params.id;
+  const resultPerPage = 10;
+  const categoryCount = await Categories.countDocuments({ shop: shopId });
   const apiFeature = new ApiFeatures(
-    Categories.find({ shop: req.params.id }),
+    Categories.find({ shop: shopId }),
     req.query
   )
     .search()
-    .filter();
+    .filter()
+    .pagination(resultPerPage);
 
-  const categories = await apiFeature.queryResults();
-  if (!categories || categories.length === 0) {
-    return next(
-      new ErrorHandler("Categories not found or No Categories are Added", 404)
-    );
-  }
+  let categories = await apiFeature.query;
+
+  let filteredCategoriesCount = categories.length;
+
+  //   apiFeature.pagination(resultPerPage);
+
+  //   products = await apiFeature.query;
 
   res.status(200).json({
     success: true,
     categories,
+    categoryCount,
+    resultPerPage,
+    filteredCategoriesCount,
   });
 });

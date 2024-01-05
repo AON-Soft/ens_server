@@ -9,6 +9,7 @@ const transaction = require("./routes/transactionRoutes.js");
 const shop = require("./routes/shopRoutes.js");
 const product = require("./routes/productRoutes.js");
 const category = require("./routes/categoryRoutes.js");
+const brand = require("./routes/brandRoutes.js");
 
 const errorMiddleware = require("./middleware/error");
 const { API_PREFIX } = require("./constant.js");
@@ -28,6 +29,7 @@ app.use(`${API_PREFIX}/api/v1`, transaction);
 app.use(`${API_PREFIX}/api/v1`, shop);
 app.use(`${API_PREFIX}/api/v1`, product);
 app.use(`${API_PREFIX}/api/v1`, category);
+app.use(`${API_PREFIX}/api/v1`, brand);
 
 app.use(errorMiddleware);
 

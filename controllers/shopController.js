@@ -103,8 +103,8 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
     },
     { $sort: { distance: 1 } }, // Sorting by distance in ascending order
   ]);
-  if (!shops || shops.length === 0) {
-    return next(new ErrorHandler("No Shops are available in your area"));
+  if (!shops) {
+    return next(new ErrorHandler("No Shops are available in your area", 404));
   }
   res.status(200).json({ success: true, data: shops });
 });
