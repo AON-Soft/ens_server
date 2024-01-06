@@ -126,26 +126,13 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
 
 //Login User
 exports.loginUser = catchAsyncError(async (req, res, next) => {
-  const { email, password, role } = req.body;
-
-  console.log(role)
-
-  
+  const { email, password } = req.body;
 
   if (!email || !password) {
     return next(new ErrorHandler("Please Enter Email & Password", 400));
   }
 
   const user = await User.findOne({ email }).select("+password");
-
-  if (user.role !== req.body.role) {
-    return next(
-      new ErrorHandler(
-        `You are not Authenticate for this app. Try ${req.body.role} App `,
-        401
-      )
-    );
-  }
 
   if (!user) {
     return next(new ErrorHandler("Invalid Email & Password", 401));
