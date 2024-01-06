@@ -4,19 +4,19 @@ const Shop = require("../models/shopModel");
 // const User = require("../models/userModel");
 const ErrorHandler = require("../utils/errorhander");
 
-exports.registerShop = catchAsyncError(async (req, res, next) => {
+exports.createNewShop = catchAsyncError(async (req, res, next) => {
 
   console.log(req.user);
 
-  const getShop = await Shop.findOne({ createdBy: req.user._id });
+  const getShop = await Shop.findOne({ createdBy: req.user.id });
   if (getShop) {
     return next(new ErrorHandler("This Email is already registerd for a shop"));
   }
   
-
   const { name, info, logo, banner, category, address } = req.body;
   const createdBy = req.user._id;
   const shop = await Shop.create({
+    userId: req.user.id,
     name,
     info,
     logo,
@@ -29,7 +29,6 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 });
 
 exports.updateShopProfile = catchAsyncError(async (req, res) => {
-  console.log("=======================", req.shop);
   const shop = await Shop.findById(req.shop._id);
   const newUserData = {
     name: req.body.name,
@@ -65,8 +64,8 @@ exports.updateShopLocation = catchAsyncError(async (req, res) => {
 });
 
 exports.getShopDetails = catchAsyncError(async (req, res) => {
-  const shop = await Shop.findById(req.shop._id);
 
+  const shop = await Shop.findById(req.user.id);
   res.status(200).json({ success: true, shop });
 });
 

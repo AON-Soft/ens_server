@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
 const shopSchema = new mongoose.Schema({
+  // user 
+  userId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   name: {
     type: String,
     required: [true, "Please Enter Shop Name"],
@@ -12,28 +17,14 @@ const shopSchema = new mongoose.Schema({
     type: String,
   },
   logo: {
-    public_id: {
       type: String,
-      default: "This is Sample Id",
-    },
-    url: {
-      type: String,
-      default: "This is sample URL",
-    },
+      default: null,
   },
-  banner: [
-    {
-      public_id: {
-        type: String,
-        required: true,
-        default: "This is Sample Id",
-      },
-      url: {
-        type: String,
-        default: "This is sample URL",
-      },
-    },
-  ],
+   
+  banner: {
+    type: String,
+    default: null,
+  },
   category: {
     type: String,
     required: [true, "Enter a Category of your Shop"],

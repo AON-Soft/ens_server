@@ -7,7 +7,7 @@ const {
 } = require("../middleware/auth");
 
 const {
-  registerShop,
+  createNewShop,
   updateShopProfile,
   getShopDetails,
   deleteShop,
@@ -18,8 +18,8 @@ const {
 const router = express.Router();
 
 router
-  .route("/register-shop")
-  .post(isAuthenticated,  registerShop);
+  .route("/shop/create-shop")
+  .post(isAuthenticated,  createNewShop);
 
 router
   .route("/shop/update")
@@ -29,8 +29,7 @@ router
   .route("/shop/location/update")
   .put(
     isAuthenticated,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthorizeRoles("shop_keeper"),
     updateShopLocation
   );
 
@@ -38,14 +37,13 @@ router
   .route("/shop")
   .get(
     isAuthenticated,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthorizeRoles("shop_keeper"),
     getShopDetails
   );
 
 router
   .route("/admin/delete-shop/:id")
-  .delete(isAuthenticated, isAuthorizeRoles("Admin"), deleteShop);
+  .delete(isAuthenticated, isAuthorizeRoles("admin"), deleteShop);
 
 router.route("/shops/nearby").get(isAuthenticated, getNearbyShops);
 
