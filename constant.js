@@ -1,7 +1,7 @@
 module.exports.API_PREFIX = process.env.API_PREFIX || "/ens";
 module.exports.PORT = process.env.PORT || 5000;
 module.exports.MONGO_URI =
-  process.env.NODE_ENV == "productions"
+  process.env.NODE_ENV == "production"
     ? process.env.MONGO_URI
     : "mongodb+srv://admin:admin@cluster0.xklu8.mongodb.net/ens_server";
 

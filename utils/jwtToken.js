@@ -1,7 +1,11 @@
-const { COOKIE_EXPIRE } = require("../constant");
-
+const { COOKIE_EXPIRE, JWT_SECRET, JWT_EXPIRE } = require("../constant");
+const jwt = require("jsonwebtoken");
 const sendToken = (user, statusCode, res) => {
-  const token = user.getJWTToken();
+  // const token = user.getJWTToken();
+
+
+  
+
   const cookieExpire = COOKIE_EXPIRE;
 
   const options = {
@@ -17,6 +21,11 @@ const sendToken = (user, statusCode, res) => {
     role: user.role,
     isVefified: true,
   }
+
+  const token = jwt.sign(responsePayload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRE,
+  });
+
 
   res
     .status(statusCode)

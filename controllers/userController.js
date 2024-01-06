@@ -35,11 +35,10 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   var createdUser = null;
   // create user 
-
-
-  // hash password
+  
+  // hash 
   const salt = await bcrypt.genSalt(10);
-  password = await bcrypt.hash(password, salt); 
+  password = await bcrypt.hash(password, salt);
 
   if (!getUser) {
     const otp = otpGenerator.generate(4, {
