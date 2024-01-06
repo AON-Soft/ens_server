@@ -1,10 +1,10 @@
-const express = require("express");
+const express = require('express')
 
 const {
   isAuthorizeRoles,
   isAuthenticatedShop,
   isAuthenticated,
-} = require("../middleware/auth");
+} = require('../middleware/auth')
 
 const {
   registerShop,
@@ -13,40 +13,38 @@ const {
   deleteShop,
   updateShopLocation,
   getNearbyShops,
-} = require("../controllers/shopController");
+} = require('../controllers/shopController')
 
-const router = express.Router();
+const router = express.Router()
 
-router
-  .route("/register-shop")
-  .post(isAuthenticated,  registerShop);
+router.route('/register-shop').post(isAuthenticated, registerShop)
 
 router
-  .route("/shop/update")
-  .put(isAuthenticated, isAuthenticatedShop, updateShopProfile);
+  .route('/shop/update')
+  .put(isAuthenticated, isAuthenticatedShop, updateShopProfile)
 
 router
-  .route("/shop/location/update")
+  .route('/shop/location/update')
   .put(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
-    updateShopLocation
-  );
+    isAuthorizeRoles('shop_keeper'),
+    updateShopLocation,
+  )
 
 router
-  .route("/shop")
+  .route('/shop')
   .get(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
-    getShopDetails
-  );
+    isAuthorizeRoles('shop_keeper'),
+    getShopDetails,
+  )
 
 router
-  .route("/admin/delete-shop/:id")
-  .delete(isAuthenticated, isAuthorizeRoles("Admin"), deleteShop);
+  .route('/admin/delete-shop/:id')
+  .delete(isAuthenticated, isAuthorizeRoles('admin'), deleteShop)
 
-router.route("/shops/nearby").get(isAuthenticated, getNearbyShops);
+router.route('/shops/nearby').get(isAuthenticated, getNearbyShops)
 
-module.exports = router;
+module.exports = router
