@@ -20,7 +20,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   if (existingUserEmail) {
     getUser = await Otp.findOne({ email: email });
-
     if(getUser && getUser.otpVerified){
       return next(
         new ErrorHandler(
@@ -141,7 +140,7 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
   const isPasswordMatched = await user.comparePassword(password);
 
   if (!isPasswordMatched) {
-    return next(new ErrorHandler("Invalid Email & Password", 401));
+    return next(new ErrorHandler("Invalid Email & Password !", 401));
   }
 
   sendToken(user, 200, res);
