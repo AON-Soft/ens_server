@@ -28,7 +28,6 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 })
 
 exports.updateShopProfile = catchAsyncError(async (req, res) => {
-  console.log('=======================', req.shop)
   const shop = await Shop.findById(req.shop._id)
   const newUserData = {
     name: req.body.name,
@@ -64,7 +63,7 @@ exports.updateShopLocation = catchAsyncError(async (req, res) => {
 })
 
 exports.getShopDetails = catchAsyncError(async (req, res) => {
-  const shop = await Shop.findById(req.shop._id)
+  const shop = await Shop.findOne({ createdBy: req.user.id })
 
   res.status(200).json({ success: true, shop })
 })
