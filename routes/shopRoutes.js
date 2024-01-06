@@ -7,7 +7,7 @@ const {
 } = require("../middleware/auth");
 
 const {
-  createNewShop,
+  registerShop,
   updateShopProfile,
   getShopDetails,
   deleteShop,
@@ -19,7 +19,7 @@ const router = express.Router();
 
 router
   .route("/shop/create-shop")
-  .post(isAuthenticated,  createNewShop);
+  .post(isAuthenticated,  registerShop);
 
 router
   .route("/shop/update")
