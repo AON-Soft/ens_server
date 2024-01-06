@@ -112,13 +112,13 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const newOtpVerified = {
     otpVerified: true,
   };
-  await Otp.findByIdAndUpdate(otpInfo._id, newOtpVerified, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
-
-
+  if(otpInfo){
+    await Otp.findByIdAndUpdate(otpInfo._id, newOtpVerified, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+  }
 
 
   sendToken(user, 200, res);
