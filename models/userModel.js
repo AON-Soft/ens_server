@@ -19,13 +19,7 @@ const userSchema = new mongoose.Schema({
   },
   mobile: {
     type: String,
-    validate: {
-      validator: function (v) {
-        return /\d{11}/.test(v);
-      },
-      message: (props) => `${props.value} is not a valid phone number!`,
-    },
-    // unique: true,
+    default:null
   },
   password: {
     type: String,

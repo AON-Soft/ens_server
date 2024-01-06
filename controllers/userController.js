@@ -13,29 +13,33 @@ const catchAsyncError = require("../middleware/catchAsyncError.js");
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  const { name, email, password, mobile, role } = req.body;
+  const { name, email, password, role } = req.body;
 
   const existingUserEmail = await User.findOne({ email: email });
-  const existingUserMobile = await User.findOne({ mobile: mobile });
+  var getUser = null;
 
-  if (existingUserEmail || existingUserMobile) {
-    return next(
-      new ErrorHandler(
-        `This email - ${email}  or mobile - ${mobile} is already registered`,
-        401
-      )
-    );
+  if (existingUserEmail) {
+    getUser = await Otp.findOne({ email: email });
+    if(getUser && getUser?.otpVerified){
+      return next(
+        new ErrorHandler(
+          `This email - ${email}  is already registered`,
+          401
+        )
+      );
+    }
   }
 
   const user = {
     name,
     email,
     password,
-    mobile,
     role,
   };
+  var createdUser = null;
 
-  const getUser = await Otp.findOne({ email: email });
+  // create user 
+
   if (!getUser) {
     const otp = otpGenerator.generate(4, {
       digits: true,
@@ -44,10 +48,8 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       specialChars: false,
     });
     const getOtp = otp;
-    console.log("==============OTP=======================", otp);
-    //**********OTP must have to be sent on mobile. We will fix it**********//
-
     await Otp.create({ email, otp, getOtp });
+    createdUser = await User.create({ name, email, password, role });
   } else {
     const otp = otpGenerator.generate(4, {
       digits: true,
@@ -56,44 +58,62 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       specialChars: false,
     });
 
-    console.log("==============OTP=======================", otp);
-    //**********OTP must have to be sent on mobile. We will fix it**********//
-
     getUser.otp = otp;
     getUser.getOtp = otp;
     await getUser.save();
+    // user should be upate with new req data
+    createdUser = await User.findOneAndUpdate({ email }, { name, email, password, role });
   }
 
-  sendTempToken(user, 201, res);
+
+  const responsePayload = {
+    id: createdUser._id,
+    name: createdUser.name,
+    email: createdUser.email,
+    role: createdUser.role,
+    isVefified: false,
+  }
+
+  sendTempToken(responsePayload, 201, res);
 });
 
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body;
-  const { name, email, password, mobile, role } = req.user;
 
-  const otpInfo = await Otp.findOne({ email }).select("+otp");
+  
+  const {email, id } = req.user;
 
-  if (!otpInfo) {
-    return next(new ErrorHandler("OTP is Expired", 403));
+  const otpInfo = await Otp.findOne({ email }).select("otp");
+
+  // test otp for Development 
+  if(otp === '1234'){
+
+    // this otp from development and no need to be checked 
+
+  }else{
+
+    if (!otpInfo) {
+      return next(new ErrorHandler("OTP is Expired", 403));
+    }
+    if (otpInfo.otpVerified) {
+      return next(new ErrorHandler("OTP is already verified", 400));
+    }
+  
+    const isOtpMatched = await otpInfo.compareOtp(otp);
+    if (!isOtpMatched) {
+      return next(new ErrorHandler("OTP doesn't matched", 401));
+    }
   }
-  if (otpInfo.otpVerified) {
-    return next(new ErrorHandler("OTP is already verified", 400));
-  }
 
-  const isOtpMatched = await otpInfo.compareOtp(otp);
-  if (!isOtpMatched) {
-    return next(new ErrorHandler("OTP doesn't matched", 401));
-  }
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-    mobile,
-    role,
-    status: "active",
+  // user user status will update be active
+  const user = await User.findByIdAndUpdate(id, { status: "active" }, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
   });
 
+  
   const newOtpVerified = {
     otpVerified: true,
   };
@@ -102,6 +122,9 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
     runValidators: true,
     useFindAndModify: false,
   });
+
+
+
 
   sendToken(user, 200, res);
 });

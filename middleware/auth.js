@@ -33,7 +33,6 @@ exports.isAuthenticatedUserTemp = catchAsyncError(async (req, _, next) => {
   }
   const secret = JWT_SECRET;
   const decodedData = jwt.verify(token, secret);
-
   req.user = decodedData;
   next();
 });

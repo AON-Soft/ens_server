@@ -28,6 +28,12 @@ module.exports = (err, _, res, __) => {
     err = new ErrorHandler(message, 400);
   }
 
-  res.status(err.statusCode).json({ success: false, message: err.message });
+  console.log(err);
+
+  res.status(err.statusCode).json({ 
+    success: false, 
+    message: err?.message,
+    stack: err?.stack
+   });
 };
 // error: err.message
