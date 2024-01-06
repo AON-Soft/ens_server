@@ -2,12 +2,11 @@ const User = require("../models/userModel");
 const Otp = require("../models/otpModel.js");
 
 const otpGenerator = require("otp-generator");
-const crypto = require("crypto");
 
 const bcrypt = require("bcryptjs");
 
 const sendToken = require("../utils/jwtToken");
-const sendEmail = require("../utils/sendEmail.js");
+// const sendEmail = require("../utils/sendEmail.js");
 const sendTempToken = require("../utils/TempJwtToken.js");
 const ErrorHandler = require("../utils/errorhander.js");
 
