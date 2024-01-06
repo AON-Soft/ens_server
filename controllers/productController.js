@@ -52,20 +52,22 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "Product deleted sucesfully" });
 });
 
-exports.getAllProducts = catchAsyncError(async (req, res) => {
-  const shop = req.params.id;
-  const resultPerPage = 12;
-
-  const productsCount = await Product.countDocuments({ shop: shop });
-
-  const apiFeature = new ApiFeatures(Product.find({ shop: shop }), req.query)
+exports.getAllProducts = catchAsyncError(async (req, res, next) => {
+  const shopId = req.params.id;
+  const resultPerPage = 10;
+  const productsCount = await Product.countDocuments({ shop: shopId });
+  const apiFeature = new ApiFeatures(Product.find({ shop: shopId }), req.query)
     .search()
     .filter()
     .pagination(resultPerPage);
 
-  const products = await apiFeature.queryResults();
+  let products = await apiFeature.query;
 
-  const filteredProductsCount = products.length;
+  let filteredProductsCount = products.length;
+
+  //   apiFeature.pagination(resultPerPage);
+
+  //   products = await apiFeature.query;
 
   res.status(200).json({
     success: true,

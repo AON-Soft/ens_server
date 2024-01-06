@@ -1,44 +1,41 @@
 const express = require("express");
-
 const {
   isAuthenticatedUser,
   isAuthenticatedShop,
   isAuthorizeRoles,
 } = require("../middleware/auth");
-
 const {
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  getAllProducts,
-} = require("../controllers/productController");
+  createBrand,
+  updateBrand,
+  deleteBrand,
+  getAllBrands,
+} = require("../controllers/brandController");
 
 const router = express.Router();
 
-router.route("/shop/products/:id").get(isAuthenticatedUser, getAllProducts);
-
 router
-  .route("/shop/product/new")
+  .route("/shop/brand/new")
   .post(
     isAuthenticatedUser,
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
-    createProduct
+    createBrand
   );
 
 router
-  .route("/shop/product/:id")
+  .route("/shop/brand/:id")
   .put(
     isAuthenticatedUser,
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
-    updateProduct
+    updateBrand
   )
   .delete(
     isAuthenticatedUser,
     isAuthenticatedShop,
     isAuthorizeRoles("Shop Keeper"),
-    deleteProduct
+    deleteBrand
   );
+router.route("/brand/shop/:id").get(isAuthenticatedUser, getAllBrands);
 
 module.exports = router;
