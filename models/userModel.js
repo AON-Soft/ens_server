@@ -104,11 +104,19 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpire: Date,
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
+userSchema.pre('save', async function (next) {
+  try {
+    // Check if the password is already hashed
+    if (!this.isModified('password') || this.password.startsWith('$2a$')) {
+      return next();
+    }
+
+    // Hash the password
+    this.password = await bcrypt.hash(this.password, 10);
+    return next();
+  } catch (error) {
+    return next(error);
   }
-  this.password = await bcrypt.hash(this.password, 10);
 });
 
 //jwt token

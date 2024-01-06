@@ -4,6 +4,8 @@ const Otp = require("../models/otpModel.js");
 const otpGenerator = require("otp-generator");
 const crypto = require("crypto");
 
+const bcrypt = require("bcryptjs");
+
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail.js");
 const sendTempToken = require("../utils/TempJwtToken.js");
@@ -13,7 +15,7 @@ const catchAsyncError = require("../middleware/catchAsyncError.js");
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  const { name, email, password, role } = req.body;
+  var { name, email, password, role } = req.body;
 
   const existingUserEmail = await User.findOne({ email: email });
   var getUser = null;
@@ -33,6 +35,11 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   var createdUser = null;
   // create user 
+
+
+  // hash password
+  const salt = await bcrypt.genSalt(10);
+  password = await bcrypt.hash(password, salt); 
 
   if (!getUser) {
     const otp = otpGenerator.generate(4, {
