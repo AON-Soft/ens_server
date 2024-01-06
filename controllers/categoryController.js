@@ -44,7 +44,7 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "category deleted sucesfully" });
 });
 
-exports.getAllCategories = catchAsyncError(async (req, res, next) => {
+exports.getAllCategories = catchAsyncError(async (req, res) => {
   const shopId = req.params.id;
   const resultPerPage = 10;
   const categoryCount = await Categories.countDocuments({ shop: shopId });

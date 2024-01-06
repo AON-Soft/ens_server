@@ -20,7 +20,8 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
   if (existingUserEmail) {
     getUser = await Otp.findOne({ email: email });
-    if(getUser && getUser?.otpVerified){
+
+    if(getUser && getUser.otpVerified){
       return next(
         new ErrorHandler(
           `This email - ${email}  is already registered`,
@@ -30,14 +31,8 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     }
   }
 
-  const user = {
-    name,
-    email,
-    password,
-    role,
-  };
-  var createdUser = null;
 
+  var createdUser = null;
   // create user 
 
   if (!getUser) {

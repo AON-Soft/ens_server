@@ -52,7 +52,7 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
     .json({ success: true, message: "Product deleted sucesfully" });
 });
 
-exports.getAllProducts = catchAsyncError(async (req, res, next) => {
+exports.getAllProducts = catchAsyncError(async (req, res) => {
   const shopId = req.params.id;
   const resultPerPage = 10;
   const productsCount = await Product.countDocuments({ shop: shopId });
