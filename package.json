@@ -9,7 +9,7 @@
     "dev": "nodemon index.js",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "prepare": "husky install" 
+    "prepare": "husky install"
   },
   "engines": {
     "node": "18.x"
@@ -43,7 +43,7 @@
     "hooks": {
       "pre-commit": "lint-staged && npm test -- --bail=false"
     }
-  },  
+  },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "*.js": [
@@ -51,5 +51,4 @@
       "git add"
     ]
   }
-  
 }
