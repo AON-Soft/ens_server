@@ -9,6 +9,9 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
   req.body.user = req.user.id;
   req.body.shop = req.shop.id;
 
+  console.log(req.user)
+
+
   const categoryName = await Categories.findById(
     req.body.categoryInfo.categoryID
   );

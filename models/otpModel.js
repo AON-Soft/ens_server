@@ -12,7 +12,6 @@ const otpSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Please Enter your Email"],
-      unique: true,
       validate: [validator.isEmail, "Please Enter a valid Email"],
     },
     otp: {
@@ -42,6 +41,7 @@ otpSchema.pre("save", async function (next) {
   }
   this.otp = await bcrypt.hash(this.otp, 10);
 });
+
 otpSchema.methods.compareOtp = async function (enteredOtp) {
   return await bcrypt.compare(enteredOtp, this.otp);
 };

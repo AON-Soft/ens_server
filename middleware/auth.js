@@ -5,6 +5,35 @@ const Shop = require("../models/shopModel");
 const catchAsyncError = require("./catchAsyncError");
 const { JWT_SECRET } = require("../constant");
 
+
+
+
+
+
+
+// Universal Authentication Middleware
+exports.isAuthenticated = catchAsyncError(async (req, _, next) => {
+  //   const { token } = req.cookies;
+  const authHeader = req.headers["authorization"];
+
+  if (typeof authHeader === "undefined") {
+    return next(new ErrorHander("un-authorized", 401));
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return next(new ErrorHander("Please Login to access this resource", 401));
+  }
+  const secret = process.env.JWT_SECRET;
+  const decodedData = jwt.verify(token, secret);
+  req.user = decodedData;
+  next();
+});
+
+
+
+
+
 exports.isAuthenticatedShop = catchAsyncError(async (req, _, next) => {
   const getShop = await Shop.findOne({ createdBy: req.user._id });
   if (!getShop) {

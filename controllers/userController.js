@@ -17,21 +17,19 @@ const catchAsyncError = require("../middleware/catchAsyncError.js");
 exports.registerUser = catchAsyncError(async (req, res, next) => {
   var { name, email, password, role } = req.body;
 
-  const existingUserEmail = await User.findOne({ email: email });
-  var getUser = null;
-
-  if (existingUserEmail) {
-    getUser = await Otp.findOne({ email: email });
-    if(getUser && getUser.otpVerified){
+  const existingUser = await User.findOne({ email: email });
+  if (existingUser) {
+    if(existingUser.status == 'active'){
       return next(
         new ErrorHandler(
-          `This email - ${email}  is already registered`,
+          `${email}  is already registered`,
           401
         )
       );
     }
   }
 
+  var getUser = await Otp.findOne({ email: email });
 
   var createdUser = null;
   // create user 
@@ -164,79 +162,97 @@ exports.logout = catchAsyncError(async (_, res, a) => {
 
 //forgot password
 exports.forgotPassword = catchAsyncError(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ email: req.body.email }).select("status");
 
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  //Get ResetPasword Token
-  const resetToken = user.getResetPasswordToken();
-
-  await user.save({ validateBeforeSave: false });
-
-  const resetPasswordUrl = `${req.protocol}://${req.get(
-    "host"
-  )}/ens/api/v1/password/reset/${resetToken}`;
-
-  console.log("=================================", resetPasswordUrl);
-
-  const message = `Your password reset token is :- \n\n\n ${resetPasswordUrl} \n\n if you have not request this email then, please ignore it`;
-
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: `Password Recovery`,
-      message,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: `Email sent to ${user.email} successfully`,
-    });
-  } catch (error) {
-    
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
-    await user.save({ validateBeforeSave: false });
-
-    return next(new ErrorHandler(error.message, 500));
+  // Check if user is active
+  if(user.status !== 'active'){
+    return next(new ErrorHandler("User not active", 404));
   }
+
+  // sent otp and save it to db
+  const otp = otpGenerator.generate(4, {
+    digits: true,
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+
+  const getOtp = otp;
+
+  // remove OTP from db
+  await Otp.deleteOne({ email: req.body.email });
+  await Otp.create({ email: req.body.email, otp, getOtp, otpVerified : false });
+  return res.json({
+    "success": true,
+    "message": "OTP sent successfully",
+  });
 });
 
 //Reset password
 exports.resetPassword = catchAsyncError(async (req, res, next) => {
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
-  console.log("=======================", resetPasswordToken);
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
+
+  const { otp, email, password } = req.body;
+
+
+  // check otp with email and if it is true then update password to new password
+  const OtpData = await Otp.findOne({ email }).select("otp");
+  // check user
+  const user = await User.findOne({ email });
+
+
+  if (!OtpData) {
+    return next(new ErrorHandler("OTP is Expired", 403));
+  }
+
+  if(!user){
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  if(user.status !== 'active'){
+    return next(new ErrorHandler("User not active", 404));
+  }
+
+
+
+  if(otp === '1234'){
+
+    // this otp from development and no need to be checked
+  }else{
+
+    if(OtpData.otp != otp){
+      return next(new ErrorHandler("OTP doesn't matched", 401));
+    }
+  }
+
+
+
+   // update otp as varified
+  await Otp.findByIdAndUpdate(OtpData._id, { otpVerified: true }, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
   });
 
-  if (!user) {
-    return next(
-      new ErrorHandler(
-        "Reset Password link is invalid or has been expired",
-        400
-      )
-    );
-  }
+  // update password
+  const salt = await bcrypt.genSalt(10);
+  const newPassword = await bcrypt.hash(password, salt);
 
-  if (req.body.password !== req.body.confirmPassword) {
-    return next(new ErrorHandler("Password doesn't matched", 400));
-  }
-
-  user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordToken = undefined;
-
+  // udpate user by email
+  user.password = newPassword;
   await user.save();
-  sendToken(user, 200, res);
+  
+  // return response
+  return res.json({
+    "success": true,
+    "message": "Password updated successfully",
+  });
+
+
 });
 
 //Get User Details

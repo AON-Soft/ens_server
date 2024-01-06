@@ -4,6 +4,7 @@ const {
   isAuthenticatedUser,
   isAuthenticatedShop,
   isAuthorizeRoles,
+  isAuthenticated
 } = require("../middleware/auth");
 
 const {
@@ -20,24 +21,21 @@ router.route("/shop/products/:id").get(isAuthenticatedUser, getAllProducts);
 router
   .route("/shop/product/new")
   .post(
-    isAuthenticatedUser,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthenticated,
+    isAuthorizeRoles("shop_keeper"),
     createProduct
   );
 
 router
   .route("/shop/product/:id")
   .put(
-    isAuthenticatedUser,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthenticated,
+    isAuthorizeRoles("shop_keeper"),
     updateProduct
   )
   .delete(
-    isAuthenticatedUser,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthenticated,
+    isAuthorizeRoles("shop_keeper"),
     deleteProduct
   );
 
