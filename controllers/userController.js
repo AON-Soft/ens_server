@@ -173,6 +173,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
   const resetPasswordUrl = `${req.protocol}://${req.get(
     "host"
   )}/ens/api/v1/password/reset/${resetToken}`;
+
   console.log("=================================", resetPasswordUrl);
 
   const message = `Your password reset token is :- \n\n\n ${resetPasswordUrl} \n\n if you have not request this email then, please ignore it`;
@@ -189,6 +190,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
       message: `Email sent to ${user.email} successfully`,
     });
   } catch (error) {
+    
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
