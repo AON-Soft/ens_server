@@ -4,6 +4,11 @@ module.exports.MONGO_URI =
   process.env.NODE_ENV == "production"
     ? process.env.MONGO_URI
     : "mongodb+srv://admin:admin@cluster0.xklu8.mongodb.net/ens_server";
+// module.exports.MONGO_URI =
+//   process.env.NODE_ENV == "production"
+//     ? process.env.MONGO_URI
+//     : "mongodb://localhost:27017/ens_server";
+
 module.exports.JWT_SECRET = process.env.JWT_SECRET
   ? process.env.JWT_SECRET
   : "fjhhIOHfjkflsjagju0fujljldfgl";
