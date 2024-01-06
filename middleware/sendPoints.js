@@ -13,7 +13,6 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
-
   try {
 
 
@@ -44,6 +43,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
 
     await sender.save({ session });
     await receiver.save({ session });
+    
     await admin.save({ session });
 
     await session.commitTransaction();

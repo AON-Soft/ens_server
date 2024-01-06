@@ -4,8 +4,6 @@ const sendToken = (user, statusCode, res) => {
   // const token = user.getJWTToken();
 
 
-  
-
   const cookieExpire = COOKIE_EXPIRE;
 
   const options = {
@@ -21,7 +19,7 @@ const sendToken = (user, statusCode, res) => {
     role: user.role,
     isVefified: true,
   }
-
+  
   const token = jwt.sign(responsePayload, JWT_SECRET, {
     expiresIn: JWT_EXPIRE,
   });

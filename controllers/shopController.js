@@ -5,11 +5,15 @@ const Shop = require("../models/shopModel");
 const ErrorHandler = require("../utils/errorhander");
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
+
+  console.log(req.user);
+
   const getShop = await Shop.findOne({ createdBy: req.user._id });
   if (getShop) {
     return next(new ErrorHandler("This Email is already registerd for a shop"));
   }
-  console.log("=================ese gchi=================");
+  
+
   const { name, info, logo, banner, category, address } = req.body;
   const createdBy = req.user._id;
   const shop = await Shop.create({
