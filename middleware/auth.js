@@ -22,7 +22,6 @@ exports.isAuthenticated = catchAsyncError(async (req, _, next) => {
 
   const decodedData = jwt.verify(token, secret)
   req.user = decodedData
-  console.log(req.user)
   next()
 })
 

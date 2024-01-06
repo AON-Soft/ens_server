@@ -14,8 +14,10 @@ const {
 } = require('../controllers/productController')
 
 const router = express.Router()
-
-router.route('/shop/products/:id').get(isAuthenticated, getAllProducts)
+//get all products by shop//
+router
+  .route('/shopkeeper/shop/products')
+  .get(isAuthenticated, isAuthenticatedShop, getAllProducts)
 
 router
   .route('/shop/product/new')
