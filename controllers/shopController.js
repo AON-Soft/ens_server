@@ -48,15 +48,21 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
 })
 
 exports.updateShopLocation = catchAsyncError(async (req, res) => {
-  const { latitude, longitude } = req.body
+  const { latitude, longitude } = req.body;
 
-  req.shop.location = {
-    type: 'Point',
-    coordinates: [longitude, latitude],
+  const shop = await Shop.findById(req.shop.id);
+
+  if (!shop) {
+    return next(new ErrorHandler('Shop not found', 404));
   }
 
-  await req.shop.save()
-
+  // update shop cordination
+  shop.location.coordinates[0] = longitude;
+  shop.location.coordinates[1] = latitude;
+  // type
+  shop.location.type = 'Point';
+  
+  await shop.save();
   res
     .status(200)
     .json({ success: true, message: 'Shop location updated successfully' })

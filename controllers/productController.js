@@ -1,15 +1,19 @@
 const Product = require('../models/productModel')
 const Categories = require('../models/categoryModel')
-// const Shop = require("../models/shopModel");
+const Shop = require("../models/shopModel");
 const ErrorHandler = require('../utils/errorhander')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ApiFeatures = require('../utils/apifeature')
 
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   req.body.user = req.user.id
-  req.body.shop = req.shop.id
+  
+  const shop = await Shop.findOne({ userId: req.user.id });
 
-  console.log(req.user)
+
+  
+
+  return res.json({})
 
   const categoryName = await Categories.findById(
     req.body.categoryInfo.categoryID,

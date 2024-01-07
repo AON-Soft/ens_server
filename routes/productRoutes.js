@@ -23,7 +23,6 @@ router
   .route('/shop/product/new')
   .post(
     isAuthenticated,
-    isAuthenticatedShop,
     isAuthorizeRoles('shop_keeper'),
     createProduct,
   )

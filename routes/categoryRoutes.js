@@ -3,6 +3,7 @@ const {
   isAuthenticatedUser,
   isAuthenticatedShop,
   isAuthorizeRoles,
+  isAuthenticated,
 } = require("../middleware/auth");
 const {
   createCategory,
@@ -16,26 +17,23 @@ const router = express.Router();
 router
   .route("/shop/category/new")
   .post(
-    isAuthenticatedUser,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthenticated,
+    isAuthorizeRoles("shop_keeper"),
     createCategory
   );
 
 router
   .route("/shop/category/:id")
   .put(
-    isAuthenticatedUser,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthenticated,
+    isAuthorizeRoles("shop_keeper"),
     updateCategory
   )
   .delete(
-    isAuthenticatedUser,
-    isAuthenticatedShop,
-    isAuthorizeRoles("Shop Keeper"),
+    isAuthenticated,
+    isAuthorizeRoles("shop_keeper"),
     deleteCategory
   );
-router.route("/category/shop/:id").get(isAuthenticatedUser, getAllCategories);
+router.route("/categories").get(isAuthenticated, getAllCategories);
 
 module.exports = router;

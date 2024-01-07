@@ -1,17 +1,25 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 const Categories = require("../models/categoryModel");
+const shopModel = require("../models/shopModel");
 const ApiFeatures = require("../utils/apifeature");
 const ErrorHandler = require("../utils/errorhander");
 
 exports.createCategory = catchAsyncError(async (req, res, next) => {
-  req.body.user = req.user.id;
-  req.body.shop = req.shop.id;
+
+  // check the category name is already exist or not
+  const exist = await Categories.findOne({ name: req.body.name });
+  if (exist) {
+    return next(new ErrorHandler("Category is already exist."));
+  }
+
   const category = await Categories.create(req.body);
   if (!category) {
     return next(new ErrorHandler("Category is not created."));
   }
+  const categoryWithout__v = category.toObject();
+  delete categoryWithout__v.__v;
 
-  res.status(201).json({ success: true, category });
+  res.status(201).json({ success: true, category:categoryWithout__v });
 });
 
 exports.updateCategory = catchAsyncError(async (req, res, next) => {
@@ -27,7 +35,10 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     useFindAndModify: false,
   });
 
-  res.status(200).json({ success: true, category });
+  const categoryWithout__v = category.toObject();
+  delete categoryWithout__v.__v;
+
+  res.status(200).json({ success: true, category:categoryWithout__v });
 });
 
 exports.deleteCategory = catchAsyncError(async (req, res, next) => {
@@ -45,11 +56,10 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllCategories = catchAsyncError(async (req, res) => {
-  const shopId = req.params.id;
   const resultPerPage = 10;
-  const categoryCount = await Categories.countDocuments({ shop: shopId });
+  const categoryCount = await Categories.countDocuments({  });
   const apiFeature = new ApiFeatures(
-    Categories.find({ shop: shopId }),
+    Categories.find({  }),
     req.query
   )
     .search()
@@ -60,15 +70,12 @@ exports.getAllCategories = catchAsyncError(async (req, res) => {
 
   let filteredCategoriesCount = categories.length;
 
-  //   apiFeature.pagination(resultPerPage);
-
-  //   products = await apiFeature.query;
 
   res.status(200).json({
     success: true,
-    categories,
     categoryCount,
     resultPerPage,
     filteredCategoriesCount,
+    categories,
   });
 });
