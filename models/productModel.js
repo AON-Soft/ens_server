@@ -25,29 +25,13 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  images: [
-    {
-      public_id: {
-        type: String,
-        required: true,
-      },
-      url: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  categoryInfo: {
-    categoryID: {
-      type: mongoose.Schema.ObjectId,
-      ref: "Categories",
-      required: true,
-    },
-    category: {
-      type: String,
-      required: [true, "Please Enter Product Category"],
-      trim: true,
-    },
+  images: {
+    type: String,
+    default: "",
+  },
+  categoryId:{
+    type: mongoose.Schema.ObjectId,
+    ref: "Categories",
   },
   subCategory: {
     type: String,

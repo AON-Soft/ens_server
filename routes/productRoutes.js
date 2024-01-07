@@ -17,7 +17,7 @@ const router = express.Router()
 //get all products by shop//
 router
   .route('/shopkeeper/shop/products')
-  .get(isAuthenticated, isAuthenticatedShop, getAllProducts)
+  .get(isAuthenticated, getAllProducts)
 
 router
   .route('/shop/product/new')
@@ -31,5 +31,8 @@ router
   .route('/shop/product/:id')
   .put(isAuthenticated, isAuthorizeRoles('shop_keeper'), updateProduct)
   .delete(isAuthenticated, isAuthorizeRoles('shop_keeper'), deleteProduct)
+
+
+
 
 module.exports = router

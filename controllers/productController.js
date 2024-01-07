@@ -10,18 +10,12 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
   
   const shop = await Shop.findOne({ userId: req.user.id });
 
-  console.log(shop);
-  
-
-  const categoryName = await Categories.findById(
-    req.body.categoryInfo.categoryID,
-  )
-  if (!categoryName) {
-    return next(new ErrorHandler('Category Not Found', 404))
-  }
-
-  req.body.categoryInfo.category = categoryName.name
-  const product = await Product.create(req.body)
+  var data = req.body;
+  data.shop = shop._id;
+  const product = await Product.create(req.body);
+  // delete __v
+  product.__v = undefined;
+  product.reviews = undefined;  
 
   res.status(201).json({ success: true, product })
 })
@@ -55,23 +49,20 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllProducts = catchAsyncError(async (req, res) => {
+
   const resultPerPage = 10
-  const productsCount = await Product.countDocuments({ shop: req.shop.id })
+  const productsCount = await Product.countDocuments({ user: req.user.id });
   const apiFeature = new ApiFeatures(
-    Product.find({ shop: req.shop.id }),
+    Product.find({ user: req.user.id }).select("-__v -reviews -shop -user"),
     req.query,
   )
     .search()
     .filter()
     .pagination(resultPerPage)
 
-  let products = await apiFeature.query
-
+  let products = await apiFeature.query;
   let filteredProductsCount = products.length
 
-  //   apiFeature.pagination(resultPerPage);
-
-  //   products = await apiFeature.query;
 
   res.status(200).json({
     success: true,
