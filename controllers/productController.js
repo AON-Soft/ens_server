@@ -1,11 +1,10 @@
 const Product = require('../models/productModel')
-const Categories = require('../models/categoryModel')
 const Shop = require("../models/shopModel");
 const ErrorHandler = require('../utils/errorhander')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ApiFeatures = require('../utils/apifeature')
 
-exports.createProduct = catchAsyncError(async (req, res, next) => {
+exports.createProduct = catchAsyncError(async (req, res) => {
   req.body.user = req.user.id
   
   const shop = await Shop.findOne({ userId: req.user.id });

@@ -3,7 +3,6 @@ const express = require('express')
 const {
   isAuthenticated,
   isAuthorizeRoles,
-  isAuthenticatedShop,
 } = require('../middleware/auth')
 
 const {
