@@ -1,6 +1,5 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 const Categories = require("../models/categoryModel");
-const shopModel = require("../models/shopModel");
 const ApiFeatures = require("../utils/apifeature");
 const ErrorHandler = require("../utils/errorhander");
 

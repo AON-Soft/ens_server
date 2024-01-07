@@ -47,7 +47,7 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
   res.status(201).json({ success: true, updatedShop })
 })
 
-exports.updateShopLocation = catchAsyncError(async (req, res) => {
+exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
   const { latitude, longitude } = req.body;
 
   const shop = await Shop.findById(req.shop.id);

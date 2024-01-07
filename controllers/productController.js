@@ -10,10 +10,8 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
   
   const shop = await Shop.findOne({ userId: req.user.id });
 
-
+  console.log(shop);
   
-
-  return res.json({})
 
   const categoryName = await Categories.findById(
     req.body.categoryInfo.categoryID,
