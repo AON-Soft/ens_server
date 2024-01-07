@@ -10,6 +10,14 @@ const categorySchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  isDelatable:{
+    type: Boolean,
+    required: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   createdAt: {
     type: Date,
     default: Date.now,
