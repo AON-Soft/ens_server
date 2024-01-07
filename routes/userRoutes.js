@@ -14,6 +14,7 @@ const {
   deleteUser,
   verifyOTP,
   getOtp,
+  forgotPasswordverifyOtp,
 } = require("../controllers/userController");
 const {
   isAuthenticatedUser,
@@ -28,6 +29,7 @@ router.route("/verify/register").post(isAuthenticatedUserTemp, verifyOTP);
 router.route("/login").post(loginUser);
 
 router.route("/password/forgot").post(forgotPassword);
+router.route("/password/verify-otp").post(forgotPasswordverifyOtp);
 router.route("/password/reset").put(resetPassword);
 
 router.route("/logout").get(logout);

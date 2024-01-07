@@ -191,6 +191,67 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
   });
 });
 
+
+//Reset password
+exports.forgotPasswordverifyOtp = catchAsyncError(async (req, res, next) => {
+
+
+  const { otp, email } = req.body;
+
+
+  // check otp with email and if it is true then update password to new password
+  const OtpData = await Otp.findOne({ email }).select("otp");
+  // check user
+  const user = await User.findOne({ email });
+
+  if (!OtpData) {
+    return next(new ErrorHandler("OTP is Expired", 403));
+  }
+
+  if(!user){
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  if(user.status !== 'active'){
+    return next(new ErrorHandler("User not active", 404));
+  }
+
+
+
+  if(otp === '1234'){
+
+    // this otp from development and no need to be checked
+  }else{
+
+    if(OtpData.otp != otp){
+      return next(new ErrorHandler("OTP doesn't matched", 401));
+    }
+  }
+
+  // Verify OTP
+  const newOtpVerified = {
+    otpVerified: true,
+  };
+  await Otp.findByIdAndUpdate(OtpData._id, newOtpVerified, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+
+
+  // return response
+  return res.json({
+    "success": true,
+    "message": "Otp is verified successfully",
+  });
+
+
+});
+
+
+
+
 //Reset password
 exports.resetPassword = catchAsyncError(async (req, res, next) => {
 
@@ -227,8 +288,6 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("OTP doesn't matched", 401));
     }
   }
-
-
 
    // update otp as varified
   await Otp.findByIdAndUpdate(OtpData._id, { otpVerified: true }, {
