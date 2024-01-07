@@ -9,7 +9,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 
   const getShop = await Shop.findOne({ createdBy: req.user.id })
   if (getShop) {
-    return next(new ErrorHandler('This Email is already registerd for a shop'))
+    return next(new ErrorHandler('Shop Alredy Exist ! You can create one shop'))
   }
 
   const { name, info, logo, banner, category, address } = req.body
@@ -29,12 +29,32 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 
 exports.updateShopProfile = catchAsyncError(async (req, res) => {
   const shop = await Shop.findById(req.shop._id)
-  const newUserData = {
+  var newUserData = {
     name: req.body.name,
     info: req.body.info,
     category: req.body.category,
     address: req.body.address,
   }
+
+  // check if shop lat and long 
+  if (req.body.latitude && req.body.longitude) {
+    newUserData.location = {
+      type: 'Point',
+      coordinates: [req.body.longitude, req.body.latitude],
+    }
+  }
+
+  // if logo 
+  if (req.body.logo) {
+    newUserData.logo = req.body.logo
+  }
+
+  // if banner 
+  if (req.body.banner) {
+    newUserData.banner = req.body.banner
+  }
+
+
 
   //we will add cloudinary later
 
