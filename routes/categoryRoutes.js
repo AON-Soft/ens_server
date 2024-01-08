@@ -1,37 +1,44 @@
-const express = require("express");
+const express = require('express')
 const {
   isAuthorizeRoles,
   isAuthenticated,
-} = require("../middleware/auth");
+  isAuthenticatedShop,
+} = require('../middleware/auth')
 const {
-  createCategory,
   updateCategory,
   deleteCategory,
   getAllCategories,
-} = require("../controllers/categoryController");
+  createCategoryByAdmin,
+  createCategoryByShop,
+  getAllCategoriesByshop,
+  getAllCategoriesByAdmin,
+} = require('../controllers/categoryController')
 
-const router = express.Router();
+const router = express.Router()
 
 router
-  .route("/shop/category/new")
+  .route('/admin/shop/category/new/:id')
+  .post(isAuthenticated, isAuthorizeRoles('admin'), createCategoryByAdmin)
+
+router
+  .route('/shop/category/new')
   .post(
     isAuthenticated,
-    isAuthorizeRoles("shop_keeper"),
-    createCategory
-  );
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    createCategoryByShop,
+  )
 
 router
-  .route("/shop/category/:id")
-  .put(
-    isAuthenticated,
-    isAuthorizeRoles("shop_keeper"),
-    updateCategory
-  )
-  .delete(
-    isAuthenticated,
-    isAuthorizeRoles("shop_keeper"),
-    deleteCategory
-  );
-router.route("/categories").get(isAuthenticated, getAllCategories);
+  .route('/shop/category/:id')
+  .put(isAuthenticated, updateCategory)
+  .delete(isAuthenticated, deleteCategory)
+router
+  .route('/shop/categories')
+  .get(isAuthenticated, isAuthenticatedShop, getAllCategoriesByshop)
 
-module.exports = router;
+router
+  .route('/admin/shop/categories/:id')
+  .get(isAuthenticated, getAllCategoriesByAdmin)
+
+module.exports = router

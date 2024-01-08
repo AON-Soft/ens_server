@@ -36,7 +36,7 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
     address: req.body.address,
   }
 
-  // check if shop lat and long 
+  // check if shop lat and long
   if (req.body.latitude && req.body.longitude) {
     newUserData.location = {
       type: 'Point',
@@ -44,17 +44,15 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
     }
   }
 
-  // if logo 
+  // if logo
   if (req.body.logo) {
     newUserData.logo = req.body.logo
   }
 
-  // if banner 
+  // if banner
   if (req.body.banner) {
     newUserData.banner = req.body.banner
   }
-
-
 
   //we will add cloudinary later
 
@@ -68,21 +66,20 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
 })
 
 exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
-  const { latitude, longitude } = req.body;
-
-  const shop = await Shop.findById(req.shop.id);
+  const { latitude, longitude } = req.body
+  const shop = await Shop.findById(req.shop.id)
 
   if (!shop) {
-    return next(new ErrorHandler('Shop not found', 404));
+    return next(new ErrorHandler('Shop not found', 404))
   }
 
   // update shop cordination
-  shop.location.coordinates[0] = longitude;
-  shop.location.coordinates[1] = latitude;
+  shop.location.coordinates[0] = longitude
+  shop.location.coordinates[1] = latitude
   // type
-  shop.location.type = 'Point';
-  
-  await shop.save();
+  shop.location.type = 'Point'
+
+  await shop.save()
   res
     .status(200)
     .json({ success: true, message: 'Shop location updated successfully' })
