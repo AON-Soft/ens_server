@@ -13,7 +13,6 @@ const {
   deleteShop,
   updateShopLocation,
   getNearbyShops,
-  createShopCategory,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -26,7 +25,12 @@ router
 
 router
   .route('/shop/location/update')
-  .put(isAuthenticated, isAuthorizeRoles('shop_keeper'), updateShopLocation)
+  .put(
+    isAuthenticated,
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    updateShopLocation,
+  )
 
 router
   .route('/shop')

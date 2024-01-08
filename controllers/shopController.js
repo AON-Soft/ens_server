@@ -1,7 +1,6 @@
 const catchAsyncError = require('../middleware/catchAsyncError')
 
 const Shop = require('../models/shopModel')
-const ShopCategory = require('../models/shopCategoryModel')
 // const User = require("../models/userModel");
 const ErrorHandler = require('../utils/errorhander')
 
@@ -68,7 +67,6 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
 
 exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
   const { latitude, longitude } = req.body
-
   const shop = await Shop.findById(req.shop.id)
 
   if (!shop) {
