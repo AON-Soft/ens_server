@@ -1,71 +1,158 @@
-const catchAsyncError = require("../middleware/catchAsyncError");
-const Brand = require("../models/brandModel");
-const ApiFeatures = require("../utils/apifeature");
-const ErrorHandler = require("../utils/errorhander");
+const catchAsyncError = require('../middleware/catchAsyncError')
+const Brands = require('../models/brandModel')
+const ApiFeatures = require('../utils/apifeature')
+const ErrorHandler = require('../utils/errorhander')
 
-exports.createBrand = catchAsyncError(async (req, res, next) => {
-  req.body.user = req.user.id;
-  req.body.shop = req.shop.id;
-  const brand = await Brand.create(req.body);
+exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
+  const exist = await Brands.findOne({ name: req.body.name })
+  if (exist) {
+    return next(new ErrorHandler('Brands is already exist.'))
+  }
+  req.body.shopCategory = req.params.id
+  req.body.createdBy = req.user.id
+
+  const brand = await Brands.create(req.body)
   if (!brand) {
-    return next(new ErrorHandler("Brand is not created."));
+    return next(new ErrorHandler('Brand is not created.'))
+  }
+  const brandWithout__v = brand.toObject()
+  delete brandWithout__v.__v
+
+  res.status(201).json({ success: true, brand: brandWithout__v })
+})
+
+exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
+  // check the category name is already exist or not
+  const exist = await Brands.findOne({ name: req.body.name })
+  if (exist) {
+    return next(new ErrorHandler('Brand is already exist.'))
   }
 
-  res.status(201).json({ success: true, brand });
-});
+  req.body.shopCategory = req.shop.category
+  req.body.shopID = req.shop.id
+  req.body.isDelatableByShop = true
+  req.body.createdBy = req.user.id
+
+  const brand = await Brands.create(req.body)
+  if (!brand) {
+    return next(new ErrorHandler('Brand is not created.'))
+  }
+  const brandWithout__v = brand.toObject()
+  delete brandWithout__v.__v
+
+  res.status(201).json({ success: true, brand: brandWithout__v })
+})
 
 exports.updateBrand = catchAsyncError(async (req, res, next) => {
-  let brand = await Brand.findById(req.params.id);
-
-  if (!brand) {
-    return next(new ErrorHandler("brand not found", 404));
+  const exist = await Brands.findOne({ name: req.body.name })
+  if (exist) {
+    if (exist._id.toString() !== req.params.id.toString()) {
+      return next(new ErrorHandler(`${req.body.name} is already exist`, 404))
+    }
   }
 
-  brand = await Brand.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
+  let brand = await Brands.findById(req.params.id)
+  if (!brand) {
+    return next(new ErrorHandler('brand not found', 404))
+  }
 
-  res.status(200).json({ success: true, brand });
-});
+  if (
+    req.user.role === 'admin' ||
+    req.user.id.toString() === brand.createdBy.toString()
+  ) {
+    brand = await Brands.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    })
+
+    const brandWithout__v = brand.toObject()
+    delete brandWithout__v.__v
+
+    res.status(200).json({ success: true, brand: brandWithout__v })
+  } else {
+    return next(
+      new ErrorHandler('You are not Authorized to Update this brand'),
+      404,
+    )
+  }
+})
 
 exports.deleteBrand = catchAsyncError(async (req, res, next) => {
-  const brand = await Brand.findById(req.params.id);
+  const brand = await Brands.findById(req.params.id)
 
   if (!brand) {
-    return next(new ErrorHandler("brand not found", 404));
+    return next(new ErrorHandler('brand not found', 404))
   }
 
-  await Brand.deleteOne({ _id: req.params.id });
+  if (
+    req.user.role === 'admin' ||
+    req.user.id.toString() === brand.createdBy.toString()
+  ) {
+    await Brands.deleteOne({ _id: req.params.id })
 
-  res
-    .status(200)
-    .json({ success: true, message: "category deleted sucesfully" });
-});
+    res.status(200).json({ success: true, message: 'brand deleted sucesfully' })
+  } else {
+    return next(
+      new ErrorHandler('You are not Authorized to Delete this brand'),
+      404,
+    )
+  }
+})
 
-exports.getAllBrands = catchAsyncError(async (req, res) => {
-  const shopId = req.params.id;
-  const resultPerPage = 10;
-  const brndsCount = await Brand.countDocuments({ shop: shopId });
-  const apiFeature = new ApiFeatures(Brand.find({ shop: shopId }), req.query)
+exports.getAllBrandByshop = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+
+  const brandCount = await Brands.countDocuments({
+    $or: [{ shopCategory: req.shop.category }, { shopID: req.shop.id }],
+  })
+  const apiFeature = new ApiFeatures(
+    Brands.find({
+      $or: [{ shopCategory: req.shop.category }, { shopID: req.shop.id }],
+    }),
+    req.query,
+  )
     .search()
     .filter()
-    .pagination(resultPerPage);
+    .pagination(resultPerPage)
 
-  let brands = await apiFeature.query;
+  let brands = await apiFeature.query
 
-  let filteredBrandsCount = brands.length;
-
-  //   apiFeature.pagination(resultPerPage);
-
-  //   products = await apiFeature.query;
+  let filteredBrandsCount = brands.length
 
   res.status(200).json({
     success: true,
-    brands,
-    brndsCount,
+    brandCount,
     resultPerPage,
     filteredBrandsCount,
-  });
-});
+    brands,
+  })
+})
+
+exports.getAllBrandsByAdmin = catchAsyncError(async (req, res) => {
+  const shopCategory = req.params.id
+  const resultPerPage = 10
+
+  const brandCount = await Brands.countDocuments({
+    shopCategory: shopCategory,
+  })
+  const apiFeature = new ApiFeatures(
+    Brands.find({ shopCategory: shopCategory }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let brands = await apiFeature.query
+
+  let filteredBrandsCount = categories.length
+
+  res.status(200).json({
+    success: true,
+    brandCount,
+    resultPerPage,
+    filteredBrandsCount,
+    brands,
+  })
+})
