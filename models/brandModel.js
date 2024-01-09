@@ -1,39 +1,37 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const brandSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Please Enter Product Name"],
+    required: [true, 'Please Enter Product Name'],
     trim: true,
   },
-  description: {
+  image: {
     type: String,
-    required: [true, "Please Enter Product Description"],
+    default: '',
   },
-  images: {
-    public_id: {
-      type: String,
-      //   required: true,
-    },
-    url: {
-      type: String,
-      //   required: true,
+  shopCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'shop_categories',
+    required: function () {
+      return this.shopCategory === 'shopCategory'
     },
   },
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
-    required: true,
+  shopID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'shop',
+    required: function () {
+      return this.shopID === 'shopID'
+    },
   },
-  shop: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Shop",
-    required: true,
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+})
 
-module.exports = mongoose.model("Brand", brandSchema);
+module.exports = mongoose.model('brands', brandSchema)

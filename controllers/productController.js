@@ -1,20 +1,20 @@
 const Product = require('../models/productModel')
-const Shop = require("../models/shopModel");
+const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ApiFeatures = require('../utils/apifeature')
 
 exports.createProduct = catchAsyncError(async (req, res) => {
   req.body.user = req.user.id
-  
-  const shop = await Shop.findOne({ userId: req.user.id });
 
-  var data = req.body;
-  data.shop = shop._id;
-  const product = await Product.create(req.body);
+  const shop = await Shop.findOne({ userId: req.user.id })
+
+  var data = req.body
+  data.shop = shop._id
+  const product = await Product.create(req.body)
   // delete __v
-  product.__v = undefined;
-  product.reviews = undefined;  
+  product.__v = undefined
+  product.reviews = undefined
 
   res.status(201).json({ success: true, product })
 })
@@ -47,21 +47,42 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, message: 'Product deleted sucesfully' })
 })
 
-exports.getAllProducts = catchAsyncError(async (req, res) => {
-
+exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
   const resultPerPage = 10
-  const productsCount = await Product.countDocuments({ user: req.user.id });
+  const productsCount = await Product.countDocuments({ user: req.user.id })
   const apiFeature = new ApiFeatures(
-    Product.find({ user: req.user.id }).select("-__v -reviews -shop -user"),
+    Product.find({ user: req.user.id }).select('-__v -reviews -shop -user'),
     req.query,
   )
     .search()
     .filter()
     .pagination(resultPerPage)
 
-  let products = await apiFeature.query;
+  let products = await apiFeature.query
   let filteredProductsCount = products.length
 
+  res.status(200).json({
+    success: true,
+    products,
+    productsCount,
+    resultPerPage,
+    filteredProductsCount,
+  })
+})
+
+exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+  const productsCount = await Product.countDocuments({ shop: req.params.id })
+  const apiFeature = new ApiFeatures(
+    Product.find({ shop: req.params.id }).select('-__v -reviews -shop -user'),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let products = await apiFeature.query
+  let filteredProductsCount = products.length
 
   res.status(200).json({
     success: true,
