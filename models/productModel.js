@@ -1,24 +1,24 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Please Enter Product Name"],
+    required: [true, 'Please Enter Product Name'],
     trim: true,
   },
   description: {
     type: String,
-    required: [true, "Please Enter Product Description"],
+    required: [true, 'Please Enter Product Description'],
   },
 
   price: {
     type: Number,
-    required: [true, "Please Enter Product Price"],
+    required: [true, 'Please Enter Product Price'],
     maxLength: [8, "Price can't exceed 8 Characters"],
   },
   points: {
     type: Number,
-    required: [true, "Please Enter Product Price"],
+    required: [true, 'Please Enter Product Price'],
     maxLength: [8, "Price can't exceed 8 Characters"],
   },
   ratings: {
@@ -27,30 +27,30 @@ const productSchema = new mongoose.Schema({
   },
   images: {
     type: String,
-    default: "",
+    default: '',
   },
-  categoryId:{
+  categoryId: {
     type: mongoose.Schema.ObjectId,
-    ref: "Categories",
+    ref: 'Categories',
   },
   subCategory: {
     type: String,
   },
   stockType: {
     type: String,
-    enum: ["stockAsUnit", "stockAsQuantity"],
+    enum: ['stockAsUnit', 'stockAsQuantity'],
     required: true,
   },
   stockUnit: {
-    type: Number,
+    type: String,
     required: function () {
-      return this.stockType === "stockAsUnit";
+      return this.stockType === 'stockAsUnit'
     },
   },
   stockQuantity: {
     type: Number,
     required: function () {
-      return this.stockType === "stockAsQuantity";
+      return this.stockType === 'stockAsQuantity'
     },
   },
   numOfReviews: {
@@ -61,7 +61,7 @@ const productSchema = new mongoose.Schema({
     {
       user: {
         type: mongoose.Schema.ObjectId,
-        ref: "User",
+        ref: 'User',
         required: true,
       },
       name: {
@@ -78,20 +78,24 @@ const productSchema = new mongoose.Schema({
       },
     },
   ],
+  commission: {
+    type: Number,
+    default: 0,
+  },
   user: {
     type: mongoose.Schema.ObjectId,
-    ref: "User",
+    ref: 'User',
     required: true,
   },
   shop: {
     type: mongoose.Schema.ObjectId,
-    ref: "Shop",
+    ref: 'Shop',
     required: true,
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+})
 
-module.exports = mongoose.model("Products", productSchema);
+module.exports = mongoose.model('Products', productSchema)

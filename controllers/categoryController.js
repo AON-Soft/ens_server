@@ -60,7 +60,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
 
   if (
     req.user.role === 'admin' ||
-    req.user.id.toString() === brand.createdBy.toString()
+    req.user.id.toString() === category.createdBy.toString()
   ) {
     category = await Categories.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -68,7 +68,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
       useFindAndModify: false,
     })
 
-    const categoryWithout__v = brand.toObject()
+    const categoryWithout__v = category.toObject()
     delete categoryWithout__v.__v
 
     res.status(200).json({ success: true, category: categoryWithout__v })

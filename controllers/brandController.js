@@ -146,7 +146,7 @@ exports.getAllBrandsByAdmin = catchAsyncError(async (req, res) => {
 
   let brands = await apiFeature.query
 
-  let filteredBrandsCount = categories.length
+  let filteredBrandsCount = brands.length
 
   res.status(200).json({
     success: true,
