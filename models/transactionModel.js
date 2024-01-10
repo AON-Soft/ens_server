@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const transactionSchema = new mongoose.Schema({
   transactionID: {
@@ -15,20 +15,20 @@ const transactionSchema = new mongoose.Schema({
     required: true,
   },
   sender: {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: String,
     email: String,
     transacion: String,
   },
   receiver: {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: String,
     email: String,
     transacion: String,
   },
   paymentType: {
     type: String,
-    enum: ["Cash", "Points"],
+    enum: ['Cash', 'Points'],
     required: true,
   },
   invoiceID: {
@@ -36,28 +36,28 @@ const transactionSchema = new mongoose.Schema({
   },
   transactionType: {
     type: String,
-    enum: ["PointsIn", "PointsOut", "Payment", "SendPoints"],
+    enum: ['pointsIn', 'pointsOut', 'payment', 'sendPoints'],
     required: true,
   },
   transactionRelation: {
     type: String,
     enum: [
-      "UserToUser",
-      "UserToAgent",
-      "UserToShopKeeper",
-      "AgentToAgent",
-      "AgentToAdmin",
-      "AgentToUser",
-      "AgentToShopKeeper",
-      "AdminToAdmin",
-      "AdminToAgent",
-      "ShopKeeperToAgent",
+      'user-To-user',
+      'user-To-agent',
+      'user-To-shop_keeper',
+      'agent-To-agent',
+      'agent-To-admin',
+      'agent-To-user',
+      'agent-To-shop_keeper',
+      'admin-To-admin',
+      'admin-To-agent',
+      'shop_keeper-To-agent',
     ],
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+})
 
-module.exports = mongoose.model("Transaction", transactionSchema);
+module.exports = mongoose.model('Transaction', transactionSchema)

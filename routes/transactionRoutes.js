@@ -1,13 +1,18 @@
-const express = require("express");
+const express = require('express')
 
-const { isAuthenticatedUser } = require("../middleware/auth");
-const { sendPoints } = require("../middleware/sendPoints");
-const { createTransaction } = require("../controllers/transactionController");
+const { isAuthenticatedUser } = require('../middleware/auth')
+const { sendPoints } = require('../middleware/sendPoints')
+const { createTransaction } = require('../controllers/transactionController')
+const { userToAgentCashOut } = require('../middleware/user-agentCashOut')
 
-const router = express.Router();
+const router = express.Router()
 
 router
-  .route("/send/points")
-  .post(isAuthenticatedUser, sendPoints, createTransaction);
+  .route('/user/user/sendPoints')
+  .post(isAuthenticatedUser, sendPoints, createTransaction)
 
-module.exports = router;
+router
+  .route('/user/agent/pointsOut')
+  .post(isAuthenticatedUser, userToAgentCashOut, createTransaction)
+
+module.exports = router

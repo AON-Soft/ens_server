@@ -6,10 +6,10 @@ const calculateServiceCharge = require('../utils/calculateServiceCharge')
 const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
 
-exports.sendPoints = catchAsyncError(async (req, res, next) => {
+exports.userToAgentCashOut = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body
   const sender = req.user
-  const percentage = 5
+  const percentage = 20
 
   const session = await mongoose.startSession()
   session.startTransaction()
@@ -37,8 +37,8 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     const trnxID = uniqueTransactionID()
     const sendPontsTranactionID = `SP${trnxID}`
     sender.balance -= amount + serviceCharge
-    receiver.balance += amount
-    admin.balance += serviceCharge
+    receiver.balance += amount + serviceCharge / 2
+    admin.balance += serviceCharge / 2
 
     await sender.save({ session })
     await receiver.save({ session })
@@ -53,7 +53,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     req.receiver = receiver
     req.transactionAmount = amount
     req.serviceCharge = serviceCharge
-    req.transactionType = 'sendPoints'
+    req.transactionType = 'pointsOut'
     next()
   } catch (error) {
     console.error(error)
