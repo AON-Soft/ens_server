@@ -33,21 +33,12 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Categories',
   },
-  subCategory: {
-    type: String,
-  },
-  stockType: {
-    type: String,
-    enum: ['stockAsUnit', 'stockAsQuantity'],
-    required: true,
-  },
+
   stockUnit: {
     type: String,
-    required: function () {
-      return this.stockType === 'stockAsUnit'
-    },
+    required: [true, 'Please Enter Stock Unit'],
   },
-  stockQuantity: {
+  availableStock: {
     type: Number,
     required: function () {
       return this.stockType === 'stockAsQuantity'
