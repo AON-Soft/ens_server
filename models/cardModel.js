@@ -29,6 +29,14 @@ const cardSchema = new mongoose.Schema({
         type: Number,
         default: 1,
       },
+      price: {
+        type: Number,
+        default: 0,
+      },
+      totalPrice: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   createdAt: {

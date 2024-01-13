@@ -1,3 +1,4 @@
+const { default: mongoose } = require('mongoose')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const cardModel = require('../models/cardModel')
 
@@ -166,22 +167,72 @@ exports.removeFromCard = catchAsyncError(async (req, res, next) => {
   const cardProductWithout__v = updatedCard.toObject()
   delete cardProductWithout__v.__v
 
-  res
-    .status(200)
-    .json({
-      success: true,
-      card: cardProductWithout__v,
-      message: 'Product deleted successfully from Card',
-    })
+  res.status(200).json({
+    success: true,
+    card: cardProductWithout__v,
+    message: 'Product deleted successfully from Card',
+  })
 })
 
 exports.getCard = catchAsyncError(async (req, res, next) => {
-  let myCard = await cardModel.find({ userId: req.user.id })
-  if (!myCard) {
-    return next(new ErrorHandler('card is not found', 404))
+  let myCard = await cardModel.aggregate([
+    {
+      $match: { userId: new mongoose.Types.ObjectId(req.user.id) },
+    },
+    {
+      $unwind: '$cardProducts',
+    },
+    {
+      $lookup: {
+        from: 'products', // Assuming your Products model is named 'products'
+        localField: 'cardProducts.productId',
+        foreignField: '_id',
+        as: 'productInfo',
+      },
+    },
+    {
+      $addFields: {
+        'cardProducts.price': { $arrayElemAt: ['$productInfo.price', 0] },
+        'cardProducts.totalPrice': {
+          $multiply: [
+            { $arrayElemAt: ['$productInfo.price', 0] },
+            '$cardProducts.productQuantity',
+          ],
+        },
+      },
+    },
+    {
+      $group: {
+        _id: '$_id',
+        userId: { $first: '$userId' },
+        shopID: { $first: '$shopID' },
+        cardProducts: { $push: '$cardProducts' },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        shopID: 1,
+        cardProducts: 1,
+      },
+    },
+  ])
+
+  if (!myCard || myCard.length === 0) {
+    return next(new ErrorHandler('Card is not found', 404))
   }
-  res.status(200).json({ success: true, card: myCard })
+
+  res.status(200).json({ success: true, card: myCard[0] })
 })
+
+// exports.getCard = catchAsyncError(async (req, res, next) => {
+//   let myCard = await cardModel.find({ userId: req.user.id })
+//   if (!myCard) {
+//     return next(new ErrorHandler('card is not found', 404))
+//   }
+//   res.status(200).json({ success: true, card: myCard })
+// })
 
 exports.getCardByAdmin = catchAsyncError(async (req, res, next) => {
   let myCard = await cardModel.find({ userId: req.params.id })
