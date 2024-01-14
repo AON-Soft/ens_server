@@ -41,13 +41,9 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
 exports.transactionHistory = catchAsyncError(async (req, res) => {
   let userId = req.user.id
   userId = new mongoose.Types.ObjectId(userId)
-  console.log(typeof userId)
-  const trn = await Transaction.find({ sender: { user: userId } })
-  console.log(userId)
 
   const sixMonthsAgo = new Date()
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-  console.log(sixMonthsAgo)
 
   const transactionPipeline = [
     {
@@ -78,9 +74,20 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
             transactionID: '$transactionID',
             transactionType: '$transactionType',
             transactionAmount: '$transactionAmount',
-            flag: '$sender.flag' || '$receiver.flag',
-            transactionHeading:
-              '$sender.transactionHeading' || '$receiver.transactionHeading',
+            flag: {
+              $cond: [
+                { $eq: ['$sender.user', userId] },
+                '$sender.flag',
+                '$receiver.flag',
+              ],
+            },
+            transactionHeading: {
+              $cond: [
+                { $eq: ['$sender.user', userId] },
+                '$sender.transactionHeading',
+                '$receiver.transactionHeading',
+              ],
+            },
             date: '$createdAt',
           },
         },

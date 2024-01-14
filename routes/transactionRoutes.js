@@ -1,6 +1,6 @@
 const express = require('express')
 
-const { isAuthenticatedUser, isAuthenticated } = require('../middleware/auth')
+const { isAuthenticated } = require('../middleware/auth')
 const { sendPoints } = require('../middleware/sendPoints')
 const {
   createTransaction,
