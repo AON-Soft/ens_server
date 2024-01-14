@@ -403,3 +403,18 @@ exports.getOtp = catchAsyncError(async (_, res, next) => {
   // getOtp = otp.getOtp;
   res.status(200).json({ success: true, otp })
 })
+
+exports.getBalance = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id)
+
+  if (!user) {
+    return next(new ErrorHandler(`User not found`, 400))
+  }
+
+  const balance = {
+    balance: user.balance,
+    bonusBalance: user.bonusBalance,
+  }
+
+  res.status(200).json({ success: true, balance })
+})
