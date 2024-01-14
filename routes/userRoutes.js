@@ -15,6 +15,7 @@ const {
   verifyOTP,
   getOtp,
   forgotPasswordverifyOtp,
+  getBalance,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -47,5 +48,6 @@ router
   .delete(isAuthenticatedUser, isAuthorizeRoles('admin'), deleteUser)
 
 router.route('/getOtp').get(getOtp)
+router.route('/self/balance').get(isAuthenticatedUser, getBalance)
 
 module.exports = router

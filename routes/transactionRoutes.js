@@ -1,18 +1,27 @@
 const express = require('express')
 
-const { isAuthenticatedUser } = require('../middleware/auth')
+const { isAuthenticatedUser, isAuthenticated } = require('../middleware/auth')
 const { sendPoints } = require('../middleware/sendPoints')
-const { createTransaction } = require('../controllers/transactionController')
-const { userToAgentCashOut } = require('../middleware/user-agentCashOut')
+const {
+  createTransaction,
+  transactionHistory,
+} = require('../controllers/transactionController')
+const {
+  userToAgentPointsOut,
+} = require('../middleware/user-to-agent-points-out')
 
 const router = express.Router()
 
 router
   .route('/user/user/sendPoints')
-  .post(isAuthenticatedUser, sendPoints, createTransaction)
+  .post(isAuthenticated, sendPoints, createTransaction)
 
 router
   .route('/user/agent/pointsOut')
-  .post(isAuthenticatedUser, userToAgentCashOut, createTransaction)
+  .post(isAuthenticated, userToAgentPointsOut, createTransaction)
+
+router
+  .route('/self/transaction-history')
+  .get(isAuthenticated, transactionHistory)
 
 module.exports = router

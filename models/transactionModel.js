@@ -18,17 +18,19 @@ const transactionSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: String,
     email: String,
-    transacion: String,
+    flag: String,
+    transactionHeading: String,
   },
   receiver: {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: String,
     email: String,
-    transacion: String,
+    flag: String,
+    transactionHeading: String,
   },
   paymentType: {
     type: String,
-    enum: ['Cash', 'Points'],
+    enum: ['bonus_points', 'points'],
     required: true,
   },
   invoiceID: {
@@ -36,7 +38,14 @@ const transactionSchema = new mongoose.Schema({
   },
   transactionType: {
     type: String,
-    enum: ['pointsIn', 'pointsOut', 'payment', 'sendPoints'],
+    enum: [
+      'points_in',
+      'points_out',
+      'payment',
+      'send_points',
+      'referal_bonus',
+      'received_bonus',
+    ],
     required: true,
   },
   transactionRelation: {
@@ -59,5 +68,7 @@ const transactionSchema = new mongoose.Schema({
     default: Date.now,
   },
 })
+
+transactionSchema.index({ transactionRelation: 1 })
 
 module.exports = mongoose.model('Transaction', transactionSchema)
