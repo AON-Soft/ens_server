@@ -33,9 +33,17 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
   await session.commitTransaction()
   session.endSession()
 
-  res
-    .status(200)
-    .json({ success: true, message: 'Transaction successful', transaction })
+  if (req.token) {
+    res.status(200).json({
+      success: true,
+      message: 'Token created successful',
+      token: req.token,
+    })
+  } else {
+    res
+      .status(200)
+      .json({ success: true, message: 'Transaction successful', transaction })
+  }
 })
 
 exports.transactionHistory = catchAsyncError(async (req, res) => {

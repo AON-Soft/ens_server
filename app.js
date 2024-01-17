@@ -11,6 +11,7 @@ const category = require('./routes/categoryRoutes.js')
 const brand = require('./routes/brandRoutes.js')
 const shopCategory = require('./routes/shopCategoryRoutes.js')
 const card = require('./routes/cardRoutes.js')
+const token = require('./routes/tokenRoutes.js')
 
 const errorMiddleware = require('./middleware/error')
 const { API_PREFIX } = require('./constant.js')
@@ -34,6 +35,7 @@ app.use(`${API_PREFIX}/api/v1`, category)
 app.use(`${API_PREFIX}/api/v1`, brand)
 app.use(`${API_PREFIX}/api/v1`, shopCategory)
 app.use(`${API_PREFIX}/api/v1`, card)
+app.use(`${API_PREFIX}/api/v1`, token)
 
 app.use(errorMiddleware)
 
