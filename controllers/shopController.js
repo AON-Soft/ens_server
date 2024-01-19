@@ -126,10 +126,15 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
         spherical: true,
       },
     },
-    { $sort: { distance: 1 } }, // Sorting by distance in ascending order
+    { $sort: { distance: 1 } },
   ])
   if (!shops) {
     return next(new ErrorHandler('No Shops are available in your area', 404))
   }
   res.status(200).json({ success: true, data: shops })
+})
+
+exports.getAllShops = catchAsyncError(async (_, res) => {
+  const shops = await Shop.find()
+  res.status(200).json({ success: true, shops })
 })

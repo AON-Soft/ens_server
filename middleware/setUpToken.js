@@ -5,7 +5,7 @@ const User = require('../models/userModel')
 const ErrorHandler = require('../utils/errorhander')
 const { default: mongoose } = require('mongoose')
 
-exports.setUpToken = catchAsyncError(async (req, res, next) => {
+exports.setUpToken = catchAsyncError(async (req, _, next) => {
   const tokenCharge = 40
   const session = await mongoose.startSession()
   session.startTransaction()

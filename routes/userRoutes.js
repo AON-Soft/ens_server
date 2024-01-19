@@ -16,6 +16,8 @@ const {
   getOtp,
   forgotPasswordverifyOtp,
   getBalance,
+  getAllAdmins,
+  getAllAgents,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -41,6 +43,13 @@ router.route('/me/update').put(isAuthenticatedUser, updateProfile)
 router
   .route('/admin/users')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getAllUsers)
+router
+  .route('/admin/admins')
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getAllAdmins)
+router
+  .route('/admin/agents')
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getAllAgents)
+
 router
   .route('/admin/user/:id')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getSingleUser)

@@ -1,10 +1,11 @@
 const express = require('express')
 
-const { isAuthenticated } = require('../middleware/auth')
+const { isAuthenticated, isAuthorizeRoles } = require('../middleware/auth')
 const { sendPoints } = require('../middleware/sendPoints')
 const {
   createTransaction,
   transactionHistory,
+  getUsersBasedOnLastPointsOut,
 } = require('../controllers/transactionController')
 const {
   userToAgentPointsOut,
@@ -23,5 +24,9 @@ router
 router
   .route('/self/transaction-history')
   .get(isAuthenticated, transactionHistory)
+
+router
+  .route('/admin/getUsers/based-on/last-points-out')
+  .get(isAuthenticated, isAuthorizeRoles('admin'), getUsersBasedOnLastPointsOut)
 
 module.exports = router
