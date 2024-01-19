@@ -8,6 +8,7 @@ const {
   deleteProduct,
   getAllProductsByShop,
   getAllProductsByUser,
+  adminGetAllProductsByShop,
 } = require('../controllers/productController')
 
 const router = express.Router()
@@ -15,6 +16,10 @@ const router = express.Router()
 router
   .route('/shopkeeper/shop/products')
   .get(isAuthenticated, getAllProductsByShop)
+
+router
+  .route('/admin/products/shop/:id')
+  .get(isAuthenticated, isAuthorizeRoles('admin'), adminGetAllProductsByShop)
 
 router
   .route('/user/products/shop/:id')

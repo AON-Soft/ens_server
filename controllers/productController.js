@@ -70,6 +70,29 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
   })
 })
 
+exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+  const productsCount = await Product.countDocuments({ shop: req.params.id })
+  const apiFeature = new ApiFeatures(
+    Product.find({ shop: req.params.id }).select('-__v -reviews -shop -user'),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let products = await apiFeature.query
+  let filteredProductsCount = products.length
+
+  res.status(200).json({
+    success: true,
+    products,
+    productsCount,
+    resultPerPage,
+    filteredProductsCount,
+  })
+})
+
 exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
   const resultPerPage = 10
   const productsCount = await Product.countDocuments({ shop: req.params.id })

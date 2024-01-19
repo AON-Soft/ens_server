@@ -123,3 +123,54 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
     transactionsHistory,
   })
 })
+
+exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (req, res) => {
+  const pipeline = [
+    {
+      $match: {
+        transactionRelation: 'user-To-agent',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $group: {
+        _id: '$sender.user',
+        lastTransaction: {
+          $first: '$$ROOT',
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        _id: 0,
+        userId: '$userDetails._id',
+        userName: '$userDetails.name',
+        userEmail: '$userDetails.email',
+        userAvatar: '$userDetails.avatar',
+        userBalance: '$userDetails.balance',
+        transactionDate: '$lastTransaction.createdAt',
+        agentEmail: '$lastTransaction.receiver.email',
+        agentName: '$lastTransaction.receiver.name',
+      },
+    },
+  ]
+
+  const result = await Transaction.aggregate(pipeline)
+  console.log(result)
+  res.status(200).json({ success: true, balanceHistory: result })
+})

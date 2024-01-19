@@ -4,7 +4,7 @@ const catchAsyncError = require('../middleware/catchAsyncError')
 const Token = require('../models/tokenModel')
 const ErrorHandler = require('../utils/errorhander')
 
-exports.createToken = catchAsyncError(async (req, res, next) => {
+exports.createToken = catchAsyncError(async (req, _, next) => {
   const { session } = req
 
   const token = await Token.create({

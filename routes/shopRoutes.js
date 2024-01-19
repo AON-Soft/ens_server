@@ -13,6 +13,7 @@ const {
   deleteShop,
   updateShopLocation,
   getNearbyShops,
+  getAllShops,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -41,5 +42,9 @@ router
   .delete(isAuthenticated, isAuthorizeRoles('admin'), deleteShop)
 
 router.route('/shops/nearby').get(isAuthenticated, getNearbyShops)
+
+router
+  .route('/admin/shops')
+  .get(isAuthenticated, isAuthorizeRoles('admin'), getAllShops)
 
 module.exports = router

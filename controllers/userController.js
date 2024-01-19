@@ -349,6 +349,18 @@ exports.getAllUsers = catchAsyncError(async (_, res) => {
   res.status(200).json({ success: true, users })
 })
 
+exports.getAllAdmins = catchAsyncError(async (_, res) => {
+  const users = await User.find({ role: 'admin' })
+
+  res.status(200).json({ success: true, users })
+})
+
+exports.getAllAgents = catchAsyncError(async (_, res) => {
+  const users = await User.find({ role: 'agent' })
+
+  res.status(200).json({ success: true, users })
+})
+
 //Get Single Users(admin)
 exports.getSingleUser = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.params.id)
