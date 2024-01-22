@@ -124,7 +124,7 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
   })
 })
 
-exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (req, res) => {
+exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
   const pipeline = [
     {
       $match: {
