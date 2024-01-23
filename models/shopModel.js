@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 
 const shopSchema = new mongoose.Schema({
-  // user
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -20,7 +19,6 @@ const shopSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-
   banner: {
     type: String,
     default: null,

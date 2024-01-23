@@ -4,6 +4,7 @@ const User = require('../models/userModel')
 const Shop = require('../models/shopModel')
 const catchAsyncError = require('./catchAsyncError')
 const { JWT_SECRET } = require('../constant')
+const { default: mongoose } = require('mongoose')
 
 // Universal Authentication Middleware
 exports.isAuthenticated = catchAsyncError(async (req, _, next) => {
@@ -25,7 +26,9 @@ exports.isAuthenticated = catchAsyncError(async (req, _, next) => {
 })
 
 exports.isAuthenticatedShop = catchAsyncError(async (req, _, next) => {
-  const getShop = await Shop.findOne({ createdBy: req.user.id })
+  const getShop = await Shop.findOne({
+    createdBy: new mongoose.Types.ObjectId(req.user.id),
+  })
   if (!getShop) {
     return next(new ErrorHander('Shop not found', 404))
   }

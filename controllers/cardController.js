@@ -6,12 +6,9 @@ const Product = require('../models/productModel')
 const ErrorHandler = require('../utils/errorhander')
 
 exports.createCard = catchAsyncError(async (req, res, next) => {
-  const product = await Product.findOne({ _id: req.params.id })
-  if (!product) {
-    return next(new ErrorHandler('product not found', 404))
-  }
+  const product = req.product
+  const existCard = req.existCard
 
-  const existCard = await cardModel.findOne({ userId: req.user.id })
   if (existCard) {
     let productFound = false
 
@@ -211,7 +208,7 @@ exports.getCard = catchAsyncError(async (req, res, next) => {
     },
     {
       $project: {
-        _id: 0,
+        _id: 1,
         userId: 1,
         shopID: 1,
         cardProducts: 1,
