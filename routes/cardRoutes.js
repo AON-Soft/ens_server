@@ -8,10 +8,13 @@ const {
   getCard,
   getCardByAdmin,
 } = require('../controllers/cardController')
+const { existcard } = require('../middleware/existcard')
 
 const router = express.Router()
 
-router.route('/card/new/product/:id').post(isAuthenticated, createCard)
+router
+  .route('/card/new/product/:id')
+  .post(isAuthenticated, existcard, createCard)
 
 router
   .route('/card/increaseQuantity/product/:id')
