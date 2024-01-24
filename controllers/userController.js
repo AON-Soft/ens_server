@@ -5,6 +5,7 @@ const otpGenerator = require('otp-generator')
 const User = require('../models/userModel')
 const Otp = require('../models/otpModel.js')
 const Shop = require('../models/shopModel.js')
+const Token = require('../models/tokenModel.js')
 
 const sendToken = require('../utils/jwtToken')
 // const sendEmail = require("../utils/sendEmail.js");
@@ -15,67 +16,77 @@ const catchAsyncError = require('../middleware/catchAsyncError.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  var { name, email, password, role } = req.body
-
-  const existingUser = await User.findOne({ email: email })
-  if (existingUser) {
-    if (existingUser.status == 'active') {
-      return next(new ErrorHandler(`${email}  is already registered`, 401))
-    }
+  var { name, email, password, token, role } = req.body
+  let isValidToken = null
+  if (role === 'user') {
+    isValidToken = await Token.findOne({ token: token, isUsed: false })
   }
 
-  var getUser = await Otp.findOne({ email: email })
-
-  var createdUser = null
-  // create user
-
-  // hash
-  const salt = await bcrypt.genSalt(10)
-  password = await bcrypt.hash(password, salt)
-
-  if (!getUser) {
-    const otp = otpGenerator.generate(4, {
-      digits: true,
-      lowerCaseAlphabets: false,
-      upperCaseAlphabets: false,
-      specialChars: false,
-    })
-    const getOtp = otp
-    await Otp.create({ email, otp, getOtp })
-    createdUser = await User.create({ name, email, password, role })
+  if (!isValidToken && role === 'user') {
+    next(new ErrorHandler('The token is not valid or used.', 404))
   } else {
-    const otp = otpGenerator.generate(4, {
-      digits: true,
-      lowerCaseAlphabets: false,
-      upperCaseAlphabets: false,
-      specialChars: false,
-    })
+    const existingUser = await User.findOne({ email: email })
+    if (existingUser) {
+      if (existingUser.status == 'active') {
+        return next(new ErrorHandler(`${email}  is already registered`, 401))
+      }
+    }
 
-    getUser.otp = otp
-    getUser.getOtp = otp
-    await getUser.save()
-    // user should be upate with new req data
-    createdUser = await User.findOneAndUpdate(
-      { email },
-      { name, email, password, role },
-    )
+    var getUser = await Otp.findOne({ email: email })
+
+    var createdUser = null
+    // create user
+
+    // hash
+    const salt = await bcrypt.genSalt(10)
+    password = await bcrypt.hash(password, salt)
+
+    if (!getUser) {
+      const otp = otpGenerator.generate(4, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      })
+      const getOtp = otp
+      await Otp.create({ email, otp, getOtp })
+      createdUser = await User.create({ name, email, password, role })
+    } else {
+      const otp = otpGenerator.generate(4, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      })
+
+      getUser.otp = otp
+      getUser.getOtp = otp
+      await getUser.save()
+      // user should be upate with new req data
+      createdUser = await User.findOneAndUpdate(
+        { email },
+        { name, email, password, role },
+      )
+    }
+
+    const responsePayload = {
+      id: createdUser._id,
+      name: createdUser.name,
+      email: createdUser.email,
+      role: createdUser.role,
+      isVefified: false,
+      token: isValidToken,
+    }
+    sendTempToken(responsePayload, 201, res)
   }
-
-  const responsePayload = {
-    id: createdUser._id,
-    name: createdUser.name,
-    email: createdUser.email,
-    role: createdUser.role,
-    isVefified: false,
-  }
-
-  sendTempToken(responsePayload, 201, res)
 })
 
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body
 
-  const { email, id } = req.user
+  const { email, id, token } = req.user
+
+  let user = null
 
   const otpInfo = await Otp.findOne({ email }).select('otp')
 
@@ -97,15 +108,27 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   }
 
   // user user status will update be active
-  const user = await User.findByIdAndUpdate(
-    id,
-    { status: 'active' },
-    {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    },
-  )
+  if (token === null) {
+    user = await User.findByIdAndUpdate(
+      id,
+      { status: 'active' },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      },
+    )
+  } else {
+    user = await User.findByIdAndUpdate(
+      id,
+      { status: 'active', parent: token.userId },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      },
+    )
+  }
 
   const newOtpVerified = {
     otpVerified: true,
@@ -116,6 +139,26 @@ exports.verifyOTP = catchAsyncError(async (req, res, next) => {
       runValidators: true,
       useFindAndModify: false,
     })
+  }
+  if (token !== null) {
+    await Token.findByIdAndUpdate(
+      token._id,
+      { isUsed: true, tokenUsedBy: id },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      },
+    )
+    await User.findByIdAndUpdate(
+      token.userId,
+      { $push: { children: user._id } },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      },
+    )
   }
 
   sendToken(user, 200, res)

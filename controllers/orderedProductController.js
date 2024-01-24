@@ -3,7 +3,6 @@ const catchAsyncError = require('../middleware/catchAsyncError')
 
 const Card = require('../models/cardModel')
 const Order = require('../models/orderedProductModel')
-const User = require('../models/userModel')
 
 const ErrorHandler = require('../utils/errorhander')
 
