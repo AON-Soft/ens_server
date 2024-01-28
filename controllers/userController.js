@@ -1,3 +1,4 @@
+const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const bcrypt = require('bcryptjs')
 const otpGenerator = require('otp-generator')
@@ -367,27 +368,42 @@ exports.updatePassword = catchAsyncError(async (req, res, next) => {
 
 //Update User Profile
 exports.updateProfile = catchAsyncError(async (req, res, _) => {
-  const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
-  }
-  console.log('=======================', req.body.avatar)
-  if (req.body.avatar !== '') {
-    const user = await User.findById(req.user.id)
+  const newUserData = req.body
 
-    const imageId = user.avatar.public_id
+  if (req.files && req.files.avatar) {
+    if (req.user.avatar !== '') {
+      const user = await User.findById(req.user.id)
+      const imageId = user.avatar.public_id
+      const tempFilePath = `temp_${Date.now()}.jpg`
+      await fs.writeFile(tempFilePath, req.files.avatar.data)
 
-    await cloudinary.v2.uploader.destroy(imageId)
+      if (imageId === '') {
+        const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+          folder: 'avatars',
+          width: 150,
+          crop: 'scale',
+        })
 
-    const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-      folder: 'avatars',
-      width: 150,
-      crop: 'scale',
-    })
+        newUserData.avatar = {
+          public_id: myCloud.public_id,
+          url: myCloud.secure_url,
+        }
+        await fs.unlink(tempFilePath)
+      } else {
+        await cloudinary.v2.uploader.destroy(imageId)
 
-    newUserData.avatar = {
-      public_id: myCloud.public_id,
-      url: myCloud.secure_url,
+        const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+          folder: 'avatars',
+          width: 150,
+          crop: 'scale',
+        })
+
+        newUserData.avatar = {
+          public_id: myCloud.public_id,
+          url: myCloud.secure_url,
+        }
+        await fs.unlink(tempFilePath)
+      }
     }
   }
 

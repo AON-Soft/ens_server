@@ -1,3 +1,5 @@
+const fs = require('fs').promises
+const cloudinary = require('cloudinary')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const Brands = require('../models/brandModel')
 const ApiFeatures = require('../utils/apifeature')
@@ -11,6 +13,23 @@ exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
   req.body.shopCategory = req.params.id
   req.body.createdBy = req.user.id
 
+  if (req.files && req.files.image) {
+    const tempFilePath = `temp_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.image.data)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'brands',
+      width: 150,
+      crop: 'scale',
+    })
+
+    req.body.image = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+    await fs.unlink(tempFilePath)
+  }
+
   const brand = await Brands.create(req.body)
   if (!brand) {
     return next(new ErrorHandler('Brand is not created.'))
@@ -23,7 +42,10 @@ exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
 
 exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
   // check the category name is already exist or not
-  const exist = await Brands.findOne({ name: req.body.name })
+  const exist = await Brands.findOne({
+    name: req.body.name,
+    shopCategory: req.shop.category,
+  })
   if (exist) {
     return next(new ErrorHandler('Brand is already exist.'))
   }
@@ -32,6 +54,23 @@ exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
   req.body.shopID = req.shop.id
   req.body.isDelatableByShop = true
   req.body.createdBy = req.user.id
+
+  if (req.files && req.files.image) {
+    const tempFilePath = `temp_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.image.data)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'brands',
+      width: 150,
+      crop: 'scale',
+    })
+
+    req.body.image = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+    await fs.unlink(tempFilePath)
+  }
 
   const brand = await Brands.create(req.body)
   if (!brand) {
@@ -44,22 +83,44 @@ exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
 })
 
 exports.updateBrand = catchAsyncError(async (req, res, next) => {
-  const exist = await Brands.findOne({ name: req.body.name })
+  let brand = await Brands.findById(req.params.id)
+  if (!brand) {
+    return next(new ErrorHandler('brand not found', 404))
+  }
+
+  const exist = await Brands.findOne({
+    name: req.body.name,
+    shopCategory: brand.shopCategory,
+  })
   if (exist) {
     if (exist._id.toString() !== req.params.id.toString()) {
       return next(new ErrorHandler(`${req.body.name} is already exist`, 404))
     }
   }
 
-  let brand = await Brands.findById(req.params.id)
-  if (!brand) {
-    return next(new ErrorHandler('brand not found', 404))
-  }
-
   if (
     req.user.role === 'admin' ||
     req.user.id.toString() === brand.createdBy.toString()
   ) {
+    if (req.files && req.files.image) {
+      const imageId = brand.image.public_id
+      const tempFilePath = `temp_${Date.now()}.jpg`
+      await fs.writeFile(tempFilePath, req.files.image.data)
+      await cloudinary.v2.uploader.destroy(imageId)
+
+      const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+        folder: 'brands',
+        width: 150,
+        crop: 'scale',
+      })
+
+      req.body.image = {
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
+      }
+      await fs.unlink(tempFilePath)
+    }
+
     brand = await Brands.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

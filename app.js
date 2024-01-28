@@ -2,6 +2,8 @@ const express = require('express')
 const app = express()
 const cookieParser = require('cookie-parser')
 const morgan = require('morgan')
+const bodyParser = require('body-parser')
+const fileUpload = require('express-fileupload')
 
 const user = require('./routes/userRoutes')
 const transaction = require('./routes/transactionRoutes.js')
@@ -19,6 +21,8 @@ const { API_PREFIX } = require('./constant.js')
 
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(fileUpload())
 app.use(express.urlencoded({ extended: false }))
 app.use(morgan('dev'))
 

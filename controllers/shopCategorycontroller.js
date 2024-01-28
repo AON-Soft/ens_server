@@ -1,3 +1,5 @@
+const fs = require('fs').promises
+const cloudinary = require('cloudinary')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ShopCategory = require('../models/shopCategoryModel')
 const ApiFeatures = require('../utils/apifeature')
@@ -7,6 +9,23 @@ exports.createShopCategory = catchAsyncError(async (req, res, next) => {
   const exist = await ShopCategory.findOne({ name: req.body.name })
   if (exist) {
     return next(new ErrorHandler(`${req.body.name} is already exist.`))
+  }
+
+  if (req.files && req.files.image) {
+    const tempFilePath = `temp_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.image.data)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'shopCategories',
+      width: 150,
+      crop: 'scale',
+    })
+
+    req.body.image = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+    await fs.unlink(tempFilePath)
   }
 
   const shopCategory = await ShopCategory.create(req.body)
@@ -29,6 +48,25 @@ exports.updateShopCategory = catchAsyncError(async (req, res, next) => {
 
   if (!shopCategory) {
     return next(new ErrorHandler('shop category not found', 404))
+  }
+
+  if (req.files && req.files.image) {
+    const imageId = shopCategory.image.public_id
+    const tempFilePath = `temp_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.image.data)
+    await cloudinary.v2.uploader.destroy(imageId)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'shopCategories',
+      width: 150,
+      crop: 'scale',
+    })
+
+    req.body.image = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+    await fs.unlink(tempFilePath)
   }
 
   shopCategory = await ShopCategory.findByIdAndUpdate(req.params.id, req.body, {
