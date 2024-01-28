@@ -12,14 +12,16 @@ process.on('uncaughtException', (err) => {
   console.log(`Error: ${err.message}`)
   console.log(`Shutting down the server due to Uncaught Exception`)
 
-  throw Error('Server Not Running...')
-})
+  throw Error('Server Not Running...');
+});
 
-connectDatabase()
+connectDatabase();
+
 
 const server = app.listen(PORT, () => {
   console.log(`Server is working on http://localhost:${PORT}`)
-})
+});
+
 
 cloudinary.config({
   cloud_name: 'dxbdrkvwr',
@@ -36,3 +38,6 @@ process.on('unhandledRejection', (err) => {
     throw Error('Server Not Running...')
   })
 })
+
+// export app
+module.exports = app
