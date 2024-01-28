@@ -7,8 +7,15 @@ const brandSchema = new mongoose.Schema({
     trim: true,
   },
   image: {
-    type: String,
-    default: '',
+    public_id: {
+      type: String,
+      required: true,
+      default: '',
+    },
+    url: {
+      type: String,
+      default: '',
+    },
   },
   shopCategory: {
     type: mongoose.Schema.Types.ObjectId,

@@ -32,11 +32,11 @@ const userSchema = new mongoose.Schema({
     public_id: {
       type: String,
       required: true,
-      default: 'This is Sample Id',
+      default: '',
     },
     url: {
       type: String,
-      default: 'This is sample URL',
+      default: '',
     },
   },
   bio: {
