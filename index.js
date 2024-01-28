@@ -18,26 +18,33 @@ process.on('uncaughtException', (err) => {
 connectDatabase();
 
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is working on http://localhost:${PORT}`)
-});
-
 
 cloudinary.config({
   cloud_name: 'dxbdrkvwr',
   api_key: '117564167476672',
   api_secret: 'QYLYPnGFlsuDBSNBk3n7TbXjRKw',
-})
+});
 
-// Unhandled Promise Rejection
-process.on('unhandledRejection', (err) => {
-  console.log(`Error: ${err.message}`)
-  console.log(`Shutting down the server due to Unhandled Promis Rejection`)
 
-  server.close(() => {
-    throw Error('Server Not Running...')
+if(process.env.NODE_ENV !== 'production') {
+
+  const server = app.listen(PORT, () => {
+    console.log(`Server is working on http://localhost:${PORT}`)
+  });
+  
+  
+  // Unhandled Promise Rejection
+  process.on('unhandledRejection', (err) => {
+    console.log(`Error: ${err.message}`)
+    console.log(`Shutting down the server due to Unhandled Promis Rejection`)
+  
+    server.close(() => {
+      throw Error('Server Not Running...')
+    })
   })
-})
+  
+}
+
 
 // export app
 module.exports = app
