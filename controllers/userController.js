@@ -69,7 +69,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
         { name, email, password, role },
       )
     }
-
     const responsePayload = {
       id: createdUser._id,
       name: createdUser.name,

@@ -104,9 +104,9 @@ exports.updateBrand = catchAsyncError(async (req, res, next) => {
   ) {
     if (req.files && req.files.image) {
       const imageId = brand.image.public_id
+      await cloudinary.v2.uploader.destroy(imageId)
       const tempFilePath = `temp_${Date.now()}.jpg`
       await fs.writeFile(tempFilePath, req.files.image.data)
-      await cloudinary.v2.uploader.destroy(imageId)
 
       const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
         folder: 'brands',

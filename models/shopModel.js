@@ -16,12 +16,25 @@ const shopSchema = new mongoose.Schema({
     type: String,
   },
   logo: {
-    type: String,
-    default: null,
+    public_id: {
+      type: String,
+      required: true,
+      default: '',
+    },
+    url: {
+      type: String,
+      default: '',
+    },
   },
   banner: {
-    type: String,
-    default: null,
+    public_id: {
+      type: String,
+      default: '',
+    },
+    url: {
+      type: String,
+      default: '',
+    },
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
