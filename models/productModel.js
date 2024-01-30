@@ -25,10 +25,21 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  images: {
-    type: String,
-    default: '',
-  },
+  images: [
+    {
+      index: {
+        type: Number,
+      },
+      public_id: {
+        type: String,
+        default: '',
+      },
+      url: {
+        type: String,
+        default: '',
+      },
+    },
+  ],
   categoryId: {
     type: mongoose.Schema.ObjectId,
     ref: 'Categories',

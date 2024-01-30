@@ -39,21 +39,10 @@ class ApiFeatures {
       delete queryCopy.price // Remove price from the queryCopy
     }
 
-    if (queryCopy.categoryInfo) {
-      const categoryQuery = {}
-
-      if (queryCopy.categoryInfo.categoryID) {
-        categoryQuery['categoryInfo.categoryID']
-        queryCopy.categoryInfo.categoryID
-      }
-
-      if (queryCopy.categoryInfo.category) {
-        categoryQuery['categoryInfo.category'] = queryCopy.categoryInfo.category
-      }
-
-      delete queryCopy.categoryInfo
-
-      this.query = this.query.find({ ...queryCopy, ...categoryQuery })
+    if (queryCopy.categoryId) {
+      this.query = this.query.find({ categoryId: queryCopy.categoryId })
+      console.log(this.query)
+      delete queryCopy.categoryId
     } else {
       this.query = this.query.find(queryCopy)
     }

@@ -1,3 +1,5 @@
+const fs = require('fs').promises
+const cloudinary = require('cloudinary')
 const Product = require('../models/productModel')
 const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
@@ -6,15 +8,39 @@ const ApiFeatures = require('../utils/apifeature')
 
 exports.createProduct = catchAsyncError(async (req, res) => {
   req.body.user = req.user.id
+  req.body.images = []
+  const shop = await Shop.findOne({ createdBy: req.user.id })
 
-  const shop = await Shop.findOne({ userId: req.user.id })
+  if (req.files && req.files.images) {
+    const images = req.files.images
 
-  var data = req.body
-  data.shop = shop._id
+    for (const [index, image] of images.entries()) {
+      const tempFilePath = `temp_${index}_${Date.now()}.jpg`
+      await fs.writeFile(tempFilePath, image.data)
+
+      const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+        folder: 'products',
+        crop: 'scale',
+      })
+
+      req.body.images.push({
+        index: index,
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
+      })
+
+      await fs.unlink(tempFilePath)
+    }
+  }
+
+  req.body.shop = shop._id
   const product = await Product.create(req.body)
+
   // delete __v
   product.__v = undefined
   product.reviews = undefined
+
+  console.log(req.body.images)
 
   res.status(201).json({ success: true, product })
 })
