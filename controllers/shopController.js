@@ -1,3 +1,5 @@
+const fs = require('fs').promises
+const cloudinary = require('cloudinary')
 const catchAsyncError = require('../middleware/catchAsyncError')
 
 const Shop = require('../models/shopModel')
@@ -12,51 +14,90 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('Shop Alredy Exist ! You can create one shop'))
   }
 
-  const { name, info, logo, banner, category, address } = req.body
-  const createdBy = req.user.id
-  const shop = await Shop.create({
-    userId: req.user.id,
-    name,
-    info,
-    logo,
-    banner,
-    category,
-    address,
-    createdBy,
-  })
+  req.body.createdBy = req.user.id
+
+  if (req.files && req.files.banner) {
+    const tempFilePath = `temp1_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.banner.data)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'shopBanners',
+      crop: 'scale',
+    })
+
+    req.body.banner = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+
+    await fs.unlink(tempFilePath)
+  }
+  if (req.files && req.files.logo) {
+    const tempFilePath1 = `temp1_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath1, req.files.logo.data)
+
+    const myCloudForlogo = await cloudinary.v2.uploader.upload(tempFilePath1, {
+      folder: 'shopLogos',
+      crop: 'scale',
+    })
+    req.body.logo = {
+      public_id: myCloudForlogo.public_id,
+      url: myCloudForlogo.secure_url,
+    }
+    await fs.unlink(tempFilePath1)
+  }
+
+  const shop = await Shop.create(req.body)
   res.status(200).json({ success: true, shop })
 })
 
 exports.updateShopProfile = catchAsyncError(async (req, res) => {
   const shop = await Shop.findById(req.shop._id)
-  var newUserData = {
-    name: req.body.name,
-    info: req.body.info,
-    category: req.body.category,
-    address: req.body.address,
-  }
 
   // check if shop lat and long
   if (req.body.latitude && req.body.longitude) {
-    newUserData.location = {
+    req.body.location = {
       type: 'Point',
       coordinates: [req.body.longitude, req.body.latitude],
     }
   }
 
-  // if logo
-  if (req.body.logo) {
-    newUserData.logo = req.body.logo
+  if (req.files && req.files.banner) {
+    const bannerImageId = shop.banner.public_id
+    await cloudinary.v2.uploader.destroy(bannerImageId)
+    const tempFilePath = `temp1_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.banner.data)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'shopBanners',
+      crop: 'scale',
+    })
+
+    req.body.banner = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+
+    await fs.unlink(tempFilePath)
+  }
+  if (req.files && req.files.logo) {
+    const logoImageId = shop.logo.public_id
+    await cloudinary.v2.uploader.destroy(logoImageId)
+    const tempFilePath1 = `temp1_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath1, req.files.logo.data)
+
+    const myCloudForlogo = await cloudinary.v2.uploader.upload(tempFilePath1, {
+      folder: 'shopLogos',
+      crop: 'scale',
+    })
+    req.body.logo = {
+      public_id: myCloudForlogo.public_id,
+      url: myCloudForlogo.secure_url,
+    }
+    await fs.unlink(tempFilePath1)
   }
 
-  // if banner
-  if (req.body.banner) {
-    newUserData.banner = req.body.banner
-  }
-
-  //we will add cloudinary later
-
-  const updatedShop = await Shop.findByIdAndUpdate(shop._id, newUserData, {
+  const updatedShop = await Shop.findByIdAndUpdate(shop._id, req.body, {
     new: true,
     runValidators: true,
     useFindAndModify: false,

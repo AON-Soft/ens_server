@@ -9,7 +9,6 @@ const categorySchema = new mongoose.Schema({
   image: {
     public_id: {
       type: String,
-      required: true,
       default: '',
     },
     url: {
