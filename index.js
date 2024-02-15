@@ -40,7 +40,7 @@ cloudinary.config({
     server.close(() => {
       throw Error('Server Not Running...')
     })
-  })
+  });
   
 
 

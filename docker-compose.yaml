@@ -1,7 +1,18 @@
 version: '3'
+
 services:
-  mongodb:
-    image: mongo
-    container_name: my-mongodb
+  dms:
+    build: ./
+    image: ens_backend:latest
     ports:
-      - "27017:27017"
+      - 5007:5000
+    
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+
