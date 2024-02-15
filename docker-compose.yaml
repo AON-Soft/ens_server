@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  dms:
+  ens:
     build: ./
     image: ens_backend:latest
     ports:
