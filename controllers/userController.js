@@ -23,7 +23,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     isValidToken = await Token.findOne({ token: token, isUsed: false })
   }
 
-  if (!isValidToken && role === 'user') {
+  if (!isValidToken && role === 'user' && token !== 'admin') {
     next(new ErrorHandler('The token is not valid or used.', 404))
   } else {
     const existingUser = await User.findOne({ email: email })
