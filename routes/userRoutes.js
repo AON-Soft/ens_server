@@ -18,6 +18,7 @@ const {
   getBalance,
   getAllAdmins,
   getAllAgents,
+  addBalance,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -58,5 +59,6 @@ router
 
 router.route('/getOtp').get(getOtp)
 router.route('/self/balance').get(isAuthenticatedUser, getBalance)
+router.route('/self/balance/add').post(isAuthenticatedUser, addBalance)
 
 module.exports = router

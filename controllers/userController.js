@@ -503,3 +503,33 @@ exports.getBalance = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, balance })
 })
+
+
+exports.addBalance = catchAsyncError(async (req, res, next) => {
+  const {balance, bonusBalance} = req.body
+
+  const user = await User.findById(req.user.id)
+
+  if (!user) {
+    return next(new ErrorHandler(`User not found`, 400))
+  }
+
+  // Update main balance if provided
+  if (balance !== undefined ) {
+    user.balance = balance;
+  }
+
+  // Update bonus balance if provided
+  if (bonusBalance !== undefined) {
+    user.bonusBalance = bonusBalance;
+  }
+
+  await user.save();
+
+const response = {
+    balance: user.balance,
+    bonusBalance: user.bonusBalance,
+  }
+
+  res.status(202).json({ success: true, response })
+})
