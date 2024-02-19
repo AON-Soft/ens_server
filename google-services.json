@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "96169270523",
+    "project_id": "enseller-12233",
+    "storage_bucket": "enseller-12233.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96169270523:android:832cbc6601e098c7e5a45e",
+        "android_client_info": {
+          "package_name": "app.enseller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvebm42CjTurA48JkUy1HwWGQhLKqYDQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

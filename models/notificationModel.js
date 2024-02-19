@@ -5,6 +5,16 @@ const notificationModelSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
+    orderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'orderedProducts', 
+        required: true
+    },
+     title: {
+        type: String,
+        required: [true, 'Please Enter Title'],
+        trim: true,
+    },
     message: {
         type: String,
         required: [true, 'Please Enter Message'],
@@ -12,7 +22,8 @@ const notificationModelSchema = new mongoose.Schema({
     },
     notificationType: {
         type: String,
-        required: true
+        default: 'order',
+        enum: ['order', 'cash_in', 'cash_out'],
     },
     isRead: {
         type: Boolean,
