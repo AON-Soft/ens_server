@@ -58,7 +58,8 @@ router
   .delete(isAuthenticatedUser, isAuthorizeRoles('admin'), deleteUser)
 
 router.route('/getOtp').get(getOtp)
+
 router.route('/self/balance').get(isAuthenticatedUser, getBalance)
-router.route('/self/balance/add').post(isAuthenticatedUser, addBalance)
+router.route('/self/balance/add/:id').post(isAuthenticatedUser, isAuthorizeRoles('admin'), addBalance)
 
 module.exports = router

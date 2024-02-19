@@ -507,8 +507,8 @@ exports.getBalance = catchAsyncError(async (req, res, next) => {
 
 exports.addBalance = catchAsyncError(async (req, res, next) => {
   const {balance, bonusBalance} = req.body
-
-  const user = await User.findById(req.user.id)
+ 
+  const user = await User.findById(req.params.id)
 
   if (!user) {
     return next(new ErrorHandler(`User not found`, 400))
@@ -526,7 +526,7 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
 
   await user.save();
 
-const response = {
+  const response = {
     balance: user.balance,
     bonusBalance: user.bonusBalance,
   }
