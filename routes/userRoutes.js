@@ -43,23 +43,23 @@ router.route('/me/update').put(isAuthenticatedUser, updateProfile)
 
 router
   .route('/admin/users')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getAllUsers)
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllUsers)
 router
   .route('/admin/admins')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getAllAdmins)
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAdmins)
 router
   .route('/admin/agents')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getAllAgents)
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAgents)
 
 router
   .route('/admin/user/:id')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin'), getSingleUser)
-  .put(isAuthenticatedUser, isAuthorizeRoles('admin'), updateUserRole)
-  .delete(isAuthenticatedUser, isAuthorizeRoles('admin'), deleteUser)
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getSingleUser)
+  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), updateUserRole)
+  .delete(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), deleteUser)
 
 router.route('/getOtp').get(getOtp)
 
 router.route('/self/balance').get(isAuthenticatedUser, getBalance)
-router.route('/self/balance/add/:id').post(isAuthenticatedUser, isAuthorizeRoles('admin'), addBalance)
+router.route('/self/balance/add/:id').post(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), addBalance)
 
 module.exports = router

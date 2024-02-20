@@ -18,7 +18,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
       session,
     )
 
-    const admin = await User.findOne({ role: 'admin' }).session(session)
+    const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!receiver) {
       return next(new ErrorHandler('Receiver not found', 403))
     }
