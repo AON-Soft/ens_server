@@ -97,3 +97,372 @@ exports.getSingleOrderDetails = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, order: order })
 })
+
+exports.getAllConfirmOrderByShop = catchAsyncError(async (req, res) => {
+  const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const pipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'order_confirm',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllOnDeliveryOrderByShop = catchAsyncError(async (req, res) => {
+  const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const pipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'on_delivery',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllDoneOrderOrderByShop = catchAsyncError(async (req, res) => {
+  const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const pipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'order_done',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllCancelOrderOrderByShop = catchAsyncError(async (req, res) => {
+  const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const pipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'canceled',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllPendingOrderByUser = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const pipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'pending',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllConfirmOrderByUser = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const pipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'order_confirm',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllOnDeliveryOrderByUser = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const pipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'on_delivery',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllDoneOrderByUser = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const pipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'order_done',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+exports.getAllCancelOrderByUser = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const pipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'canceled',
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})

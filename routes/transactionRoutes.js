@@ -28,10 +28,14 @@ router
 
 router
   .route('/admin/getUsers/based-on/last-points-out')
-  .get(isAuthenticated, isAuthorizeRoles('admin'), getUsersBasedOnLastPointsOut)
+  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), getUsersBasedOnLastPointsOut)
 
 router
   .route('/agent/user/sendPoints')
   .post(isAuthenticated, isAuthorizeRoles('agent'), sendPointsAgentToUser, createTransaction)
+
+router
+  .route('/user/shop_keeper/sendPoints')
+  .post(isAuthenticated, isAuthorizeRoles('user'), sendPointsAgentToUser, createTransaction)
 
 module.exports = router
