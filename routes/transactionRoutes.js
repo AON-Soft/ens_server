@@ -10,16 +10,17 @@ const {
 const {
   userToAgentPointsOut,
 } = require('../middleware/user-to-agent-points-out')
+const { sendPointsAgentToUser } = require('../middleware/sendPointsAgentToUser')
 
 const router = express.Router()
 
 router
   .route('/user/user/sendPoints')
-  .post(isAuthenticated, sendPoints, createTransaction)
+  .post(isAuthenticated, isAuthorizeRoles('user'), sendPoints, createTransaction)
 
 router
   .route('/user/agent/pointsOut')
-  .post(isAuthenticated, userToAgentPointsOut, createTransaction)
+  .post(isAuthenticated, isAuthorizeRoles('user'), userToAgentPointsOut, createTransaction)
 
 router
   .route('/self/transaction-history')
@@ -28,5 +29,9 @@ router
 router
   .route('/admin/getUsers/based-on/last-points-out')
   .get(isAuthenticated, isAuthorizeRoles('admin'), getUsersBasedOnLastPointsOut)
+
+router
+  .route('/agent/user/sendPoints')
+  .post(isAuthenticated, isAuthorizeRoles('agent'), sendPointsAgentToUser, createTransaction)
 
 module.exports = router

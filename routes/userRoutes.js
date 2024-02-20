@@ -44,9 +44,11 @@ router.route('/me/update').put(isAuthenticatedUser, updateProfile)
 router
   .route('/admin/users')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllUsers)
+
 router
   .route('/admin/admins')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAdmins)
+  
 router
   .route('/admin/agents')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAgents)
