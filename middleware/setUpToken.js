@@ -18,13 +18,13 @@ exports.setUpToken = catchAsyncError(async (req, _, next) => {
     return next(new ErrorHandler('Insufficient balance.', 400))
   }
 
-  const admin = await User.findOne({ role: 'admin' }).session(session)
+  const admin = await User.findOne({ role: 'super_admin' }).session(session)
 
   if (!admin) {
     await session.abortTransaction()
     session.endSession()
 
-    return next(new ErrorHandler('Admin not found', 400))
+    return next(new ErrorHandler('super_admin not found', 400))
   }
 
   const trnxID = uniqueTransactionID()

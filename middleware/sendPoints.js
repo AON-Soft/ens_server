@@ -23,7 +23,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Receiver not found', 403))
     }
     if (!admin) {
-      return next(new ErrorHandler('Admin not found', 403))
+      return next(new ErrorHandler('super_admin not found', 403))
     }
     const serviceCharge = await calculateServiceCharge(amount, percentage)
 

@@ -10,8 +10,6 @@ const {
 const {
   userToAgentPointsOut,
 } = require('../middleware/user-to-agent-points-out')
-const { userToShopKeeperPointsIn } = require('../middleware/user-to-shop-keeper-point-in')
-const { userToShopKeeperPointsOut } = require('../middleware/user-to-shop-keeper-point-out')
 
 const router = express.Router()
 
@@ -20,17 +18,8 @@ router
   .post(isAuthenticated, sendPoints, createTransaction)
 
 router
-  .route('/user/shop-keeper/sendPoints')
-  .post(isAuthenticated, userToShopKeeperPointsIn, createTransaction)
-  
-
-router
   .route('/user/agent/pointsOut')
   .post(isAuthenticated, userToAgentPointsOut, createTransaction)
-
-  router
-  .route('/user/shop-keeper/pointsOut')
-  .post(isAuthenticated, userToShopKeeperPointsOut, createTransaction)
 
 router
   .route('/self/transaction-history')

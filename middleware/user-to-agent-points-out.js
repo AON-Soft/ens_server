@@ -18,12 +18,12 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
       session,
     )
 
-    const admin = await User.findOne({ role: 'admin' }).session(session)
+    const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!receiver) {
       return next(new ErrorHandler('Receiver not found', 403))
     }
     if (!admin) {
-      return next(new ErrorHandler('Admin not found', 403))
+      return next(new ErrorHandler('super_admin not found', 403))
     }
 
     ///////////////////// We will dynamic here///////////////////////////
