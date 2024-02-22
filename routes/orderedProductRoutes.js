@@ -17,12 +17,13 @@ const {
   getAllOnDeliveryOrderByShop,
   getAllDoneOrderOrderByShop,
   getAllCancelOrderOrderByShop,
+  deleteSingleOrder,
 } = require('../controllers/orderedProductController')
 
 const router = express.Router()
 
 // place order by user
-router.route('/place/order/card/:id').post(isAuthenticated, placeOrder)
+router.route('/place/order/card/:id').post(isAuthenticated, isAuthorizeRoles('user'), placeOrder)
 
 // pending all order by shop
 router
@@ -74,11 +75,6 @@ router
     getAllCancelOrderOrderByShop,
   )
 
-  // pending oder details by shop
-router
-  .route('/details/pending/order/:id')
-  .get(isAuthenticated, getSingleOrderDetails)
-
   // pending oder by user
 router
   .route('/shop/pending/order/user')
@@ -123,5 +119,14 @@ router
     getAllCancelOrderByUser,
   )
 
+// get single oder details
+router
+  .route('/details/order/:id')
+  .get(isAuthenticated, getSingleOrderDetails)
+
+// delete single oder
+router
+  .route('/delete/order/:id')
+  .delete(isAuthenticated, deleteSingleOrder)
 
 module.exports = router

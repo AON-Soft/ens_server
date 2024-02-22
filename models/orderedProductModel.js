@@ -60,6 +60,9 @@ const orderedProductsSchema = new mongoose.Schema({
   totalBill: {
     type: Number,
   },
+  totalCommissionBill: {
+    type: Number,
+  },
   orderStatus: {
     type: String,
     default: 'pending',
