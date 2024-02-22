@@ -37,6 +37,14 @@ const cardSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+      commission: {
+        type: Number,
+        default: 0,
+      },
+      totalCommission: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   createdAt: {

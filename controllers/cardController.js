@@ -28,6 +28,7 @@ exports.createCard = catchAsyncError(async (req, res, next) => {
               productId: product._id,
               productName: product.name,
               productImage: product.images,
+              commission: product.commission,
             },
           },
         },
@@ -44,6 +45,7 @@ exports.createCard = catchAsyncError(async (req, res, next) => {
         productId: product._id,
         productName: product.name,
         productImage: product.images,
+        commission: product.commission,
       },
     }
 
@@ -196,6 +198,13 @@ exports.getCard = catchAsyncError(async (req, res, next) => {
             '$cardProducts.productQuantity',
           ],
         },
+        'cardProducts.commission': { $arrayElemAt: ['$productInfo.commission', 0] },
+        'cardProducts.totalCommission': {
+          $multiply: [
+            { $arrayElemAt: ['$productInfo.commission', 0] },
+            '$cardProducts.productQuantity',
+          ],
+        },
       },
     },
     {
@@ -245,6 +254,13 @@ exports.getCardByAdmin = catchAsyncError(async (req, res, next) => {
         'cardProducts.totalPrice': {
           $multiply: [
             { $arrayElemAt: ['$productInfo.price', 0] },
+            '$cardProducts.productQuantity',
+          ],
+        },
+        'cardProducts.commission': { $arrayElemAt: ['$productInfo.commission', 0] },
+        'cardProducts.totalCommission': {
+          $multiply: [
+            { $arrayElemAt: ['$productInfo.commission', 0] },
             '$cardProducts.productQuantity',
           ],
         },
