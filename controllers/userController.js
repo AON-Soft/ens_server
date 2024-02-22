@@ -2,7 +2,6 @@ const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const bcrypt = require('bcryptjs')
 const otpGenerator = require('otp-generator')
-
 const User = require('../models/userModel')
 const Otp = require('../models/otpModel.js')
 const Shop = require('../models/shopModel.js')
@@ -17,69 +16,98 @@ const catchAsyncError = require('../middleware/catchAsyncError.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  var { name, email, password, token, role } = req.body
-  let isValidToken = null
-  if (role === 'user') {
-    isValidToken = await Token.findOne({ token: token, isUsed: false })
+  var { name, email, password, token, role } = req.body;
+
+  // Verify if the role is 'user' and token is provided
+  let isValidToken = null;
+  if (role === 'user' && token) {
+    isValidToken = await Token.findOne({ token: token, isUsed: false });
   }
 
+  // Check if the token is not valid or used
   if (!isValidToken && role === 'user' && token !== 'admin') {
-    next(new ErrorHandler('The token is not valid or used.', 404))
-  } else {
-    const existingUser = await User.findOne({ email: email })
+    return next(new ErrorHandler('The token is not valid or used.', 404));
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email });
+
     if (existingUser) {
-      if (existingUser.status == 'active') {
-        return next(new ErrorHandler(`${email}  is already registered`, 401))
+      if (existingUser.status === 'active') {
+        return next(new ErrorHandler(`${email} is already registered`, 401));
       }
     }
 
-    var getUser = await Otp.findOne({ email: email })
+    // Check if user has existing OTP
+    let getUser = await Otp.findOne({ email: email });
 
-    var createdUser = null
-    // create user
+    // Generate OTP
+    const otp = otpGenerator.generate(4, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
 
-    // hash
-    const salt = await bcrypt.genSalt(10)
-    password = await bcrypt.hash(password, salt)
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    password = await bcrypt.hash(password, salt);
+
+    let createdUser = null;
 
     if (!getUser) {
-      const otp = otpGenerator.generate(4, {
-        digits: true,
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
-      })
-      const getOtp = otp
-      await Otp.create({ email, otp, getOtp })
-      createdUser = await User.create({ name, email, password, role })
+      // If user does not have OTP, create new OTP and user
+      await Otp.create({ email, otp, getOtp: otp });
+      createdUser = await User.create({ name, email, password, role });
     } else {
-      const otp = otpGenerator.generate(4, {
-        digits: true,
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
-      })
-
-      getUser.otp = otp
-      getUser.getOtp = otp
-      await getUser.save()
-      // user should be upate with new req data
-      createdUser = await User.findOneAndUpdate(
-        { email },
-        { name, email, password, role },
-      )
+      // If user already has OTP, update OTP and user details
+      getUser.otp = otp;
+      getUser.getOtp = otp;
+      await getUser.save();
+      
+      createdUser = await User.findOneAndUpdate({ email }, { name, email, password, role });
     }
+
+      // Update parent and children fields based on token
+    if (isValidToken) {
+      // Update parent field of the new user with the userId associated with the token
+      createdUser.parent = isValidToken.userId;
+      await createdUser.save();
+
+      // Update children field of the token owner
+      const tokenOwner = await User.findById(isValidToken.userId);
+      tokenOwner.children.push(createdUser._id);
+      await tokenOwner.save();
+
+      // Mark the token as used
+      isValidToken.isUsed = true;
+      await isValidToken.save();
+    }
+
+    // Fetch token owner's details
+    let tokenOwnerDetails = null;
+    if (isValidToken) {
+      tokenOwnerDetails = await User.findById(isValidToken.userId);
+    }
+
+    // Prepare response payload including token owner's details
     const responsePayload = {
       id: createdUser._id,
       name: createdUser.name,
       email: createdUser.email,
       role: createdUser.role,
-      isVefified: false,
+      isVerified: false,
       token: isValidToken,
-    }
-    sendTempToken(responsePayload, 201, res)
+      parent: tokenOwnerDetails ? tokenOwnerDetails.parent : null,
+      children: tokenOwnerDetails ? tokenOwnerDetails.children : [],
+    };
+
+    sendTempToken(responsePayload, 201, res);
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
-})
+});
 
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body
@@ -341,6 +369,8 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 //Get User Details
 exports.getUserDetails = catchAsyncError(async (req, res) => {
   const user = await User.findById(req.user.id)
+    .populate('parent', 'name email') 
+    .populate('children', 'name email').exec() 
 
   res.status(200).json({ success: true, user })
 })
@@ -504,7 +534,6 @@ exports.getBalance = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, balance })
 })
 
-
 exports.addBalance = catchAsyncError(async (req, res, next) => {
   const {balance, bonusBalance} = req.body
  
@@ -533,3 +562,70 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
 
   res.status(202).json({ success: true, response })
 })
+
+
+
+// exports.registerUser = catchAsyncError(async (req, res, next) => {
+//   var { name, email, password, token, role } = req.body
+//   let isValidToken = null
+//   if (role === 'user') {
+//     isValidToken = await Token.findOne({ token: token, isUsed: false })
+//   }
+
+//   if (!isValidToken && role === 'user' && token !== 'admin') {
+//     next(new ErrorHandler('The token is not valid or used.', 404))
+//   } else {
+//     const existingUser = await User.findOne({ email: email })
+//     if (existingUser) {
+//       if (existingUser.status == 'active') {
+//         return next(new ErrorHandler(`${email}  is already registered`, 401))
+//       }
+//     }
+
+//     var getUser = await Otp.findOne({ email: email })
+
+//     var createdUser = null
+//     // create user
+
+//     // hash
+//     const salt = await bcrypt.genSalt(10)
+//     password = await bcrypt.hash(password, salt)
+
+//     if (!getUser) {
+//       const otp = otpGenerator.generate(4, {
+//         digits: true,
+//         lowerCaseAlphabets: false,
+//         upperCaseAlphabets: false,
+//         specialChars: false,
+//       })
+//       const getOtp = otp
+//       await Otp.create({ email, otp, getOtp })
+//       createdUser = await User.create({ name, email, password, role })
+//     } else {
+//       const otp = otpGenerator.generate(4, {
+//         digits: true,
+//         lowerCaseAlphabets: false,
+//         upperCaseAlphabets: false,
+//         specialChars: false,
+//       })
+
+//       getUser.otp = otp
+//       getUser.getOtp = otp
+//       await getUser.save()
+//       // user should be upate with new req data
+//       createdUser = await User.findOneAndUpdate(
+//         { email },
+//         { name, email, password, role },
+//       )
+//     }
+//     const responsePayload = {
+//       id: createdUser._id,
+//       name: createdUser.name,
+//       email: createdUser.email,
+//       role: createdUser.role,
+//       isVefified: false,
+//       token: isValidToken,
+//     }
+//     sendTempToken(responsePayload, 201, res)
+//   }
+// })
