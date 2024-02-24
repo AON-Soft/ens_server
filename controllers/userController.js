@@ -451,14 +451,23 @@ exports.getAllUsers = catchAsyncError(async (_, res) => {
   res.status(200).json({ success: true, users })
 })
 
+//Get All Admin(admin)
 exports.getAllAdmins = catchAsyncError(async (_, res) => {
   const users = await User.find({ role: 'admin' })
 
   res.status(200).json({ success: true, users })
 })
 
+//Get All Agents (admin)
 exports.getAllAgents = catchAsyncError(async (_, res) => {
   const users = await User.find({ role: 'agent' })
+
+  res.status(200).json({ success: true, users })
+})
+
+//Get All Shopkeeper (admin)
+exports.getAllShopKeepers = catchAsyncError(async (_, res) => {
+  const users = await User.find({ role: 'shop_keeper' })
 
   res.status(200).json({ success: true, users })
 })

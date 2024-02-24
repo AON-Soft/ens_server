@@ -19,6 +19,7 @@ const {
   getAllAdmins,
   getAllAgents,
   addBalance,
+  getAllShopKeepers,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -52,6 +53,10 @@ router
 router
   .route('/admin/agents')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAgents)
+
+router
+  .route('/admin/shop_keepers')
+  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllShopKeepers)
 
 router
   .route('/admin/user/:id')

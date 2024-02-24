@@ -54,10 +54,9 @@ exports.createCard = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Card is not created'), 404)
     }
 
-    const cardWithout__v = card.toObject()
-    delete cardWithout__v.__v
+    const response = await cardModel.findById(card._id).select('-__v').exec()
 
-    res.status(201).json({ success: true, card: cardWithout__v })
+    res.status(201).json({ success: true, card: response })
   }
 })
 
@@ -153,25 +152,19 @@ exports.decreaseQuantity = catchAsyncError(async (req, res, next) => {
 })
 
 exports.removeFromCard = catchAsyncError(async (req, res, next) => {
-  const updatedCard = await cardModel.findOneAndUpdate(
-    { userId: req.user.id },
-    { $pull: { cardProducts: { productId: req.params.id } } },
-    { new: true, useFindAndModify: false },
-  )
+   const deletedCard = await cardModel.findOneAndDelete(req.params.id);
 
-  if (!updatedCard) {
-    return next(new ErrorHandler("Product not found in the user's card", 404))
+
+  if (!deletedCard) {
+    return next(new ErrorHandler("Product not found in the user's card", 404));
   }
 
-  const cardProductWithout__v = updatedCard.toObject()
-  delete cardProductWithout__v.__v
+  // const cardProductWithout__v = updatedCard.toObject();
+  // delete cardProductWithout__v.__v;
 
-  res.status(200).json({
-    success: true,
-    card: cardProductWithout__v,
-    message: 'Product deleted successfully from Card',
-  })
-})
+  res.status(200).json(await cardModel.find({ userId: req.user.id }));
+});
+
 
 exports.getCard = catchAsyncError(async (req, res, next) => {
   let myCard = await cardModel.aggregate([

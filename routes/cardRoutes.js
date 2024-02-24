@@ -30,6 +30,6 @@ router.route('/user/getCard').get(isAuthenticated, getCard)
 
 router
   .route('/admin/getCard/user/:id')
-  .get(isAuthenticated, isAuthorizeRoles('admin'), getCardByAdmin)
+  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), getCardByAdmin)
 
 module.exports = router
