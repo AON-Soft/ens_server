@@ -19,11 +19,15 @@ const {
   getAllCancelOrderOrderByShop,
   deleteSingleOrder,
 } = require('../controllers/orderedProductController')
+const { sendPayments } = require('../middleware/sendPayments')
+const { createTransaction } = require('../controllers/transactionController')
 
 const router = express.Router()
 
 // place order by user
-router.route('/place/order/card/:id').post(isAuthenticated, isAuthorizeRoles('user'), placeOrder)
+router
+  .route('/place/order/card/:id')
+  .post(isAuthenticated, sendPayments, placeOrder, createTransaction)
 
 // pending all order by shop
 router

@@ -7,93 +7,99 @@ const Order = require('../models/orderedProductModel')
 const ErrorHandler = require('../utils/errorhander')
 const userModel = require('../models/userModel')
 
-exports.placeOrder = catchAsyncError(async (req, res, next) => {
-  const { address, discount, deliveryCharge, totalBill, totalCommissionBill } = req.body;
-  const cardID = req.params.id;
-  const userID = req.user.id;
+exports.placeOrder = catchAsyncError(async (req, _, next) => {
+  const { session } = req;
 
-  let existUser = await userModel.findById(userID); 
+  try {
 
-  if (!existUser) {
-    return next(new ErrorHandler('User not found', 400));
-  }
+    const { address, discount, deliveryCharge, totalBill, totalCommissionBill } = req.body;
+    const cardID = req.params.id;
+    const userID = req.user.id;
 
-  const userOrder = await Order.findOne({ userId: userID });
+    let existUser = await userModel.findById(userID);
 
-   if (!userOrder) {
-    return next(new ErrorHandler('Your order not found', 400));
-  }
-
-  const existOrder = await Order.findOne({ cardId: cardID });
-  if (existOrder) {
-    return next(new ErrorHandler('You have already placed this order. Try on a new card', 400));
-  }
-
-  const card = await Card.findById(cardID);
-  if (!card) {
-    return next(new ErrorHandler('Card not found', 400));
-  }
-
-  // Initialize commission amount
-  let commissionAmount = totalCommissionBill;
-
-  // Calculate commission share for each parent level (up to 5 generations)
-  for (let i = 0; i < 5; i++) {
-    // Check if the user has a parent
-    if (!existUser.parent) {
-      break; 
+    if (!existUser) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('User not found', 400));
     }
 
-    // Calculate commission share for this parent level
-    const shareAmount = commissionAmount / 5;
+    const userOrder = await Order.findOne({ userId: userID });
 
-    // Update parent's balance with commission share
-    await userModel.findByIdAndUpdate(existUser.parent._id, { $inc: { bonusBalance: shareAmount } });
-
-    // Deduct the distributed commission from the remaining amount
-    commissionAmount -= shareAmount;
-
-    // Move to the next parent
-    existUser = await userModel.findById(existUser.parent._id);
-  }
-
-  // If commission remains, add it to super admin's balance
-  if (commissionAmount > 0) {
-    // Find and update super admin's balance
-    const superAdmin = await userModel.findOne({ role: 'super_admin' });
-    if (superAdmin) {
-      await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: commissionAmount } });
+    if (!userOrder) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Your order not found', 400));
     }
+
+    const existOrder = await Order.findOne({ cardId: cardID });
+    if (existOrder) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('You have already placed this order. Try on a new card', 400));
+    }
+
+    const card = await Card.findById(cardID);
+    if (!card) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Card not found', 400));
+    }
+
+    let commissionAmount = totalCommissionBill;
+
+       for (let i = 0; i < 5; i++) {
+      if (!existUser.parent) {
+        break;
+      }
+
+      const shareAmount = commissionAmount / 5;
+
+      await userModel.findByIdAndUpdate(existUser.parent._id, { $inc: { bonusBalance: shareAmount } }, { session });
+
+      commissionAmount -= shareAmount;
+
+      existUser = await userModel.findById(existUser.parent._id).session(session);
+    }
+
+    if (commissionAmount > 0) {
+      const superAdmin = await userModel.findOne({ role: 'super_admin' }).session(session);
+      if (superAdmin) {
+        await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: commissionAmount } }, { session });
+      }
+    }
+
+    const data = {
+      userId: card.userId,
+      shopID: card.shopID,
+      cardId: cardID,
+      cardProducts: card.cardProducts,
+      shippingAddress: address,
+      discount,
+      deliveryCharge,
+      totalBill,
+      totalCommissionBill
+    };
+
+    const order = await Order.create(data);
+
+    if (!order) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order is not created.', 400));
+    }
+
+    await Card.findByIdAndDelete(cardID);
+
+    req.order = order;
+
+    next();
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    return next(new ErrorHandler('An error occurred while placing the order.', 500));
   }
-
-  const data = {
-    userId: card.userId,
-    shopID: card.shopID,
-    cardId: cardID,
-    cardProducts: card.cardProducts,
-    shippingAddress: address,
-    discount,
-    deliveryCharge,
-    totalBill,
-    totalCommissionBill
-  };
-
-  // create order
-  const order = await Order.create(data);
-  if (!order) {
-    return next(new ErrorHandler('Order is not created.', 400));
-  }
-
-  // delete order from card
-  await Card.findByIdAndDelete(cardID);
-
-  const orderWithout__v = order.toObject();
-  delete orderWithout__v.__v;
-
-  res.status(201).json({ success: true, order: orderWithout__v });
 });
-
-
 
 // get all pending order by shop
 exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
