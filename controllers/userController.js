@@ -100,7 +100,6 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       isVerified: false,
       token: isValidToken,
       parent: tokenOwnerDetails ? tokenOwnerDetails.parent : null,
-      children: tokenOwnerDetails ? tokenOwnerDetails.children : [],
     };
 
     sendTempToken(responsePayload, 201, res);
@@ -544,13 +543,13 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
   }
 
   // Update main balance if provided
-  if (balance !== undefined ) {
-    user.balance = balance;
+  if (balance !== undefined) {
+    user.balance = (user.balance || 0) + balance;
   }
 
   // Update bonus balance if provided
   if (bonusBalance !== undefined) {
-    user.bonusBalance = bonusBalance;
+    user.bonusBalance = (user.bonusBalance || 0) + bonusBalance;
   }
 
   await user.save();
