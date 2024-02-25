@@ -3,7 +3,7 @@ const app = express()
 const cookieParser = require('cookie-parser')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
-const cors = require('cors');
+const cors = require('cors')
 const fileUpload = require('express-fileupload')
 
 const user = require('./routes/userRoutes')
