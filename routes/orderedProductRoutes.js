@@ -134,7 +134,7 @@ router
   .route('/delete/order/:id')
   .delete(isAuthenticated, deleteSingleOrder)
 
-// delete single oder
+// change order status
 router
   .route('/shop/order/status/:id')
   .put(isAuthenticated, changeOrderStatus)
