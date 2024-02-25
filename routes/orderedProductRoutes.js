@@ -18,6 +18,7 @@ const {
   getAllDoneOrderOrderByShop,
   getAllCancelOrderOrderByShop,
   deleteSingleOrder,
+  changeOrderStatus,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -132,5 +133,10 @@ router
 router
   .route('/delete/order/:id')
   .delete(isAuthenticated, deleteSingleOrder)
+
+// delete single oder
+router
+  .route('/shop/order/status/:id')
+  .put(isAuthenticated, changeOrderStatus)
 
 module.exports = router

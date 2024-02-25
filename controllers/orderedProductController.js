@@ -539,3 +539,21 @@ exports.deleteSingleOrder = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, message: 'Delete success' })
 })
 
+// change order status
+exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
+  const orderId = new mongoose.Types.ObjectId(req.params.id)
+
+  try {
+    const order = await Order.findByIdAndUpdate(orderId, { orderStatus: req.body.orderStatus }, { new: true });
+
+    if (!order) {
+      return next(new ErrorHandler('No order found', 404));
+    }
+
+    res.status(200).json({ success: true, message: 'Order status updated successfully', order });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
