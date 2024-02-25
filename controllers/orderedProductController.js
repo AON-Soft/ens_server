@@ -4,6 +4,7 @@ const Card = require('../models/cardModel')
 const Order = require('../models/orderedProductModel')
 const ErrorHandler = require('../utils/errorhander')
 const userModel = require('../models/userModel')
+const uniqueTransactionID = require('../utils/transactionID')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
@@ -541,19 +542,94 @@ exports.deleteSingleOrder = catchAsyncError(async (req, res, next) => {
 
 // change order status
 exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
-  const orderId = new mongoose.Types.ObjectId(req.params.id)
+  const orderId = new mongoose.Types.ObjectId(req.params.id);
+  const { orderStatus } = req.body;
+
+  let session;
 
   try {
-    const order = await Order.findByIdAndUpdate(orderId, { orderStatus: req.body.orderStatus }, { new: true });
+    session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!order) {
-      return next(new ErrorHandler('No order found', 404));
+    const existOrder = await Order.findById(orderId).session(session);
+
+    if (!existOrder) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order not found.', 400));
     }
 
-    res.status(200).json({ success: true, message: 'Order status updated successfully', order });
+    if (orderStatus === 'canceled') {
+      const updateOrder = await Order.findByIdAndUpdate(
+        orderId,
+        { orderStatus: orderStatus },
+        { new: true }
+      ).session(session);
+
+      const { userId, totalBill } = existOrder;
+
+      const user = await userModel.findOne({ _id: userId }).session(session);
+
+      if (!user || user.balance < totalBill) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('Insufficient balance.', 400));
+      }
+
+      const shopKeeper = await userModel.findById(req.user.id).session(session);
+
+      if (!shopKeeper) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('Shop Keeper not found', 400));
+      }
+
+      const trnxID = uniqueTransactionID();
+      const generatePaymentTranactionID = `RP${trnxID}`;
+      shopKeeper.balance -= totalBill;
+      user.balance += totalBill;
+
+      await user.save();
+      await shopKeeper.save();
+
+      req.transactionID = generatePaymentTranactionID;
+      req.sender = shopKeeper;
+      req.receiver = user;
+      req.transactionAmount = totalBill;
+      req.serviceCharge = 0;
+      req.transactionType = 'payment';
+      req.paymentType = 'points';
+      req.senderTransactionHeading = 'Return Payment Sent';
+      req.receiverTransactionHeading = 'Return Payment Received';
+
+      req.session = session;
+      req.order = updateOrder;
+
+      next();
+    } else {
+      const order = await Order.findByIdAndUpdate(
+        orderId,
+        { orderStatus: orderStatus },
+        { new: true }
+      ).session(session);
+
+      if (!order) {
+        return next(new ErrorHandler('No order found', 404));
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(200).json({ success: true, message: 'Order status updated successfully', order });
+    }
   } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     next(error);
   }
 });
+
 
 

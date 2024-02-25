@@ -6,8 +6,11 @@ const ErrorHandler = require('../utils/errorhander')
 const { default: mongoose } = require('mongoose')
 const orderedProductModel = require('../models/orderedProductModel')
 
-exports.orderPayments = catchAsyncError(async (req, _, next) => {
+exports.backPayments = catchAsyncError(async (req, _, next) => {
   const orderId = new mongoose.Types.ObjectId(req.params.id)
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
   const order = await orderedProductModel.findById(orderId).session(session);
 
@@ -20,9 +23,6 @@ exports.orderPayments = catchAsyncError(async (req, _, next) => {
 
   const {userId, totalBill, totalCommissionBill} = order
 
-  const session = await mongoose.startSession()
-  session.startTransaction()
-
   const user = await User.findOne({ _id: userId}).session(session)
  
   if (!user || user.balance < totalBill) {
@@ -32,21 +32,6 @@ exports.orderPayments = catchAsyncError(async (req, _, next) => {
     return next(new ErrorHandler('Insufficient balance.', 400))
   }
 
-  // const card = await cardModel.findById(cardId).session(session);
-  
-  // if (!card) {
-  //   await session.abortTransaction();
-  //   session.endSession();
-  //   return next(new ErrorHandler('Card not found', 400));
-  // }
-
-  // const shop = await shopModel.findById(shopID).session(session);
-
-  // if (!shop) {
-  //   await session.abortTransaction();
-  //   session.endSession();
-  //   return next(new ErrorHandler('shop not found', 400));
-  // }
 
   const shopKeeper = await User.findById(req.user.id).session(session);
 
@@ -56,15 +41,7 @@ exports.orderPayments = catchAsyncError(async (req, _, next) => {
     return next(new ErrorHandler('Shop Keeper not found', 400));
   }
 
-  // const admin = await User.findOne({ role: 'super_admin' }).session(session)
 
-  // if (!admin) {
-  //   await session.abortTransaction()
-  //   session.endSession()
-
-  //   return next(new ErrorHandler('super_admin not found', 400))
-  // }
-  
   const trnxID = uniqueTransactionID()
   const generatePaymentTranactionID = `OP${trnxID}`
   user.balance -= totalBill

@@ -137,6 +137,6 @@ router
 // change order status
 router
   .route('/shop/order/status/:id')
-  .put(isAuthenticated, changeOrderStatus)
+  .put(isAuthenticated, changeOrderStatus, createTransaction)
 
 module.exports = router
