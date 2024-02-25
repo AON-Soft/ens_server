@@ -1,22 +1,18 @@
 const { default: mongoose } = require('mongoose')
 const catchAsyncError = require('../middleware/catchAsyncError')
-
 const Card = require('../models/cardModel')
 const Order = require('../models/orderedProductModel')
-
 const ErrorHandler = require('../utils/errorhander')
 const userModel = require('../models/userModel')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
+  const { address, discount, deliveryCharge, totalBill, totalCommissionBill } = req.body;
+  const cardID = req.params.id;
+  const userID = req.user.id;
 
   try {
-
-    const { address, discount, deliveryCharge, totalBill, totalCommissionBill } = req.body;
-    const cardID = req.params.id;
-    const userID = req.user.id;
-
-    let existUser = await userModel.findById(userID);
+    let existUser = await userModel.findById(userID).session(session);
 
     if (!existUser) {
       await session.abortTransaction();
@@ -46,14 +42,14 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
       return next(new ErrorHandler('Card not found', 400));
     }
 
+    // give commission upto top 5 label generation
     let commissionAmount = totalCommissionBill;
+    const shareAmount = commissionAmount / 5;
 
-       for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
       if (!existUser.parent) {
         break;
       }
-
-      const shareAmount = commissionAmount / 5;
 
       await userModel.findByIdAndUpdate(existUser.parent._id, { $inc: { bonusBalance: shareAmount } }, { session });
 
@@ -91,7 +87,7 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
 
     await Card.findByIdAndDelete(cardID);
 
-    req.order = order;
+    req.order = order
 
     next();
   } catch (error) {
