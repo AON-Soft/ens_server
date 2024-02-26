@@ -559,6 +559,12 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Order not found.', 400));
     }
 
+    if (existOrder.orderStatus === 'canceled') {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order has already been canceled.', 400));
+    }
+
     if (orderStatus === 'canceled') {
       const updateOrder = await Order.findByIdAndUpdate(
         orderId,
@@ -566,9 +572,9 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
         { new: true }
       ).session(session);
 
-      const { userId, totalBill } = existOrder;
+      const { userId, totalBill, totalCommissionBill } = existOrder;
 
-      const user = await userModel.findOne({ _id: userId }).session(session);
+      let user = await userModel.findOne({ _id: userId }).session(session);
 
       if (!user || user.balance < totalBill) {
         await session.abortTransaction();
@@ -586,8 +592,8 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
 
       const trnxID = uniqueTransactionID();
       const generatePaymentTranactionID = `RP${trnxID}`;
-      shopKeeper.balance -= totalBill;
-      user.balance += totalBill;
+      shopKeeper.balance -= totalBill - totalCommissionBill;
+      user.balance += totalBill ;
 
       await user.save();
       await shopKeeper.save();
@@ -604,6 +610,30 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
 
       req.session = session;
       req.order = updateOrder;
+
+         // get back commission from upto top 5 label generation
+      let commissionAmount = totalCommissionBill;
+      const shareAmount = commissionAmount / 5;
+
+      for (let i = 0; i < 5; i++) {
+        if (!user.parent) {
+          break;
+        }
+
+        await userModel.findByIdAndUpdate(user.parent._id, { $inc: { bonusBalance: -shareAmount } }, { session });
+
+        commissionAmount -= shareAmount;
+
+        user = await userModel.findById(user.parent._id).session(session);
+      }
+
+      if (commissionAmount > 0) {
+        const superAdmin = await userModel.findOne({ role: 'super_admin' }).session(session);
+        if (superAdmin) {
+          await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: -commissionAmount } }, { session });
+        }
+      }
+
 
       next();
     } else {
