@@ -98,6 +98,152 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
   }
 });
 
+// get all order by shop
+exports.getAllOrderByShop = catchAsyncError(async (req, res) => {
+  const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const pipeline = [
+    {
+      $match: {
+        shopID: shopId,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+// get all order by user
+exports.getAllOrderByUser = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const pipeline = [
+    {
+      $match: {
+        userId: userId,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+  ]
+
+  const result = await Order.aggregate(pipeline)
+  res.status(200).json({ success: true, orders: result })
+})
+
+// get all order
+exports.getAllOrders = catchAsyncError(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  const pipeline = [
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        avatar: '$userDetails.avatar',
+        orderId: '$_id',
+        orderStatus: 1,
+        totalBill: 1,
+      },
+    },
+    {
+      $skip: (page - 1) * limit,
+    },
+    {
+      $limit: limit,
+    },
+  ];
+
+  const countPipeline = [
+    {
+      $count: 'totalCount',
+    },
+  ];
+
+  const [orders, count] = await Promise.all([
+    Order.aggregate(pipeline),
+    Order.aggregate(countPipeline),
+  ]);
+
+  const totalOrders = count.length > 0 ? count[0].totalCount : 0;
+  const totalPages = Math.ceil(totalOrders / limit);
+
+  res.status(200).json({
+    success: true,
+    orders: orders,
+    totalPages: totalPages,
+    currentPage: page,
+    totalOrders: totalOrders,
+  });
+});
+
+
 // get all pending order by shop
 exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)

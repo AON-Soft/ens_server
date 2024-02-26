@@ -19,6 +19,9 @@ const {
   getAllCancelOrderOrderByShop,
   deleteSingleOrder,
   changeOrderStatus,
+  getAllOrderByShop,
+  getAllOrderByUser,
+  getAllOrders,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -29,6 +32,33 @@ const router = express.Router()
 router
   .route('/place/order/card/:id')
   .post(isAuthenticated, sendPayments, placeOrder, createTransaction)
+
+// all order
+router
+  .route('/all/order')
+  .get(
+    isAuthenticated,
+    getAllOrders,
+  )
+
+// all order by shop
+router
+  .route('/shop/all/order')
+  .get(
+    isAuthenticated,
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    getAllOrderByShop,
+  )
+
+
+// all order by user
+router
+  .route('/shop/all/order/user')
+  .get(
+    isAuthenticated,
+    getAllOrderByUser,
+  )
 
 // pending all order by shop
 router
@@ -50,7 +80,7 @@ router
     getAllConfirmOrderByShop,
   )
 
-  // On delivery all order by shop
+// On delivery all order by shop
 router
   .route('/shop/delivery/order')
   .get(
@@ -60,7 +90,7 @@ router
     getAllOnDeliveryOrderByShop,
   )
 
-  // done all order by shop
+// done all order by shop
 router
   .route('/shop/done/order')
   .get(
@@ -70,7 +100,7 @@ router
     getAllDoneOrderOrderByShop,
   )
 
-  // cancel all order by shop
+// cancel all order by shop
 router
   .route('/shop/cancel/order')
   .get(
@@ -80,7 +110,7 @@ router
     getAllCancelOrderOrderByShop,
   )
 
-  // pending oder by user
+// pending oder by user
 router
   .route('/shop/pending/order/user')
   .get(
