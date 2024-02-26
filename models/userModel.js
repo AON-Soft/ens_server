@@ -100,7 +100,7 @@ const userSchema = new mongoose.Schema({
   status: {
     type: String,
     default: 'pending',
-    enum: ['pending', 'active', 'hold', 'rejectd'],
+    enum: ['pending', 'active', 'hold', 'rejected'],
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,

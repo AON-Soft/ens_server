@@ -486,20 +486,35 @@ exports.getSingleUser = catchAsyncError(async (req, res, next) => {
 //Update User Role ---Admin
 exports.updateUserRole = catchAsyncError(async (req, res, _) => {
   const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
     role: req.body.role,
   }
 
-  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+  await User.findByIdAndUpdate(req.params.id, newUserData, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
   })
 
-  console.log(user)
+  const user = await User.findById(req.params.id)
 
-  res.status(200).json({ success: true })
+  res.status(200).json({ success: true, user })
+})
+
+//Update User status ---Admin
+exports.updateUserStatus = catchAsyncError(async (req, res, _) => {
+  const newUserData = {
+    status: req.body.status,
+  }
+
+  await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  })
+
+   const user = await User.findById(req.params.id)
+
+  res.status(200).json({ success: true, user })
 })
 
 //Delete User ---Admin
@@ -570,70 +585,3 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
 
   res.status(202).json({ success: true, response })
 })
-
-
-
-// exports.registerUser = catchAsyncError(async (req, res, next) => {
-//   var { name, email, password, token, role } = req.body
-//   let isValidToken = null
-//   if (role === 'user') {
-//     isValidToken = await Token.findOne({ token: token, isUsed: false })
-//   }
-
-//   if (!isValidToken && role === 'user' && token !== 'admin') {
-//     next(new ErrorHandler('The token is not valid or used.', 404))
-//   } else {
-//     const existingUser = await User.findOne({ email: email })
-//     if (existingUser) {
-//       if (existingUser.status == 'active') {
-//         return next(new ErrorHandler(`${email}  is already registered`, 401))
-//       }
-//     }
-
-//     var getUser = await Otp.findOne({ email: email })
-
-//     var createdUser = null
-//     // create user
-
-//     // hash
-//     const salt = await bcrypt.genSalt(10)
-//     password = await bcrypt.hash(password, salt)
-
-//     if (!getUser) {
-//       const otp = otpGenerator.generate(4, {
-//         digits: true,
-//         lowerCaseAlphabets: false,
-//         upperCaseAlphabets: false,
-//         specialChars: false,
-//       })
-//       const getOtp = otp
-//       await Otp.create({ email, otp, getOtp })
-//       createdUser = await User.create({ name, email, password, role })
-//     } else {
-//       const otp = otpGenerator.generate(4, {
-//         digits: true,
-//         lowerCaseAlphabets: false,
-//         upperCaseAlphabets: false,
-//         specialChars: false,
-//       })
-
-//       getUser.otp = otp
-//       getUser.getOtp = otp
-//       await getUser.save()
-//       // user should be upate with new req data
-//       createdUser = await User.findOneAndUpdate(
-//         { email },
-//         { name, email, password, role },
-//       )
-//     }
-//     const responsePayload = {
-//       id: createdUser._id,
-//       name: createdUser.name,
-//       email: createdUser.email,
-//       role: createdUser.role,
-//       isVefified: false,
-//       token: isValidToken,
-//     }
-//     sendTempToken(responsePayload, 201, res)
-//   }
-// })

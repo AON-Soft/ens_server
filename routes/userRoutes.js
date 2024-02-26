@@ -20,6 +20,7 @@ const {
   getAllAgents,
   addBalance,
   getAllShopKeepers,
+  updateUserStatus,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -61,8 +62,15 @@ router
 router
   .route('/admin/user/:id')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getSingleUser)
-  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), updateUserRole)
   .delete(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), deleteUser)
+
+router
+  .route('/admin/user/role/:id')
+  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), updateUserRole)
+
+router
+  .route('/admin/user/status/:id')
+  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), updateUserStatus)
 
 router.route('/getOtp').get(getOtp)
 
