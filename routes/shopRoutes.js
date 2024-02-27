@@ -29,22 +29,22 @@ router
   .put(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper'),
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
     updateShopLocation,
   )
 
 router
   .route('/shop')
-  .get(isAuthenticated, isAuthorizeRoles('shop_keeper'), getShopDetails)
+  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), getShopDetails)
 
 router
   .route('/admin/delete-shop/:id')
-  .delete(isAuthenticated, isAuthorizeRoles('admin'), deleteShop)
+  .delete(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), deleteShop)
 
 router.route('/shops/nearby').get(isAuthenticated, getNearbyShops)
 
 router
   .route('/admin/shops')
-  .get(isAuthenticated, isAuthorizeRoles('admin'), getAllShops)
+  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), getAllShops)
 
 module.exports = router

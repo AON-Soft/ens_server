@@ -5,6 +5,7 @@ const Order = require('../models/orderedProductModel')
 const ErrorHandler = require('../utils/errorhander')
 const userModel = require('../models/userModel')
 const uniqueTransactionID = require('../utils/transactionID')
+const orderedProductModel = require('../models/orderedProductModel')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
@@ -804,6 +805,99 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       session.endSession();
     }
     next(error);
+  }
+});
+
+// get all invoice
+exports.getAllInvoice = catchAsyncError(async (_, res, next) => {
+  try {
+    // Fetch ordered products from the database
+    const orders = await orderedProductModel.find()
+      .populate({path: 'userId', select: 'avatar name email'})
+      .populate({path: 'shopID', select: 'name info logo banner location address'})
+      .exec()
+
+    if (!orders) {
+      next(new ErrorHandler('No order found', 400))
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: orders
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// get single invoice
+exports.getSingleInvoice = catchAsyncError(async (req, res, next) => {
+    try {
+    const order = await orderedProductModel.findById(req.params.id)
+      .populate({path: 'userId', select: 'avatar name email'})
+      .populate({path: 'shopID', select: 'name info logo banner location address'})
+      .exec()
+
+    if (!order) {
+      next(new ErrorHandler('No order found', 400))
+    }
+
+    // Send the invoice data as response
+    res.status(200).json({
+      status: 'success',
+      data: order
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// get all order by shop
+exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
+  const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  try {
+    const order = await orderedProductModel.find({shopID : shopId})
+      .populate({path: 'userId', select: 'avatar name email'})
+      .populate({path: 'shopID', select: 'name info logo banner location address'})
+      .exec()
+
+    if (!order) {
+      next(new ErrorHandler('No order found', 400))
+    }
+
+    // Send the invoice data as response
+    res.status(200).json({
+      status: 'success',
+      data: order
+    });
+  } catch (error) {
+    return next(error);
+  }
+ 
+})
+
+// get single invoice
+exports.changePyamentStatus = catchAsyncError(async (req, res, next) => {
+  const {paymentStatus} = req.body
+    try {
+      await orderedProductModel.findByIdAndUpdate(req.params.id, {paymentStatus}, { new: true })
+
+      const order = await orderedProductModel.findById(req.params.id)
+        .populate({path: 'userId', select: 'avatar name email'})
+        .populate({path: 'shopID', select: 'name info logo banner location address'})
+        .exec()
+
+    if (!order) {
+      next(new ErrorHandler('No order found', 400))
+    }
+
+    // Send the invoice data as response
+    res.status(200).json({
+      status: 'success',
+      data: order
+    });
+  } catch (error) {
+    return next(error);
   }
 });
 

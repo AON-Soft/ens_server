@@ -22,6 +22,9 @@ const {
   getAllOrderByShop,
   getAllOrderByUser,
   getAllOrders,
+  getAllInvoice,
+  getSingleInvoice,
+  changePyamentStatus,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -168,5 +171,40 @@ router
 router
   .route('/shop/order/status/:id')
   .put(isAuthenticated, changeOrderStatus, createTransaction)
+
+// all invoice
+router
+  .route('/invoice/all')
+  .get(
+    isAuthenticated,
+    getAllInvoice,
+  )
+
+// all invoice by shop
+router
+  .route('/invoice/shop/all')
+  .get(
+    isAuthenticated,
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    getAllOrderByShop,
+  )
+
+// get invoice details
+router
+  .route('/invoice/details/:id')
+  .get(
+    isAuthenticated,
+    getSingleInvoice,
+  )
+
+// change invoice payment status
+router
+  .route('/invoice/pyament/status/:id')
+  .put(
+    isAuthenticated,
+    isAuthorizeRoles('admin', 'super_admin', 'shop_keeper'),
+    changePyamentStatus,
+  )
 
 module.exports = router

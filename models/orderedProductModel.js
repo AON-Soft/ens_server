@@ -68,6 +68,15 @@ const orderedProductsSchema = new mongoose.Schema({
     default: 'pending',
     enum: ['pending', 'order_confirm', 'on_delivery', 'order_done', 'canceled'],
   },
+  paymentStatus: {
+    type: String,
+    default: 'unpaid',
+    enum: ['paid', 'unpaid'],
+  },
+  vat: {
+    type: Number,
+    default: 0,
+  },
   shippingAddress: {
     type: String,
     required: [true, 'Please Enter Adress'],

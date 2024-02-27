@@ -18,14 +18,14 @@ const router = express.Router()
 
 router
   .route('/admin/shop/category/new/:id')
-  .post(isAuthenticated, isAuthorizeRoles('admin'), createCategoryByAdmin)
+  .post(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), createCategoryByAdmin)
 
 router
   .route('/shop/category/new')
   .post(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper'),
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
     createCategoryByShop,
   )
 
@@ -33,6 +33,7 @@ router
   .route('/shop/category/:id')
   .put(isAuthenticated, updateCategory)
   .delete(isAuthenticated, deleteCategory)
+  
 router
   .route('/shop/categories')
   .get(isAuthenticated, isAuthenticatedShop, getAllCategoriesByshop)
