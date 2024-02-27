@@ -37,6 +37,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       if (existingUser.status === 'active') {
         return next(new ErrorHandler(`${email} is already registered`, 401));
       }
+      return next(new ErrorHandler(`${email} is already registered`, 401));
     }
 
     // Check if user has existing OTP
