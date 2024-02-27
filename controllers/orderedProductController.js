@@ -706,11 +706,11 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Order not found.', 400));
     }
 
-    // if (existOrder.orderStatus === 'canceled') {
-    //   await session.abortTransaction();
-    //   session.endSession();
-    //   return next(new ErrorHandler('Order has already been canceled.', 400));
-    // }
+    if (existOrder.orderStatus === 'canceled') {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order has already been canceled.', 400));
+    }
 
     if (orderStatus === 'canceled') {
       const updateOrder = await Order.findByIdAndUpdate(
