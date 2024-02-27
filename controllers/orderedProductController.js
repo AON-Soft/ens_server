@@ -45,7 +45,7 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
     }
 
     // give commission upto top 5 label generation
-    let commissionAmount = totalCommissionBill;
+    let commissionAmount = (totalCommissionBill/2)
     const shareAmount = commissionAmount / 5;
 
     for (let i = 0; i < 5; i++) {
@@ -706,11 +706,11 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Order not found.', 400));
     }
 
-    if (existOrder.orderStatus === 'canceled') {
-      await session.abortTransaction();
-      session.endSession();
-      return next(new ErrorHandler('Order has already been canceled.', 400));
-    }
+    // if (existOrder.orderStatus === 'canceled') {
+    //   await session.abortTransaction();
+    //   session.endSession();
+    //   return next(new ErrorHandler('Order has already been canceled.', 400));
+    // }
 
     if (orderStatus === 'canceled') {
       const updateOrder = await Order.findByIdAndUpdate(
@@ -739,7 +739,7 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
 
       const trnxID = uniqueTransactionID();
       const generatePaymentTranactionID = `RP${trnxID}`;
-      shopKeeper.balance -= totalBill - totalCommissionBill;
+      shopKeeper.balance -= totalBill - (totalCommissionBill/2);
       user.balance += totalBill ;
 
       await user.save();
@@ -759,7 +759,7 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       req.order = updateOrder;
 
          // get back commission from upto top 5 label generation
-      let commissionAmount = totalCommissionBill;
+      let commissionAmount = (totalCommissionBill/2);
       const shareAmount = commissionAmount / 5;
 
       for (let i = 0; i < 5; i++) {
