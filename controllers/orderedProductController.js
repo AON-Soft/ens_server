@@ -901,5 +901,125 @@ exports.changePyamentStatus = catchAsyncError(async (req, res, next) => {
   }
 });
 
+exports.getOrderChart = catchAsyncError(async (req, res, next) => {
+    const year = req.query.year;
+    const nextYear = parseInt(year) + 1;
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size
+
+    try {
+        // Find all completed orders within the specified year
+        const completedOrders = await orderedProductModel.find({
+            createdAt: {
+                $gte: new Date(`${year}-01-01`),
+                $lt: new Date(`${nextYear}-01-01`),
+            },
+            orderStatus: 'order_confirm'
+        });
+
+        // Sum up the total revenue from completed orders
+        const totalRevenue = completedOrders.reduce((total, order) => total + (order.totalBill || 0), 0);
+
+        // Define the aggregation pipeline
+       const queryFilter = [
+            {
+                $match: {
+                    createdAt: {
+                        $gte: new Date(`${year}-01-01`),
+                        $lt: new Date(`${nextYear}-01-01`),
+                    },
+                     orderStatus: 'order_confirm'
+                },
+            },
+            {
+                $unwind: '$cardProducts'
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' },
+                    },
+                    totalBill: { $sum: '$totalBill' },
+                    products: {
+                        $push: {
+                            name: '$cardProducts.productName',
+                            price: '$cardProducts.price'
+                        }
+                    }
+                }
+            }
+        ];
+
+        // Apply pagination
+        const skip = (page - 1) * pageSize;
+        const limit = pageSize;
+
+        queryFilter.push({ $skip: skip }, { $limit: limit });
+
+        // Execute the aggregation query
+        const data = await orderedProductModel.aggregate(queryFilter);
+
+        // Initialize formattedData object
+        const formattedData = {};
+
+        // Iterate over the data array
+        data.forEach(item => {
+            // Extract the year and month
+            const year = item._id.year.toString();
+            const month = item._id.month;
+
+            // Extract month name
+            const monthName = new Date(`${year}-${month}-01`).toLocaleString('default', { month: 'long' });
+
+            // Check if the month already exists in formattedData
+            if (!formattedData[year]) {
+                formattedData[year] = [];
+            }
+
+            const existingMonth = formattedData[year].find(m => m.name === monthName);
+
+            if (existingMonth) {
+                // If the month exists, update the total bill
+                existingMonth.totalBill += item.totalBill;
+                existingMonth.products.push(...item.products);
+
+            } else {
+                // If the month doesn't exist, add it to formattedData
+                formattedData[year].push({
+                    name: monthName,
+                    amount: item.totalBill,
+                    products: item.products
+                });
+            }
+        });
+
+        // Calculate total number of pages
+        const totalItems = formattedData.length;
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        // Send the response with pagination information
+        res.status(200).json({
+            success: true,
+            data: formattedData,
+            totalRevenue,
+            pagination: {
+                currentPage: page,
+                pageSize,
+                totalPages,
+                totalItems
+            }
+        });
+    } catch (error) {
+        // Handle errors
+        next(error);
+    }
+});
+
+
+
+
+
+
 
 

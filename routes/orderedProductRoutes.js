@@ -3,6 +3,7 @@ const {
   isAuthenticated,
   isAuthorizeRoles,
   isAuthenticatedShop,
+  isAuthenticatedUser,
 } = require('../middleware/auth')
 const {
   placeOrder,
@@ -25,6 +26,7 @@ const {
   getAllInvoice,
   getSingleInvoice,
   changePyamentStatus,
+  getOrderChart,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -206,5 +208,6 @@ router
     isAuthorizeRoles('admin', 'super_admin', 'shop_keeper'),
     changePyamentStatus,
   )
+router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
 
 module.exports = router

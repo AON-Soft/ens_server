@@ -13,6 +13,7 @@ const sendTempToken = require('../utils/TempJwtToken.js')
 const ErrorHandler = require('../utils/errorhander.js')
 
 const catchAsyncError = require('../middleware/catchAsyncError.js')
+const orderedProductModel = require('../models/orderedProductModel.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -586,3 +587,4 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
 
   res.status(202).json({ success: true, response })
 })
+
