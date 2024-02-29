@@ -36,14 +36,14 @@ router
   
 router
   .route('/shop/categories')
-  .get(isAuthenticated, isAuthenticatedShop, getAllCategoriesByshop)
+  .get(isAuthenticated,  isAuthorizeRoles('shop_keeper'), isAuthenticatedShop, getAllCategoriesByshop)
 
 router
   .route('/admin/shop/categories/:id')
-  .get(isAuthenticated, getAllCategoriesByAdmin)
+  .get(isAuthenticated,  isAuthorizeRoles('admin', 'super_admin'), getAllCategoriesByAdmin)
 
 router
-  .route('/user/categories/shop/:id')
-  .get(isAuthenticated, getAllCategoriesByUser)
+  .route('/user/shop/categories/:id')
+  .get(isAuthenticated,  isAuthorizeRoles('user'), getAllCategoriesByUser)
 
 module.exports = router

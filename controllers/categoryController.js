@@ -5,6 +5,7 @@ const Categories = require('../models/categoryModel')
 const Shops = require('../models/shopModel')
 const ApiFeatures = require('../utils/apifeature')
 const ErrorHandler = require('../utils/errorhander')
+const categoryModel = require('../models/categoryModel')
 
 exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   // check the category name is already exist or not
@@ -182,6 +183,16 @@ exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
 
   let categories = await apiFeature.query
 
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
+
   let filteredCategoriesCount = categories.length
 
   res.status(200).json({
@@ -209,6 +220,16 @@ exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
     .pagination(resultPerPage)
 
   let categories = await apiFeature.query
+
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
 
   let filteredCategoriesCount = categories.length
 
@@ -240,6 +261,16 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
     .pagination(resultPerPage)
 
   let categories = await apiFeature.query
+
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
 
   let filteredCategoriesCount = categories.length
 

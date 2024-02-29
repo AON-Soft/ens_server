@@ -105,6 +105,16 @@ exports.getAllShopCategories = catchAsyncError(async (req, res) => {
 
   let shopCategories = await apiFeature.query
 
+   if (!shopCategories || shopCategories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      shopCategoryCount: 0,
+      resultPerPage,
+      filteredShopCategoriesCount: 0,
+      shopCategories: []
+    });
+  }
+
   let filteredShopCategoriesCount = shopCategories.length
 
   res.status(200).json({
