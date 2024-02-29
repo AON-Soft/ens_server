@@ -1,39 +1,21 @@
 const mongoose = require('mongoose')
 
 const locationSchema = new mongoose.Schema({
-  name: {
+  title: {
     type: String,
-    required: [true, 'Please Enter Product Name'],
+    required: [true, 'Please Enter Title'],
     trim: true,
   },
-  image: {
-    public_id: {
-      type: String,
-      default: '',
-    },
-    url: {
-      type: String,
-      default: '',
-    },
+  subtitle: {
+    type: String,
+    required: [true, 'Please Enter Sub-Title'],
+    trim: true,
   },
-  shopCategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'shop_categories',
-    required: function () {
-      return this.shopCategory === 'shopCategory'
-    },
-  },
-  shopID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'shop',
-    required: function () {
-      return this.shopID === 'shopID'
-    },
-  },
-  createdBy: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+
   createdAt: {
     type: Date,
     default: Date.now,
