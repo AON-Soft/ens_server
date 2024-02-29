@@ -24,8 +24,8 @@ router
   .route('/shop/category/new')
   .post(
     isAuthenticated,
+    isAuthorizeRoles('shop_keeper'),
     isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
     createCategoryByShop,
   )
 
@@ -43,7 +43,7 @@ router
   .get(isAuthenticated,  isAuthorizeRoles('admin', 'super_admin'), getAllCategoriesByAdmin)
 
 router
-  .route('/user/shop/categories/:id')
-  .get(isAuthenticated,  isAuthorizeRoles('user'), getAllCategoriesByUser)
+  .route('/all/shop/categories/:id')
+  .get(isAuthenticated, getAllCategoriesByUser)
 
 module.exports = router

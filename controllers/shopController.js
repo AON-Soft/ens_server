@@ -7,7 +7,6 @@ const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
-  console.log(req.user)
 
   const getShop = await Shop.findOne({ createdBy: req.user.id })
   if (getShop) {
@@ -32,6 +31,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 
     await fs.unlink(tempFilePath)
   }
+
   if (req.files && req.files.logo) {
     const tempFilePath1 = `temp1_${Date.now()}.jpg`
     await fs.writeFile(tempFilePath1, req.files.logo.data)
@@ -52,59 +52,65 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 })
 
 exports.updateShopProfile = catchAsyncError(async (req, res) => {
-  const shop = await Shop.findById(req.shop._id)
+  const shop = await Shop.findById(req.shop._id);
 
   // check if shop lat and long
   if (req.body.latitude && req.body.longitude) {
     req.body.location = {
       type: 'Point',
       coordinates: [req.body.longitude, req.body.latitude],
-    }
+    };
   }
 
   if (req.files && req.files.banner) {
-    const bannerImageId = shop.banner.public_id
-    await cloudinary.v2.uploader.destroy(bannerImageId)
-    const tempFilePath = `temp1_${Date.now()}.jpg`
-    await fs.writeFile(tempFilePath, req.files.banner.data)
+    const bannerImageId = shop.banner.public_id;
+    await cloudinary.v2.uploader.destroy(bannerImageId);
+    const tempFilePath = `temp1_${Date.now()}.jpg`;
+    await fs.writeFile(tempFilePath, req.files.banner.data);
 
-    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+    // Upload the new banner image to Cloudinary
+    const myCloud = await cloudinary.v2.uploader.upload(req.files.banner.path, {
       folder: 'shopBanners',
       crop: 'scale',
-    })
+    });
 
     req.body.banner = {
       public_id: myCloud.public_id,
       url: myCloud.secure_url,
-    }
+    };
 
-    await fs.unlink(tempFilePath)
+    await fs.unlink(tempFilePath);
+    
   }
+
   if (req.files && req.files.logo) {
-    const logoImageId = shop.logo.public_id
-    await cloudinary.v2.uploader.destroy(logoImageId)
-    const tempFilePath1 = `temp1_${Date.now()}.jpg`
-    await fs.writeFile(tempFilePath1, req.files.logo.data)
+    const logoImageId = shop.logo.public_id;
+    await cloudinary.v2.uploader.destroy(logoImageId);
+    const tempFilePath1 = `temp1_${Date.now()}.jpg`;
+    await fs.writeFile(tempFilePath1, req.files.logo.data);
 
     const myCloudForlogo = await cloudinary.v2.uploader.upload(tempFilePath1, {
       folder: 'shopLogos',
       crop: 'scale',
-    })
+    });
     req.body.logo = {
       public_id: myCloudForlogo.public_id,
       url: myCloudForlogo.secure_url,
-    }
-    await fs.unlink(tempFilePath1)
+    };
+    await fs.unlink(tempFilePath1);
   }
 
+  // Update shop details except the banner
   const updatedShop = await Shop.findByIdAndUpdate(shop._id, req.body, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
-  })
+  });
 
-  res.status(201).json({ success: true, updatedShop })
-})
+  // Return updated shop
+  res.status(201).json({ success: true, updatedShop });
+});
+
 
 exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
   const { latitude, longitude } = req.body
@@ -114,16 +120,30 @@ exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('Shop not found', 404))
   }
 
-  // update shop cordination
-  shop.location.coordinates[0] = longitude
-  shop.location.coordinates[1] = latitude
-  // type
-  shop.location.type = 'Point'
+ // Check if latitude and longitude are provided in the request body
+  if (!latitude || !longitude) {
+    return res.status(400).json({ success: false, message: 'Latitude and longitude are required.' });
+  }
 
-  await shop.save()
-  res
-    .status(200)
-    .json({ success: true, message: 'Shop location updated successfully' })
+  const longitudeValue = parseFloat(longitude);
+  const latitudeValue = parseFloat(latitude);
+
+  // Validate latitude and longitude
+  if (isNaN(latitudeValue) || isNaN(longitudeValue) || latitudeValue < -90 || latitudeValue > 90 || longitudeValue < -180 || longitudeValue > 180) {
+    return res.status(400).json({ success: false, message: 'Invalid latitude or longitude values.' });
+  }
+
+  // Update location coordinates
+  shop.location = {
+    type: 'Point',
+    coordinates: [longitudeValue, latitudeValue],
+  };
+
+  // Save the updated shop with new location coordinates
+  await shop.save();
+
+  res.status(200).json({ success: true, message: 'Update successfully.' });
+
 })
 
 exports.getShopDetails = catchAsyncError(async (req, res) => {

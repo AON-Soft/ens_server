@@ -18,18 +18,18 @@ const {
 
 const router = express.Router()
 
-router.route('/shop/create-shop').post(isAuthenticated, registerShop)
+router.route('/shop/create-shop').post(isAuthenticated, isAuthorizeRoles('shop_keeper'), registerShop)
 
 router
   .route('/shop/update')
-  .put(isAuthenticated, isAuthenticatedShop, updateShopProfile)
+  .put(isAuthenticated, isAuthorizeRoles('shop_keeper'), isAuthenticatedShop, updateShopProfile)
 
 router
   .route('/shop/location/update')
   .put(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
+    isAuthorizeRoles('shop_keeper'),
     updateShopLocation,
   )
 

@@ -13,12 +13,12 @@ const router = express.Router()
 
 router
   .route('/shopCategory/create-category')
-  .post(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), createShopCategory)
+  .post(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), createShopCategory)
 
 router
   .route('/shopCategory/:id')
-  .put(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), updateShopCategory)
-  .delete(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), deleteShopCategory)
+  .put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateShopCategory)
+  .delete(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), deleteShopCategory)
 
 router.route('/shop-categories').get(isAuthenticated, getAllShopCategories)
 
