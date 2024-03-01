@@ -14,6 +14,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
   }
 
   req.body.createdBy = req.user.id
+  req.body.userId = req.user.id
 
   if (req.files && req.files.banner) {
     const tempFilePath = `temp1_${Date.now()}.jpg`
@@ -30,6 +31,10 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
     }
 
     await fs.unlink(tempFilePath)
+  }
+
+  if(!req.files.logo || req.files.logo === undefined){
+    return next(new ErrorHandler('Logo not found', 404))
   }
 
   if (req.files && req.files.logo) {

@@ -1,22 +1,31 @@
+const { default: mongoose } = require('mongoose')
 const Product = require('../models/productModel')
 const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ApiFeatures = require('../utils/apifeature')
 
-exports.createProduct = catchAsyncError(async (req, res) => {
-  req.body.user = req.user.id
+exports.createProduct = catchAsyncError(async (req, res, next) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id)
 
-  const shop = await Shop.findOne({ userId: req.user.id })
+  try {
+    const shop = await Shop.findOne({userId})
+    if (!shop) {
+      return next(new ErrorHandler('shop not found', 404))
+    }
+    req.body.user = userId
 
-  var data = req.body
-  data.shop = shop._id
-  const product = await Product.create(req.body)
-  // delete __v
-  product.__v = undefined
-  product.reviews = undefined
+    var data = req.body
+    data.shop = shop._id
+    const product = await Product.create(req.body)
+    // delete __v
+    product.__v = undefined
+    product.reviews = undefined
 
-  res.status(201).json({ success: true, product })
+    res.status(201).json({ success: true, product })
+  } catch (error) {
+    next(error)
+  }
 })
 
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
