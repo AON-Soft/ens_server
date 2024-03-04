@@ -38,7 +38,7 @@ exports.createCard = catchAsyncError(async (req, res, next) => {
         { new: true, useFindAndModify: false },
       )
 
-      res.status(201).json({ success: true, card: updatedCard })
+      res.status(201).json({ success: true, data: updatedCard })
     }
   } else {
     req.body = {
@@ -62,7 +62,7 @@ exports.createCard = catchAsyncError(async (req, res, next) => {
 
     const response = await cardModel.findById(card._id).select('-__v').exec()
 
-    res.status(201).json({ success: true, card: response })
+    res.status(201).json({ success: true, data: response })
   }
 })
 
@@ -111,7 +111,7 @@ exports.increaseQuantity = catchAsyncError(async (req, res, next) => {
 
     res.status(200).json({ success: true, card: cardProductWithout__v })
   } else {
-    res.status(200).json({ success: true, card: card })
+    res.status(200).json({ success: true, data: card })
   }
 })
 
@@ -154,7 +154,7 @@ exports.decreaseQuantity = catchAsyncError(async (req, res, next) => {
   const cardProductWithout__v = updatedCard.toObject()
   delete cardProductWithout__v.__v
 
-  res.status(200).json({ success: true, card: cardProductWithout__v })
+  res.status(200).json({ success: true, data: cardProductWithout__v })
 })
 
 exports.removeFromCard = catchAsyncError(async (req, res, next) => {

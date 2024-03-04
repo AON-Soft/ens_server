@@ -22,7 +22,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
     product.__v = undefined
     product.reviews = undefined
 
-    res.status(201).json({ success: true, product })
+    res.status(201).json({ success: true, data:product })
   } catch (error) {
     next(error)
   }
@@ -41,7 +41,7 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
     useFindAndModify: false,
   })
 
-  res.status(200).json({ success: true, product })
+  res.status(200).json({ success: true, data:product })
 })
 
 exports.deleteProduct = catchAsyncError(async (req, res, next) => {

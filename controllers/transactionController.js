@@ -37,7 +37,7 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Token created successful',
-      token: req.token,
+      data: req.token,
     });
   } else if (req.order) {
     res.status(200).json({

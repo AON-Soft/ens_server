@@ -40,7 +40,7 @@ exports.updateLocation = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('location not found', 404))
     }
 
-    res.status(200).json({ success: true, location: location })
+    res.status(200).json({ success: true, data: location })
   } catch (error) {
     next(error)
   }  

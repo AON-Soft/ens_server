@@ -35,7 +35,7 @@ exports.createShopCategory = catchAsyncError(async (req, res, next) => {
   const shopCategoryWithout__v = shopCategory.toObject()
   delete shopCategoryWithout__v.__v
 
-  res.status(201).json({ success: true, category: shopCategoryWithout__v })
+  res.status(201).json({ success: true, data: shopCategoryWithout__v })
 })
 
 exports.updateShopCategory = catchAsyncError(async (req, res, next) => {
@@ -78,7 +78,7 @@ exports.updateShopCategory = catchAsyncError(async (req, res, next) => {
   const shopCategoryWithout__v = shopCategory.toObject()
   delete shopCategoryWithout__v.__v
 
-  res.status(200).json({ success: true, category: shopCategoryWithout__v })
+  res.status(200).json({ success: true, data: shopCategoryWithout__v })
 })
 
 exports.deleteShopCategory = catchAsyncError(async (req, res, next) => {

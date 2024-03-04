@@ -68,7 +68,7 @@ exports.sendNotification = catchAsyncError(async (req, res, next) => {
     const response = await notificationModel.create({ userId, orderId, title, message });
    
 
-    res.status(200).json({ message: 'Notification sent successfully', response});
+    res.status(200).json({ message: 'Notification sent successfully', data: response});
   } catch (error) {
     console.error('Error sending notification:', error);
     return next(new ErrorHandler('Notification is not created.'))

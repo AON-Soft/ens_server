@@ -37,7 +37,7 @@ exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
   const brandWithout__v = brand.toObject()
   delete brandWithout__v.__v
 
-  res.status(201).json({ success: true, brand: brandWithout__v })
+  res.status(201).json({ success: true, data: brandWithout__v })
 })
 
 exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
@@ -79,7 +79,7 @@ exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
   const brandWithout__v = brand.toObject()
   delete brandWithout__v.__v
 
-  res.status(201).json({ success: true, brand: brandWithout__v })
+  res.status(201).json({ success: true, data: brandWithout__v })
 })
 
 exports.updateBrand = catchAsyncError(async (req, res, next) => {
@@ -130,7 +130,7 @@ exports.updateBrand = catchAsyncError(async (req, res, next) => {
     const brandWithout__v = brand.toObject()
     delete brandWithout__v.__v
 
-    res.status(200).json({ success: true, brand: brandWithout__v })
+    res.status(200).json({ success: true, data: brandWithout__v })
   } else {
     return next(
       new ErrorHandler('You are not Authorized to Update this brand'),

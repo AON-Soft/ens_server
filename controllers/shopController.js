@@ -53,7 +53,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
   }
 
   const shop = await Shop.create(req.body)
-  res.status(200).json({ success: true, shop })
+  res.status(200).json({ success: true, data:shop })
 })
 
 exports.updateShopProfile = catchAsyncError(async (req, res) => {
@@ -113,7 +113,7 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
   });
 
   // Return updated shop
-  res.status(201).json({ success: true, updatedShop });
+  res.status(201).json({ success: true, data:updatedShop });
 });
 
 

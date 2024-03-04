@@ -5,7 +5,6 @@ const Categories = require('../models/categoryModel')
 const Shops = require('../models/shopModel')
 const ApiFeatures = require('../utils/apifeature')
 const ErrorHandler = require('../utils/errorhander')
-const categoryModel = require('../models/categoryModel')
 
 exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   // check the category name is already exist or not
@@ -41,7 +40,7 @@ exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
-  res.status(201).json({ success: true, category: categoryWithout__v })
+  res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
 exports.createCategoryByShop = catchAsyncError(async (req, res, next) => {
@@ -82,7 +81,7 @@ exports.createCategoryByShop = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
-  res.status(201).json({ success: true, category: categoryWithout__v })
+  res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
 exports.updateCategory = catchAsyncError(async (req, res, next) => {
@@ -132,7 +131,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     const categoryWithout__v = category.toObject()
     delete categoryWithout__v.__v
 
-    res.status(200).json({ success: true, category: categoryWithout__v })
+    res.status(200).json({ success: true, data: categoryWithout__v })
   } else {
     return next(
       new ErrorHandler('You are not Authorized to Update this brand'),
