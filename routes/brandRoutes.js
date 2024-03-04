@@ -29,7 +29,7 @@ router
   )
 
 router
-  .route('/shop/brands')
+  .route('/shop/brand/:id')
   .put(isAuthenticated, updateBrand)
   .delete(isAuthenticated, deleteBrand)
 router

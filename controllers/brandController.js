@@ -99,7 +99,7 @@ exports.updateBrand = catchAsyncError(async (req, res, next) => {
   }
 
   if (
-    req.user.role === 'admin' ||
+    req.user.role === 'admin' || req.user.role === 'super_admin' ||
     req.user.id.toString() === brand.createdBy.toString()
   ) {
     if (req.files && req.files.image) {
