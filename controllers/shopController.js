@@ -204,3 +204,25 @@ exports.getAllShops = catchAsyncError(async (_, res) => {
   const shops = await Shop.find()
   res.status(200).json({ success: true, shops })
 })
+
+exports.updateShopStatus = catchAsyncError(async (req, res, next) => {
+  try {
+    const shop = await Shop.findById(req.params.id);
+
+  if(!shop){
+    return next(new ErrorHandler('Shop not found', 404))
+  }
+
+  // Update shop details except the banner
+  const updatedShop = await Shop.findByIdAndUpdate(shop._id, req.body, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  // Return updated shop
+  res.status(201).json({ success: true, data:updatedShop });
+  } catch (error) {
+    next(error)
+  }
+})

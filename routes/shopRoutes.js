@@ -14,6 +14,7 @@ const {
   updateShopLocation,
   getNearbyShops,
   getAllShops,
+  updateShopStatus,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -46,5 +47,11 @@ router.route('/shops/nearby').get(isAuthenticated, getNearbyShops)
 router
   .route('/admin/shops')
   .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), getAllShops)
+
+
+router
+  .route('/admin/update-shop/status/:id')
+  .put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateShopStatus)
+
 
 module.exports = router
