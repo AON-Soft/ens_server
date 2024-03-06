@@ -124,3 +124,19 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
     filteredProductsCount,
   })
 })
+
+exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id)
+
+  if (!product) {
+    return next(new ErrorHandler('Product not found', 404))
+  }
+  res.status(200).json({
+    success: true,
+    data: product,
+  })
+  } catch (error) {
+    next(error)
+  }
+})
