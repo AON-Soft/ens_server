@@ -35,7 +35,7 @@ router
   )
 
 router
-  .route('/shop')
+  .route('/shop/details/:id')
   .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), getShopDetails)
 
 router

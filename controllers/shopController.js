@@ -151,10 +151,18 @@ exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
 
 })
 
-exports.getShopDetails = catchAsyncError(async (req, res) => {
-  const shop = await Shop.findOne({ createdBy: req.user.id })
+exports.getShopDetails = catchAsyncError(async (req, res, next) => {
+  try {
+    const shop = await Shop.findById(req.params.id);
 
-  res.status(200).json({ success: true, shop })
+    if(!shop){
+      return next(new ErrorHandler('Shop not found', 404))
+    }
+      res.status(200).json({ success: true, data: shop })
+    }
+  catch(error){
+    next(error)
+  }
 })
 
 exports.deleteShop = catchAsyncError(async (req, res, next) => {
