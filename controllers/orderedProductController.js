@@ -797,7 +797,7 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       await session.commitTransaction();
       session.endSession();
 
-      res.status(200).json({ success: true, message: 'Order status updated successfully', order });
+      res.status(200).json({ success: true, message: 'Order status updated successfully', data: order });
     }
   } catch (error) {
     if (session) {

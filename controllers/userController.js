@@ -499,7 +499,7 @@ exports.updateUserRole = catchAsyncError(async (req, res, _) => {
 
   const user = await User.findById(req.params.id)
 
-  res.status(200).json({ success: true, user })
+  res.status(200).json({ success: true, data: user })
 })
 
 //Update User status ---Admin
@@ -516,7 +516,7 @@ exports.updateUserStatus = catchAsyncError(async (req, res, _) => {
 
    const user = await User.findById(req.params.id)
 
-  res.status(200).json({ success: true, user })
+  res.status(200).json({ success: true, data: user })
 })
 
 //Delete User ---Admin
