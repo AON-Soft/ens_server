@@ -15,6 +15,7 @@ const {
   getNearbyShops,
   getAllShops,
   updateShopStatus,
+  getShopDetailsByShopKeeper,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -35,8 +36,12 @@ router
   )
 
 router
+  .route('/shop/details')
+  .get(isAuthenticated, isAuthorizeRoles('shop_keeper'), isAuthenticatedShop, getShopDetailsByShopKeeper)
+
+router
   .route('/shop/details/:id')
-  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), getShopDetails)
+  .get(isAuthenticated, getShopDetails)
 
 router
   .route('/admin/delete-shop/:id')
