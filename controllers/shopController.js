@@ -33,7 +33,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
     await fs.unlink(tempFilePath)
   }
 
-  if(!req.files.logo || req.files.logo === undefined){
+  if(!req.files.logo || req.files.logo === 'undefined'){
     return next(new ErrorHandler('Logo not found', 404))
   }
 

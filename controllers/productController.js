@@ -43,17 +43,12 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
     req.body.shop = shop._id;
 
     const product = await Product.create(req.body);
-    // Delete __v and reviews
-    // product.images.forEach(image => delete image._id);
-    product.__v = undefined;
-    product.reviews = undefined;
-
+    
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     next(error);
   }
 });
-
 
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   try {
@@ -102,8 +97,8 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
     if (req.body.commission) {
       product.commission = req.body.commission;
     }
-    if (req.body.images !== undefined) {
-      if (!req.files.images || req.files.images.length === 0) {
+    if (req.files && req.files.images) {
+      if (req.files.images.length === 0) {
         return next(new ErrorHandler('Images not found', 404));
       }
 
@@ -125,10 +120,7 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
         await fs.unlink(tempFilePath);
       }
 
-      product.images = uploadedImages;
-    } else if (req.body.images === null) {
-      product.images = null; 
-    }
+    } 
    
     // Save the updated product
     await product.save();

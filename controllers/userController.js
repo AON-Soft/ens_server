@@ -569,12 +569,12 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
   }
 
   // Update main balance if provided
-  if (balance !== undefined) {
+  if (balance !== 'undefined') {
     user.balance = (user.balance || 0) + balance;
   }
 
   // Update bonus balance if provided
-  if (bonusBalance !== undefined) {
+  if (bonusBalance !== 'undefined') {
     user.bonusBalance = (user.bonusBalance || 0) + bonusBalance;
   }
 
