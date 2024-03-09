@@ -6,6 +6,7 @@ const ErrorHandler = require('../utils/errorhander')
 const userModel = require('../models/userModel')
 const uniqueTransactionID = require('../utils/transactionID')
 const orderedProductModel = require('../models/orderedProductModel')
+const ApiFeatures = require('../utils/apifeature')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
@@ -185,6 +186,8 @@ exports.getAllOrderByUser = catchAsyncError(async (req, res) => {
 exports.getAllOrders = catchAsyncError(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
+
+  
 
   const pipeline = [
     {
@@ -809,25 +812,32 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
 });
 
 // get all invoice
-exports.getAllInvoice = catchAsyncError(async (_, res, next) => {
+exports.getAllInvoice = catchAsyncError(async (req, res, next) => {
   try {
-    // Fetch ordered products from the database
-    const orders = await orderedProductModel.find()
-      .populate({path: 'userId', select: 'avatar name email'})
-      .populate({path: 'shopID', select: 'name info logo banner location address'})
-      .exec()
+    const resultPerPage = 10
+    const count = await orderedProductModel.countDocuments()
+    const apiFeature = new ApiFeatures(
+    orderedProductModel.find()
+    .populate({path: 'userId', select: 'avatar name email'})
+    .populate({path: 'shopID', select: 'name info logo banner location address'}),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-    if (!orders) {
-      next(new ErrorHandler('No order found', 400))
-    }
+    let invoices = await apiFeature.query
+    let filteredCount = invoices.length
 
     res.status(200).json({
-      status: 'success',
-      data: orders
-    });
-  } catch (error) {
-    return next(error);
-  }
+      success: true,
+      data: invoices,
+      count,
+      resultPerPage,
+      filteredCount,
+    })
+    } catch (error) {
+      return next(error);
+    }
 });
 
 // get single invoice
@@ -856,20 +866,28 @@ exports.getSingleInvoice = catchAsyncError(async (req, res, next) => {
 exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
   try {
-    const order = await orderedProductModel.find({shopID : shopId})
-      .populate({path: 'userId', select: 'avatar name email'})
-      .populate({path: 'shopID', select: 'name info logo banner location address'})
-      .exec()
+    const resultPerPage = 10
+    const count = await orderedProductModel.countDocuments({shopID : shopId})
+    const apiFeature = new ApiFeatures(
+    orderedProductModel.find({shopID : shopId})
+    .populate({path: 'userId', select: 'avatar name email'})
+    .populate({path: 'shopID', select: 'name info logo banner location address'}),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-    if (!order) {
-      next(new ErrorHandler('No order found', 400))
-    }
+    let invoices = await apiFeature.query
+    let filteredCount = invoices.length
 
-    // Send the invoice data as response
     res.status(200).json({
-      status: 'success',
-      data: order
-    });
+      success: true,
+      data: invoices,
+      count,
+      resultPerPage,
+      filteredCount,
+    })
+
   } catch (error) {
     return next(error);
   }

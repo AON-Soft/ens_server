@@ -1,4 +1,3 @@
-const { Types } = require('mongoose')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const locationModel = require('../models/locationModel')
 const userModel = require('../models/userModel')

@@ -5,6 +5,7 @@ const catchAsyncError = require('../middleware/catchAsyncError')
 const Shop = require('../models/shopModel')
 // const User = require("../models/userModel");
 const ErrorHandler = require('../utils/errorhander')
+const ApiFeatures = require('../utils/apifeature')
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
 
@@ -222,9 +223,27 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, data: shops })
 })
 
-exports.getAllShops = catchAsyncError(async (_, res) => {
-  const shops = await Shop.find()
-  res.status(200).json({ success: true, shops })
+exports.getAllShops = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+  const count = await Shop.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Shop.find(),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let shops = await apiFeature.query
+  let filteredCount = shops.length
+
+  res.status(200).json({
+    success: true,
+    shops,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 exports.updateShopStatus = catchAsyncError(async (req, res, next) => {

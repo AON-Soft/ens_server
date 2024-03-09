@@ -17,12 +17,19 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
     }
     req.body.user = userId;
 
-    if (!req.files.images || req.files.images.length === 0) {
+    let images = req.files.images; 
+
+    // Check if images is not an array
+    if (!Array.isArray(images)) {
+      images = [images];
+    }
+
+    if (!images || images.length === 0) {
       return next(new ErrorHandler('Images not found', 404));
     }
 
     const uploadedImages = [];
-    for (const image of req.files.images) {
+    for (const image of images) {
       const tempFilePath = `temp_${Date.now()}_${image.name}`;
       await image.mv(tempFilePath);
 
@@ -49,6 +56,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
     next(error);
   }
 });
+
 
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   try {
@@ -97,40 +105,62 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
     if (req.body.commission) {
       product.commission = req.body.commission;
     }
-    if (req.files && req.files.images) {
-      if (req.files.images.length === 0) {
-        return next(new ErrorHandler('Images not found', 404));
-      }
 
-      const uploadedImages = [];
-      for (const image of req.files.images) {
-        const tempFilePath = `temp_${Date.now()}_${image.name}`;
-        await image.mv(tempFilePath);
+    // Check if images are provided in the request
+    if (req.files && req.files.images) {
+      if (Array.isArray(req.files.images)) { // If multiple images are uploaded
+        if (req.files.images.length === 0) {
+          return next(new ErrorHandler('Images not found', 404));
+        }
+
+        const uploadedImages = [];
+        for (const image of req.files.images) {
+          const tempFilePath = `temp_${Date.now()}_${image.name}`;
+          await image.mv(tempFilePath);
+
+          const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
+            folder: 'productImages',
+            crop: 'scale',
+          });
+
+          uploadedImages.push({
+            public_id: myCloudImage.public_id,
+            url: myCloudImage.secure_url,
+          });
+
+          await fs.unlink(tempFilePath);
+        }
+
+        product.images = uploadedImages; 
+      } else { // If a single image is uploaded
+        const tempFilePath = `temp_${Date.now()}_${req.files.images.name}`;
+        await req.files.images.mv(tempFilePath);
 
         const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
           folder: 'productImages',
           crop: 'scale',
         });
 
-        uploadedImages.push({
+        const uploadedImage = {
           public_id: myCloudImage.public_id,
           url: myCloudImage.secure_url,
-        });
+        };
 
         await fs.unlink(tempFilePath);
-      }
 
-    } 
-   
-    // Save the updated product
+        product.images = [uploadedImage]; 
+      }
+    }
+
+    // Save product
     await product.save();
 
-    // Return the updated product
     res.status(200).json({ success: true, data: product });
   } catch (error) {
     next(error);
   }
 });
+
 
 exports.deleteProduct = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.params.id)

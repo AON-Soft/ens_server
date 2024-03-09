@@ -14,6 +14,7 @@ const ErrorHandler = require('../utils/errorhander.js')
 
 const catchAsyncError = require('../middleware/catchAsyncError.js')
 const orderedProductModel = require('../models/orderedProductModel.js')
+const ApiFeatures = require('../utils/apifeature.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -447,31 +448,95 @@ exports.updateProfile = catchAsyncError(async (req, res, _) => {
 })
 
 //Get All Users(admin)
-exports.getAllUsers = catchAsyncError(async (_, res) => {
-  const users = await User.find()
+exports.getAllUsers = catchAsyncError(async (req, res) => {   
+  const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'user' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'user' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get All Admin(admin)
-exports.getAllAdmins = catchAsyncError(async (_, res) => {
-  const users = await User.find({ role: 'admin' })
+exports.getAllAdmins = catchAsyncError(async (req, res) => { 
+  const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'admin' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'admin' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get All Agents (admin)
-exports.getAllAgents = catchAsyncError(async (_, res) => {
-  const users = await User.find({ role: 'agent' })
+exports.getAllAgents = catchAsyncError(async (req, res) => {
+const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'agent' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'agent' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get All Shopkeeper (admin)
-exports.getAllShopKeepers = catchAsyncError(async (_, res) => {
-  const users = await User.find({ role: 'shop_keeper' })
+exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'shop_keeper' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'shop_keeper' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get Single Users(admin)
