@@ -189,19 +189,15 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
     let userId = req.user.id;
     userId = new mongoose.Types.ObjectId(userId);
 
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
     const earnings = await Transaction.find({
       $and: [
         { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] }, 
-        { createdAt: { $gte: sixMonthsAgo } }, 
-        { paymentType: 'bonus_points' },
-        { transactionRelation: { $in: ['user-To-user', 'user-To-admin'] } } 
+        { paymentType: { $in: ['points', 'bonus_points'] } },
+        { transactionRelation: { $in: ['user-To-user', 'user-To-admin', 'user-To-super_admin'] } },
+        { 'receiver.flag': 'Credit' }
       ]
     });
 
-    // Calculate total earnings
     let totalEarnings = 0;
     for (const earning of earnings) {
       totalEarnings += earning.transactionAmount;
