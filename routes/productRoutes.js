@@ -20,7 +20,7 @@ router
 
 router
   .route('/admin/products/shop/:id')
-  .get(isAuthenticated, isAuthorizeRoles('admin'), adminGetAllProductsByShop)
+  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), adminGetAllProductsByShop)
 
 router
   .route('/user/products/shop/:id')

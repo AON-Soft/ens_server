@@ -148,7 +148,19 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
   const resultPerPage = 10
   const productsCount = await Product.countDocuments({ user: req.user.id })
   const apiFeature = new ApiFeatures(
-    Product.find({ user: req.user.id }).select('-__v -reviews -shop -user'),
+    Product.find({ user: req.user.id }).select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    }),
     req.query,
   )
     .search()
@@ -171,7 +183,19 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
   const resultPerPage = 10
   const productsCount = await Product.countDocuments({ shop: req.params.id })
   const apiFeature = new ApiFeatures(
-    Product.find({ shop: req.params.id }).select('-__v -reviews -shop -user'),
+    Product.find({ user: req.user.id }).select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    }),
     req.query,
   )
     .search()
@@ -194,7 +218,19 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
   const resultPerPage = 10
   const productsCount = await Product.countDocuments({ shop: req.params.id })
   const apiFeature = new ApiFeatures(
-    Product.find({ shop: req.params.id }).select('-__v -reviews -shop -user'),
+    Product.find({ user: req.user.id }).select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    }),
     req.query,
   )
     .search()
@@ -215,7 +251,19 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
 
 exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const product = await Product.findById(req.params.id).select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    }).exec()
 
   if (!product) {
     return next(new ErrorHandler('Product not found', 404))

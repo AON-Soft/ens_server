@@ -82,7 +82,7 @@ const productSchema = new mongoose.Schema({
   },
   shop: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Shop',
+    ref: 'shop',
     required: true,
   },
   createdAt: {
