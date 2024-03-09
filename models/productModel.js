@@ -25,17 +25,13 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-   
-  images: [{
-    public_id: String,
+  images: {
     url: String
-  }],
-
+  },
   categoryId: {
     type: mongoose.Schema.ObjectId,
     ref: 'Categories',
   },
-
   stockUnit: {
     type: String,
     required: [true, 'Please Enter Stock Unit'],

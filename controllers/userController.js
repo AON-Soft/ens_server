@@ -13,7 +13,6 @@ const sendTempToken = require('../utils/TempJwtToken.js')
 const ErrorHandler = require('../utils/errorhander.js')
 
 const catchAsyncError = require('../middleware/catchAsyncError.js')
-const orderedProductModel = require('../models/orderedProductModel.js')
 const ApiFeatures = require('../utils/apifeature.js')
 
 //Register a User: /api/v1/register
@@ -653,3 +652,43 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
   res.status(202).json({ success: true, response })
 })
 
+exports.imageUpload = catchAsyncError(async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No images uploaded' });
+    }
+
+      let images = req.files.images; 
+
+    // Check if images is not an array
+    if (!Array.isArray(images)) {
+      images = [images];
+    }
+
+    if (!images || images.length === 0) {
+      return next(new ErrorHandler('Images not found', 404));
+    }
+
+    const uploadedImages = [];
+    for (const image of images) {
+      const tempFilePath = `temp_${Date.now()}_${image.name}`;
+      await image.mv(tempFilePath);
+
+      const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
+        folder: 'images',
+        crop: 'scale',
+      });
+
+      uploadedImages.push({
+        public_id: myCloudImage.public_id,
+        url: myCloudImage.secure_url,
+      });
+
+      await fs.unlink(tempFilePath);
+    }
+
+    res.status(200).json({ success: true, imageUrls: uploadedImages });
+  } catch (error) {
+    next(error);
+  }
+})

@@ -1,6 +1,4 @@
 const { default: mongoose } = require('mongoose')
-const fs = require('fs').promises
-const cloudinary = require('cloudinary')
 const Product = require('../models/productModel')
 const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
@@ -8,49 +6,37 @@ const catchAsyncError = require('../middleware/catchAsyncError')
 const ApiFeatures = require('../utils/apifeature')
 
 exports.createProduct = catchAsyncError(async (req, res, next) => {
-  const userId = new mongoose.Types.ObjectId(req.user.id);
+
+   const { name, description, price, points, images, categoryId, stockUnit, availableStock, commission } = req.body;
+
+    if (!name || !description || !price || !points || !stockUnit || !availableStock || images || categoryId || commission) {
+      return next(new ErrorHandler('Please provide all required fields', 400));
+    }
 
   try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+
+    // Find the shop associated with the user
     const shop = await Shop.findOne({ userId });
     if (!shop) {
       return next(new ErrorHandler('Shop not found', 404));
     }
-    req.body.user = userId;
 
-    let images = req.files.images; 
+    // Create the product
+    const product = await Product.create({
+      name: name,
+      description: description,
+      price: price,
+      points: points,
+      images: { url: images }, 
+      categoryId: categoryId || null,
+      stockUnit: stockUnit,
+      availableStock: availableStock,
+      commission: commission || 0,
+      user: userId,
+      shop: shop._id,
+    });
 
-    // Check if images is not an array
-    if (!Array.isArray(images)) {
-      images = [images];
-    }
-
-    if (!images || images.length === 0) {
-      return next(new ErrorHandler('Images not found', 404));
-    }
-
-    const uploadedImages = [];
-    for (const image of images) {
-      const tempFilePath = `temp_${Date.now()}_${image.name}`;
-      await image.mv(tempFilePath);
-
-      const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
-        folder: 'productImages',
-        crop: 'scale',
-      });
-
-      uploadedImages.push({
-        public_id: myCloudImage.public_id,
-        url: myCloudImage.secure_url,
-      });
-
-      await fs.unlink(tempFilePath);
-    }
-
-    req.body.images = uploadedImages;
-    req.body.shop = shop._id;
-
-    const product = await Product.create(req.body);
-    
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     next(error);
@@ -105,51 +91,8 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
     if (req.body.commission) {
       product.commission = req.body.commission;
     }
-
-    // Check if images are provided in the request
-    if (req.files && req.files.images) {
-      if (Array.isArray(req.files.images)) { // If multiple images are uploaded
-        if (req.files.images.length === 0) {
-          return next(new ErrorHandler('Images not found', 404));
-        }
-
-        const uploadedImages = [];
-        for (const image of req.files.images) {
-          const tempFilePath = `temp_${Date.now()}_${image.name}`;
-          await image.mv(tempFilePath);
-
-          const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
-            folder: 'productImages',
-            crop: 'scale',
-          });
-
-          uploadedImages.push({
-            public_id: myCloudImage.public_id,
-            url: myCloudImage.secure_url,
-          });
-
-          await fs.unlink(tempFilePath);
-        }
-
-        product.images = uploadedImages; 
-      } else { // If a single image is uploaded
-        const tempFilePath = `temp_${Date.now()}_${req.files.images.name}`;
-        await req.files.images.mv(tempFilePath);
-
-        const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
-          folder: 'productImages',
-          crop: 'scale',
-        });
-
-        const uploadedImage = {
-          public_id: myCloudImage.public_id,
-          url: myCloudImage.secure_url,
-        };
-
-        await fs.unlink(tempFilePath);
-
-        product.images = [uploadedImage]; 
-      }
+    if (req.body.images) {
+      product.images = { url: req.body.images }; 
     }
 
     // Save product
