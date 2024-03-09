@@ -9,7 +9,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
 
    const { name, description, price, points, images, categoryId, stockUnit, availableStock, commission } = req.body;
 
-    if (!name || !description || !price || !points || !stockUnit || !availableStock || images || categoryId || commission) {
+    if (!name || !description || !price || !points || !stockUnit || !availableStock || !images || !categoryId || !commission) {
       return next(new ErrorHandler('Please provide all required fields', 400));
     }
 
