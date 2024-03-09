@@ -183,3 +183,33 @@ exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
   console.log(result)
   res.status(200).json({ success: true, balanceHistory: result })
 })
+
+exports.earningHistory = catchAsyncError(async (req, res) => {
+  try {
+    let userId = req.user.id;
+    userId = new mongoose.Types.ObjectId(userId);
+
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const earnings = await Transaction.find({
+      $and: [
+        { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] }, 
+        { createdAt: { $gte: sixMonthsAgo } }, 
+        { paymentType: 'bonus_points' },
+        { transactionRelation: { $in: ['user-To-user', 'user-To-admin'] } } 
+      ]
+    });
+
+    // Calculate total earnings
+    let totalEarnings = 0;
+    for (const earning of earnings) {
+      totalEarnings += earning.transactionAmount;
+    }
+
+    res.status(200).json({ success: true, earnings: totalEarnings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});

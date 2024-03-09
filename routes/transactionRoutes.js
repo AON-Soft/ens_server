@@ -6,6 +6,7 @@ const {
   createTransaction,
   transactionHistory,
   getUsersBasedOnLastPointsOut,
+  earningHistory,
 } = require('../controllers/transactionController')
 const {
   userToAgentPointsOut,
@@ -37,5 +38,9 @@ router
 router
   .route('/user/shop_keeper/sendPoints')
   .post(isAuthenticated, isAuthorizeRoles('user'), sendPointsAgentToUser, createTransaction)
+
+router
+  .route('/self/earnings')
+  .get(isAuthenticated, earningHistory)
 
 module.exports = router
