@@ -1,21 +1,31 @@
 const mongoose = require('mongoose')
 
 const locationSchema = new mongoose.Schema({
-  title: {
+  address_one: {
     type: String,
-    required: [true, 'Please Enter Title'],
+    required: [true, 'This field can not be empty'],
     trim: true,
   },
-  subtitle: {
+  address_two: {
     type: String,
-    required: [true, 'Please Enter Sub-Title'],
     trim: true,
+  },
+  country: {
+    type: String,
+    required: true,
+  },
+  city: {
+    type: String,
+    required: true,
+  },
+  zip: {
+    type: String,
+    required: true,
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-
   createdAt: {
     type: Date,
     default: Date.now,

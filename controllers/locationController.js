@@ -4,7 +4,7 @@ const userModel = require('../models/userModel')
 const ErrorHandler = require('../utils/errorhander')
 
 exports.createLocatiion = catchAsyncError(async (req, res, next) => {
-  const {title, subtitle} = req.body;
+  const {address_one, address_two, city, country, zip} = req.body;
 
   try {
     const user = await userModel.findById(req.user.id);
@@ -13,8 +13,11 @@ exports.createLocatiion = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('User not found.'))
     }
     const newData = {
-      title,
-      subtitle,
+      address_one,
+      address_two,
+      country,
+      city,
+      zip,
       userId: user._id
     }
 
