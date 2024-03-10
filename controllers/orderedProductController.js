@@ -139,15 +139,15 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
       totalCommissionBill
     };
 
-    // const order = await Order.create(data);
+    const order = await Order.create(data);
 
-    // if (!order) {
-    //   await session.abortTransaction();
-    //   session.endSession();
-    //   return next(new ErrorHandler('Order is not created.', 400));
-    // }
+    if (!order) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order is not created.', 400));
+    }
 
-    // await Card.findByIdAndDelete(cardID);
+    await Card.findByIdAndDelete(cardID);
 
     req.order = data
 
@@ -162,6 +162,9 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
 // get all order by shop
 exports.getAllOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+
   const pipeline = [
     {
       $match: {
@@ -194,15 +197,45 @@ exports.getAllOrderByShop = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  // Count total number of orders for the user
+  const countPipeline = [
+    {
+      $match: {
+        shopID: shopId,
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all order by user
 exports.getAllOrderByUser = catchAsyncError(async (req, res) => {
-  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const userId = new mongoose.Types.ObjectId(req.user.id);
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+
   const pipeline = [
     {
       $match: {
@@ -235,18 +268,45 @@ exports.getAllOrderByUser = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
-  ]
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
+  ];
 
-  const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
-})
+  const result = await Order.aggregate(pipeline);
+
+  // Count total number of orders for the user
+  const countPipeline = [
+    {
+      $match: {
+        userId: userId,
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
+});
+
 
 // get all order
 exports.getAllOrders = catchAsyncError(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-
-  
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
 
   const pipeline = [
     {
@@ -276,33 +336,30 @@ exports.getAllOrders = catchAsyncError(async (req, res) => {
       },
     },
     {
-      $skip: (page - 1) * limit,
+      $skip: (page - 1) * resultPerPage
     },
     {
-      $limit: limit,
-    },
+      $limit: resultPerPage 
+    }
   ];
+
+  const result = await Order.aggregate(pipeline);
 
   const countPipeline = [
     {
-      $count: 'totalCount',
+      $count: 'count',
     },
   ];
 
-  const [orders, count] = await Promise.all([
-    Order.aggregate(pipeline),
-    Order.aggregate(countPipeline),
-  ]);
-
-  const totalOrders = count.length > 0 ? count[0].totalCount : 0;
-  const totalPages = Math.ceil(totalOrders / limit);
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
 
   res.status(200).json({
     success: true,
-    orders: orders,
-    totalPages: totalPages,
-    currentPage: page,
-    totalOrders: totalOrders,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
   });
 });
 
@@ -310,6 +367,9 @@ exports.getAllOrders = catchAsyncError(async (req, res) => {
 // get all pending order by shop
 exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -343,15 +403,46 @@ exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'pending',
+      }
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all confirm order by shop
 exports.getAllConfirmOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -385,15 +476,46 @@ exports.getAllConfirmOrderByShop = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'order_confirm',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
-// get all cancel order by shop
+// get all on delivery order by shop
 exports.getAllOnDeliveryOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -427,15 +549,46 @@ exports.getAllOnDeliveryOrderByShop = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'on_delivery',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all completed order by shop
 exports.getAllDoneOrderOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -469,15 +622,46 @@ exports.getAllDoneOrderOrderByShop = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'order_done',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all cancel order by shop
 exports.getAllCancelOrderOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -511,15 +695,46 @@ exports.getAllCancelOrderOrderByShop = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        shopID: shopId,
+        orderStatus: 'canceled',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all pending order by user
 exports.getAllPendingOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -553,15 +768,46 @@ exports.getAllPendingOrderByUser = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'pending',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all confirm order by user
 exports.getAllConfirmOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -595,15 +841,46 @@ exports.getAllConfirmOrderByUser = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'order_confirm',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all on delivery order by user
 exports.getAllOnDeliveryOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -637,15 +914,46 @@ exports.getAllOnDeliveryOrderByUser = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'on_delivery',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all completed order by user
 exports.getAllDoneOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -679,15 +987,46 @@ exports.getAllDoneOrderByUser = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'order_done',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all cancel order by user
 exports.getAllCancelOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  
   const pipeline = [
     {
       $match: {
@@ -721,10 +1060,38 @@ exports.getAllCancelOrderByUser = catchAsyncError(async (req, res) => {
         totalBill: 1,
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
   ]
 
   const result = await Order.aggregate(pipeline)
-  res.status(200).json({ success: true, orders: result })
+  
+  const countPipeline = [
+    {
+      $match: {
+        userId: userId,
+        orderStatus: 'canceled',
+      },
+    },
+    {
+      $count: 'count',
+    },
+  ];
+
+  const countResult = await Order.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    orders: result,
+    count, 
+    resultPerPage,
+    filteredCount: result.length 
+  });
 })
 
 // get all single order
