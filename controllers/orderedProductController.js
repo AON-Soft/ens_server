@@ -7,14 +7,17 @@ const userModel = require('../models/userModel')
 const uniqueTransactionID = require('../utils/transactionID')
 const orderedProductModel = require('../models/orderedProductModel')
 const ApiFeatures = require('../utils/apifeature')
+const transactionModel = require('../models/transactionModel')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
-  const { address, discount, deliveryCharge, totalBill, totalCommissionBill } = req.body;
+  const { address, discount, deliveryCharge, paymentStatus, totalBill, totalCommissionBill } = req.body;
   const cardID = req.params.id;
   const userID = req.user.id;
 
   try {
+    const sender = await userModel.findById(userID).session(session);
+
     let existUser = await userModel.findById(userID).session(session);
 
     if (!existUser) {
@@ -54,17 +57,72 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
         break;
       }
 
-      await userModel.findByIdAndUpdate(existUser.parent._id, { $inc: { bonusBalance: shareAmount } }, { session });
-
+      const receiver  = await userModel.findByIdAndUpdate(existUser.parent._id, { $inc: { bonusBalance: shareAmount } }, { session });
+      
       commissionAmount -= shareAmount;
 
+       const transaction = new transactionModel({
+        transactionID: uniqueTransactionID(),
+        transactionAmount: shareAmount,
+        serviceCharge: 0,
+        sender: {
+          user: sender._id,
+          name: sender.name,
+          email: sender.email,
+          flag: 'Debit',
+          transactionHeading: 'Referral Bonus Sent',
+        },
+        receiver: {
+          user: receiver._id,
+          name: receiver.name,
+          email: receiver.email,
+          flag: 'Credit',
+          transactionHeading: 'Referral Bonus Received',
+        },
+        transactionType: 'referal_bonus',
+        paymentType: 'bonus_points',
+        transactionRelation: `${sender.role}-To-${receiver.role}`,
+      });
+
+      await transaction.save();
+      
+
       existUser = await userModel.findById(existUser.parent._id).session(session);
+     
     }
 
     if (commissionAmount > 0) {
       const superAdmin = await userModel.findOne({ role: 'super_admin' }).session(session);
       if (superAdmin) {
-        await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: commissionAmount } }, { session });
+      await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: commissionAmount } }, { session });
+    
+      const transaction = new transactionModel({
+        transactionID: uniqueTransactionID(),
+        transactionAmount: commissionAmount,
+        serviceCharge: 0,
+        sender: {
+          user: sender._id,
+          name: sender.name,
+          email: sender.email,
+          flag: 'Debit',
+          transactionHeading: 'Referral Bonus Sent',
+        },
+        receiver: {
+          user: superAdmin._id,
+          name: superAdmin.name,
+          email: superAdmin.email,
+          flag: 'Credit',
+          transactionHeading: 'Referral Bonus Received',
+        },
+        transactionType: 'referal_bonus',
+        paymentType: 'bonus_points',
+        transactionRelation: `${sender.role}-To-${superAdmin.role}`,
+      });
+
+      await transaction.save();
+
+      commissionAmount -= shareAmount;
+
       }
     }
 
@@ -76,21 +134,22 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
       shippingAddress: address,
       discount,
       deliveryCharge,
+      paymentStatus,
       totalBill,
       totalCommissionBill
     };
 
-    const order = await Order.create(data);
+    // const order = await Order.create(data);
 
-    if (!order) {
-      await session.abortTransaction();
-      session.endSession();
-      return next(new ErrorHandler('Order is not created.', 400));
-    }
+    // if (!order) {
+    //   await session.abortTransaction();
+    //   session.endSession();
+    //   return next(new ErrorHandler('Order is not created.', 400));
+    // }
 
-    await Card.findByIdAndDelete(cardID);
+    // await Card.findByIdAndDelete(cardID);
 
-    req.order = order
+    req.order = data
 
     next();
   } catch (error) {
@@ -726,6 +785,8 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
 
       let user = await userModel.findOne({ _id: userId }).session(session);
 
+      const receiver = await userModel.findOne({ _id: userId }).session(session);
+
       if (!user || user.balance < totalBill) {
         await session.abortTransaction();
         session.endSession();
@@ -761,7 +822,7 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       req.session = session;
       req.order = updateOrder;
 
-         // get back commission from upto top 5 label generation
+      // get back commission from upto top 5 label generation
       let commissionAmount = (totalCommissionBill/2);
       const shareAmount = commissionAmount / 5;
 
@@ -770,9 +831,34 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
           break;
         }
 
-        await userModel.findByIdAndUpdate(user.parent._id, { $inc: { bonusBalance: -shareAmount } }, { session });
+      const sender = await userModel.findByIdAndUpdate(user.parent._id, { $inc: { bonusBalance: -shareAmount } }, { session });
 
-        commissionAmount -= shareAmount;
+      commissionAmount -= shareAmount;
+
+       const transaction = new transactionModel({
+        transactionID: uniqueTransactionID(),
+        transactionAmount: shareAmount,
+        serviceCharge: 0,
+        sender: {
+          user: sender._id,
+          name: sender.name,
+          email: sender.email,
+          flag: 'Debit',
+          transactionHeading: 'Return Bonus Sent',
+        },
+        receiver: {
+          user: receiver._id,
+          name: receiver.name,
+          email: receiver.email,
+          flag: 'Credit',
+          transactionHeading: 'Return Bonus Received',
+        },
+        transactionType: 'referal_bonus',
+        paymentType: 'bonus_points',
+        transactionRelation: `${sender.role}-To-${receiver.role}`,
+      });
+
+        await transaction.save({ session });
 
         user = await userModel.findById(user.parent._id).session(session);
       }
@@ -781,9 +867,33 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
         const superAdmin = await userModel.findOne({ role: 'super_admin' }).session(session);
         if (superAdmin) {
           await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: -commissionAmount } }, { session });
+          
+          const transaction = new transactionModel({
+            transactionID: uniqueTransactionID(),
+            transactionAmount: commissionAmount,
+            serviceCharge: 0,
+            sender: {
+              user: superAdmin._id,
+              name: superAdmin.name,
+              email: superAdmin.email,
+              flag: 'Debit',
+              transactionHeading: 'Return Bonus Sent',
+            },
+            receiver: {
+              user: receiver._id,
+              name: receiver.name,
+              email: receiver.email,
+              flag: 'Credit',
+              transactionHeading: 'Return Bonus Received',
+            },
+            transactionType: 'referal_bonus',
+            paymentType: 'bonus_points',
+            transactionRelation: `${superAdmin.role}-To-${receiver.role}`,
+          });
+
+        await transaction.save({ session });
         }
       }
-
 
       next();
     } else {

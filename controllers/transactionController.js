@@ -43,7 +43,7 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Order placed successfully',
-      order: req.order,
+      data: req.order,
     });
   } else {
     res.status(200).json({
@@ -185,27 +185,54 @@ exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
 })
 
 exports.earningHistory = catchAsyncError(async (req, res) => {
-  try {
-    let userId = req.user.id;
-    userId = new mongoose.Types.ObjectId(userId);
+  let userId = req.user.id;
+  userId = new mongoose.Types.ObjectId(userId);
 
-    const earnings = await Transaction.find({
-      $and: [
-        { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] }, 
-        { paymentType: { $in: ['points', 'bonus_points'] } },
-        { transactionRelation: { $in: ['user-To-user', 'user-To-admin', 'user-To-super_admin'] } },
-        { 'receiver.flag': 'Credit' }
-      ]
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const earningPipeline = [
+    {
+      $match: {
+        'receiver.user': userId,
+        'receiver.flag': 'Credit', // Filter transactions where receiver.flag is "Credit"
+        createdAt: { $gte: sixMonthsAgo },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalEarnings: {
+          $sum: '$transactionAmount',
+        },
+        earningHistory: {
+          $push: {
+            transactionID: '$transactionID',
+            transactionType: '$transactionType',
+            transactionAmount: '$transactionAmount',
+            transactionHeading: '$receiver.transactionHeading',
+            date: '$createdAt',
+          },
+        },
+      },
+    },
+  ];
+
+  const earningResult = await Transaction.aggregate(earningPipeline);
+
+  if (earningResult.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: 'No earnings found for the user in the last 6 months.',
+      earningResult,
     });
-
-    let totalEarnings = 0;
-    for (const earning of earnings) {
-      totalEarnings += earning.transactionAmount;
-    }
-
-    res.status(200).json({ success: true, earnings: totalEarnings });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
   }
+
+  const { totalEarnings, earningHistory } = earningResult[0];
+
+  res.status(200).json({
+    success: true,
+    totalEarnings,
+    earningHistory,
+  });
 });

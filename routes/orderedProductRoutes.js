@@ -205,7 +205,7 @@ router
   .route('/invoice/pyament/status/:id')
   .put(
     isAuthenticated,
-    isAuthorizeRoles('admin', 'super_admin', 'shop_keeper'),
+    isAuthorizeRoles('shop_keeper'),
     changePyamentStatus,
   )
 router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
