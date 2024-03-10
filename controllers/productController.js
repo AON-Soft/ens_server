@@ -249,3 +249,38 @@ exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
     next(error)
   }
 })
+
+exports.getAllProducts = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+  const productsCount = await Product.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Product.find().select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let products = await apiFeature.query
+  let filteredProductsCount = products.length
+
+  res.status(200).json({
+    success: true,
+    products,
+    productsCount,
+    resultPerPage,
+    filteredProductsCount,
+  })
+})

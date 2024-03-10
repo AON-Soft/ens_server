@@ -10,9 +10,17 @@ const {
   getAllProductsByUser,
   adminGetAllProductsByShop,
   getSingleProduct,
+  getAllProducts,
 } = require('../controllers/productController')
 
 const router = express.Router()
+
+//get all products
+router
+  .route('/get/products')
+  .get(isAuthenticated, getAllProducts)
+
+
 //get all products by shop//
 router
   .route('/shopkeeper/shop/products')
