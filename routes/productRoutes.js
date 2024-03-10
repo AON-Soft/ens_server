@@ -18,7 +18,7 @@ const router = express.Router()
 //get all products
 router
   .route('/get/products')
-  .get(isAuthenticated, getAllProducts)
+  .get(getAllProducts)
 
 
 //get all products by shop//
