@@ -195,8 +195,14 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
     {
       $match: {
         'receiver.user': userId,
-        'receiver.flag': 'Credit', // Filter transactions where receiver.flag is "Credit"
+        'receiver.flag': 'Credit',
         createdAt: { $gte: sixMonthsAgo },
+        paymentType: 'bonus_points',
+        $or: [
+          { transactionRelation: 'user-To-user' },
+          { transactionRelation: 'user-To-admin' },
+          { transactionRelation: 'user-To-super_admin' }
+        ]
       },
     },
     {
