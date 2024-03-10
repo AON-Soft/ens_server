@@ -56,11 +56,14 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
 })
 
 exports.transactionHistory = catchAsyncError(async (req, res) => {
-  let userId = req.user.id
-  userId = new mongoose.Types.ObjectId(userId)
+  let userId = req.user.id;
+  userId = new mongoose.Types.ObjectId(userId);
 
-  const sixMonthsAgo = new Date()
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
 
   const transactionPipeline = [
     {
@@ -110,28 +113,54 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
         },
       },
     },
-  ]
+    {
+      $skip: (page - 1) * resultPerPage // Skip results for pagination
+    },
+    {
+      $limit: resultPerPage // Limit results for pagination
+    }
+  ];
 
-  const transactionResult = await Transaction.aggregate(transactionPipeline)
+  const transactionResult = await Transaction.aggregate(transactionPipeline);
 
   if (transactionResult.length === 0) {
     return res.status(404).json({
       success: false,
       message: 'No transactions found for the user in the last 6 months.',
       transactionResult,
-    })
+    });
   }
 
   const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
-    transactionResult[0]
+    transactionResult[0];
+
+  // Count total number of transactions for the user
+  const countPipeline = [
+    {
+      $match: {
+        $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
+        createdAt: { $gte: sixMonthsAgo },
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const countResult = await Transaction.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
 
   res.status(200).json({
     success: true,
     totalUpcomingPoints,
     totalOutgoingPoints,
     transactionsHistory,
-  })
-})
+    count, 
+    resultPerPage,
+    filteredCount: transactionsHistory.length 
+  });
+});
+
 
 exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
   const pipeline = [
@@ -191,6 +220,9 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+
   const earningPipeline = [
     {
       $match: {
@@ -222,6 +254,12 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
         },
       },
     },
+    {
+      $skip: (page - 1) * resultPerPage // Skip results for pagination
+    },
+    {
+      $limit: resultPerPage // Limit results for pagination
+    }
   ];
 
   const earningResult = await Transaction.aggregate(earningPipeline);
@@ -236,9 +274,36 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
 
   const { totalEarnings, earningHistory } = earningResult[0];
 
+  // Count total number of earnings for the user
+  const countPipeline = [
+    {
+      $match: {
+        'receiver.user': userId,
+        'receiver.flag': 'Credit',
+        createdAt: { $gte: sixMonthsAgo },
+        paymentType: 'bonus_points',
+        $or: [
+          { transactionRelation: 'user-To-user' },
+          { transactionRelation: 'user-To-admin' },
+          { transactionRelation: 'user-To-super_admin' }
+        ]
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const countResult = await Transaction.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
   res.status(200).json({
     success: true,
     totalEarnings,
     earningHistory,
+    count, 
+    resultPerPage,
+    filteredCount: earningHistory.length
   });
 });
+

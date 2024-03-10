@@ -275,9 +275,8 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    categoryCount,
+    categoryCount: filteredCategoriesCount,
     resultPerPage,
-    filteredCategoriesCount,
     categories,
   })
 })
