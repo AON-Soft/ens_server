@@ -7,7 +7,7 @@ const ApiFeatures = require('../utils/apifeature')
 
 exports.createProduct = catchAsyncError(async (req, res, next) => {
 
-   const { name, description, price, points, images, categoryId, stockUnit, availableStock, commission } = req.body;
+   const { name, description, price, points, images, categoryId, stockUnit, availableStock, commission, unit, tags } = req.body;
 
     if (!name || !description || !price || !points || !stockUnit || !availableStock || !images || !categoryId || !commission) {
       return next(new ErrorHandler('Please provide all required fields', 400));
@@ -23,19 +23,28 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
     }
 
     // Create the product
-    const product = await Product.create({
+    let productData = {
       name: name,
       description: description,
       price: price,
       points: points,
-      images: { url: images }, 
+      images: { url: images },
       categoryId: categoryId || null,
       stockUnit: stockUnit,
       availableStock: availableStock,
       commission: commission || 0,
       user: userId,
       shop: shop._id,
-    });
+    };
+
+    if (unit) {
+      productData.unit = unit;
+    }
+    if (tags && tags.length > 0) {
+      productData.tags = tags;
+    }
+
+    const product = await Product.create(productData);
 
     res.status(201).json({ success: true, data: product });
   } catch (error) {
@@ -94,7 +103,12 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
     if (req.body.images) {
       product.images = { url: req.body.images }; 
     }
-
+    if (req.body.unit) {
+      product.unit = req.body.unit;
+    }
+    if (req.body.tags && req.body.tags.length > 0) {
+      product.tags = req.body.tags;
+    }
     // Save product
     await product.save();
 
@@ -133,6 +147,14 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
     .populate({
       path: 'shop',
       select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
     }),
     req.query,
   )
@@ -168,6 +190,14 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
     .populate({
       path: 'shop',
       select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
     }),
     req.query,
   )
@@ -203,6 +233,14 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
     .populate({
       path: 'shop',
       select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
     }),
     req.query,
   )
@@ -236,6 +274,13 @@ exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
     .populate({
       path: 'shop',
       select: 'logo banner name'
+    }).populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
     }).exec()
 
   if (!product) {
@@ -266,6 +311,14 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
     .populate({
       path: 'shop',
       select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
     }),
     req.query,
   )

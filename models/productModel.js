@@ -33,12 +33,13 @@ const productSchema = new mongoose.Schema({
   },
   stockUnit: {
     type: String,
+    enum: ['pieces', 'boxes', 'liters', 'grams', 'kilograms'],
     required: [true, 'Please Enter Stock Unit'],
   },
   availableStock: {
     type: Number,
     required: function () {
-      return this.stockType === 'stockAsQuantity'
+      return this.stockType === 'stockAsQuantity';
     },
   },
   numOfReviews: {
