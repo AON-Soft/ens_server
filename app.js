@@ -18,6 +18,8 @@ const token = require('./routes/tokenRoutes.js')
 const orderedProducts = require('./routes/orderedProductRoutes.js')
 const notification = require('./routes/notificationRoutes.js')
 const location = require('./routes/locationRoutes.js')
+const tag = require('./routes/tagRoutes.js')
+const unit = require('./routes/unitRoutes.js')
 
 const errorMiddleware = require('./middleware/error')
 const { API_PREFIX } = require('./constant.js')
@@ -48,6 +50,8 @@ app.use(`${API_PREFIX}/api/v1`, token)
 app.use(`${API_PREFIX}/api/v1`, orderedProducts)
 app.use(`${API_PREFIX}/api/v1`, notification)
 app.use(`${API_PREFIX}/api/v1`, location)
+app.use(`${API_PREFIX}/api/v1`, tag)
+app.use(`${API_PREFIX}/api/v1`, unit)
 
 app.use(errorMiddleware)
 
