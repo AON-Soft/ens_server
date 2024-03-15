@@ -1,11 +1,13 @@
 const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const catchAsyncError = require('../middleware/catchAsyncError')
-
+const { default: mongoose } = require('mongoose')
 const Shop = require('../models/shopModel')
-// const User = require("../models/userModel");
 const ErrorHandler = require('../utils/errorhander')
 const ApiFeatures = require('../utils/apifeature')
+const productModel = require('../models/productModel')
+const transactionModel = require('../models/transactionModel')
+const orderedProductModel = require('../models/orderedProductModel')
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
 
@@ -152,23 +154,15 @@ exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
 
 })
 
-exports.getShopDetails = catchAsyncError(async (req, res, next) => {
-  try {
-    const shop = await Shop.findById(req.params.id);
-
-    if(!shop){
-      return next(new ErrorHandler('Shop not found', 404))
-    }
-      res.status(200).json({ success: true, data: shop })
-    }
-  catch(error){
-    next(error)
-  }
-})
-
 exports.getShopDetailsByShopKeeper = catchAsyncError(async (req, res, next) => {
   try {
-    const shop = await Shop.findById(req.shop._id);
+    const shop = await Shop.findById(req.shop._id).populate({
+      path: 'category',
+      select: 'name image'
+    }).populate({
+      path: 'userId',
+      select: 'avatar name email mobile balance bonusBalance duebalance'
+    }).exec();
 
     if(!shop){
       return next(new ErrorHandler('Shop not found', 404))
@@ -264,6 +258,276 @@ exports.updateShopStatus = catchAsyncError(async (req, res, next) => {
   // Return updated shop
   res.status(201).json({ success: true, data:updatedShop });
   } catch (error) {
+    next(error)
+  }
+})
+
+exports.getShopDetails = catchAsyncError(async (req, res, next) => {
+  try {
+    const shop = await Shop.findById(req.params.id).populate({
+      path: 'category',
+      select: 'name image'
+    }).populate({
+      path: 'userId',
+      select: 'avatar name email mobile balance bonusBalance duebalance'
+    }).exec();
+
+    if(!shop){
+      return next(new ErrorHandler('Shop not found', 404))
+    }
+      res.status(200).json({ success: true, data: shop })
+    }
+  catch(error){
+    next(error)
+  }
+})
+
+exports.getPrductsByShopID = catchAsyncError(async (req, res, next) => {
+  const resultPerPage = 10
+  try {
+    const shop = await Shop.findById(req.params.id).exec();
+
+    if(!shop){
+      return next(new ErrorHandler('Shop not found', 404))
+    }
+    const productsCount = await productModel.countDocuments({ shop: req.params.id })
+    const apiFeature = new ApiFeatures(
+      productModel.find({ shop: shop._id }).select('-__v')
+      .populate({
+        path: 'categoryId',
+        select: 'image name'
+      })
+      .populate({
+        path: 'user',
+        select: 'image name'
+      })
+      .populate({
+        path: 'shop',
+        select: 'logo banner name'
+      })
+      .populate({
+        path: 'unit', 
+        select: 'name abbreviation'
+      })
+      .populate({
+        path: 'tags',
+        select: 'name'
+      }),
+      req.query,
+    )
+      .search()
+      .filter()
+      .pagination(resultPerPage)
+
+    let products = await apiFeature.query
+    let filteredProductsCount = products.length
+
+    res.status(200).json({
+      success: true,
+      data: products,
+      count: productsCount,
+      resultPerPage,
+      filteredProductsCount,
+    })
+    }
+  catch(error){
+    next(error)
+  }
+})
+
+exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+
+  try {
+    const shop = await Shop.findById(req.params.id).exec();
+
+    if(!shop){
+      return next(new ErrorHandler('Shop not found', 404))
+    }
+
+    const userId = new mongoose.Types.ObjectId(shop.userId);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const transactionPipeline = [
+      {
+        $match: {
+          $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
+          createdAt: { $gte: sixMonthsAgo },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalUpcomingPoints: {
+            $sum: {
+              $cond: [
+                { $eq: ['$receiver.user', userId] },
+                '$transactionAmount',
+                0,
+              ],
+            },
+          },
+          totalOutgoingPoints: {
+            $sum: {
+              $cond: [{ $eq: ['$sender.user', userId] }, '$transactionAmount', 0],
+            },
+          },
+          transactionsHistory: {
+            $push: {
+              transactionID: '$transactionID',
+              transactionType: '$transactionType',
+              transactionAmount: '$transactionAmount',
+              flag: {
+                $cond: [
+                  { $eq: ['$sender.user', userId] },
+                  '$sender.flag',
+                  '$receiver.flag',
+                ],
+              },
+              transactionHeading: {
+                $cond: [
+                  { $eq: ['$sender.user', userId] },
+                  '$sender.transactionHeading',
+                  '$receiver.transactionHeading',
+                ],
+              },
+              date: '$createdAt',
+            },
+          },
+        },
+      },
+      {
+        $skip: (page - 1) * resultPerPage 
+      },
+      {
+        $limit: resultPerPage 
+      }
+    ];
+
+    const transactionResult = await transactionModel.aggregate(transactionPipeline);
+
+    if (transactionResult.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No transactions found for the user in the last 6 months.',
+        transactionResult,
+      });
+    }
+
+    const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
+      transactionResult[0];
+
+    // Count total number of transactions for the user
+    const countPipeline = [
+      {
+        $match: {
+          $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
+          createdAt: { $gte: sixMonthsAgo },
+        },
+      },
+      {
+        $count: 'count'
+      }
+    ];
+
+    const countResult = await transactionModel.aggregate(countPipeline);
+    const count = countResult.length > 0 ? countResult[0].count : 0;
+
+    res.status(200).json({
+      success: true,
+      totalUpcomingPoints,
+      totalOutgoingPoints,
+      data: transactionsHistory,
+      count, 
+      resultPerPage,
+      filteredCount: transactionsHistory.length,
+    });
+  }
+  catch(error){
+    next(error)
+  }
+})
+
+exports.getOrdersByShopID = catchAsyncError(async (req, res, next) => {
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+  try {
+      const shop = await Shop.findById(req.params.id).exec();
+
+      if(!shop){
+        return next(new ErrorHandler('Shop not found', 404))
+      }
+      const shopId = new mongoose.Types.ObjectId(shop._id)
+    
+
+      const pipeline = [
+        {
+          $match: {
+            shopID: shopId,
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: '$userDetails',
+        },
+        {
+          $project: {
+            name: '$userDetails.name',
+            email: '$userDetails.email',
+            avatar: '$userDetails.avatar',
+            orderId: '$_id',
+            orderStatus: 1,
+            totalBill: 1,
+          },
+        },
+        {
+          $skip: (page - 1) * resultPerPage
+        },
+        {
+          $limit: resultPerPage 
+        }
+      ]
+
+    const result = await orderedProductModel.aggregate(pipeline)
+    // Count total number of orders for the user
+    const countPipeline = [
+      {
+        $match: {
+          shopID: shopId,
+        },
+      },
+      {
+        $count: 'count'
+      }
+    ];
+
+    const countResult = await orderedProductModel.aggregate(countPipeline);
+    const count = countResult.length > 0 ? countResult[0].count : 0;
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      count, 
+      resultPerPage,
+      filteredCount: result.length 
+    });
+    
+    }
+  catch(error){
     next(error)
   }
 })
