@@ -92,15 +92,17 @@ const userSchema = new mongoose.Schema({
       ref: 'User',
     },
   ],
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
   status: {
     type: String,
     default: 'pending',
-    enum: ['pending', 'active', 'hold', 'rejectd'],
+    enum: ['pending', 'active', 'hold', 'rejected'],
+  },
+  fcmToken: {
+      type: String, 
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,

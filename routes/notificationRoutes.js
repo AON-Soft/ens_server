@@ -1,7 +1,11 @@
 const express = require('express')
 const { isAuthenticated } = require('../middleware/auth')
-const { sendNotification } = require('../controllers/notificationController')
+const { sendNotification, createFcmtoken } = require('../controllers/notificationController')
 const router = express.Router()
+
+router
+  .route('/notification/create/fcm-token')
+  .post(createFcmtoken)
 
 router
   .route('/notification/send')

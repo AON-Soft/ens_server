@@ -13,6 +13,7 @@ const sendTempToken = require('../utils/TempJwtToken.js')
 const ErrorHandler = require('../utils/errorhander.js')
 
 const catchAsyncError = require('../middleware/catchAsyncError.js')
+const ApiFeatures = require('../utils/apifeature.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -37,6 +38,7 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       if (existingUser.status === 'active') {
         return next(new ErrorHandler(`${email} is already registered`, 401));
       }
+      return next(new ErrorHandler(`${email} is already registered`, 401));
     }
 
     // Check if user has existing OTP
@@ -445,31 +447,95 @@ exports.updateProfile = catchAsyncError(async (req, res, _) => {
 })
 
 //Get All Users(admin)
-exports.getAllUsers = catchAsyncError(async (_, res) => {
-  const users = await User.find()
+exports.getAllUsers = catchAsyncError(async (req, res) => {   
+  const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'user' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'user' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get All Admin(admin)
-exports.getAllAdmins = catchAsyncError(async (_, res) => {
-  const users = await User.find({ role: 'admin' })
+exports.getAllAdmins = catchAsyncError(async (req, res) => { 
+  const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'admin' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'admin' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get All Agents (admin)
-exports.getAllAgents = catchAsyncError(async (_, res) => {
-  const users = await User.find({ role: 'agent' })
+exports.getAllAgents = catchAsyncError(async (req, res) => {
+const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'agent' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'agent' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get All Shopkeeper (admin)
-exports.getAllShopKeepers = catchAsyncError(async (_, res) => {
-  const users = await User.find({ role: 'shop_keeper' })
+exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+  const count = await User.countDocuments({ role: 'shop_keeper' })
+  const apiFeature = new ApiFeatures(
+    User.find({ role: 'shop_keeper' }),
+    req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage)
 
-  res.status(200).json({ success: true, users })
+  let users = await apiFeature.query
+  let filteredCount = users.length
+
+  res.status(200).json({
+    success: true,
+    users,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
 })
 
 //Get Single Users(admin)
@@ -486,20 +552,35 @@ exports.getSingleUser = catchAsyncError(async (req, res, next) => {
 //Update User Role ---Admin
 exports.updateUserRole = catchAsyncError(async (req, res, _) => {
   const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
     role: req.body.role,
   }
 
-  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+  await User.findByIdAndUpdate(req.params.id, newUserData, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
   })
 
-  console.log(user)
+  const user = await User.findById(req.params.id)
 
-  res.status(200).json({ success: true })
+  res.status(200).json({ success: true, data: user })
+})
+
+//Update User status ---Admin
+exports.updateUserStatus = catchAsyncError(async (req, res, _) => {
+  const newUserData = {
+    status: req.body.status,
+  }
+
+  await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  })
+
+   const user = await User.findById(req.params.id)
+
+  res.status(200).json({ success: true, data: user })
 })
 
 //Delete User ---Admin
@@ -552,12 +633,12 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
   }
 
   // Update main balance if provided
-  if (balance !== undefined) {
+  if (balance !== 'undefined') {
     user.balance = (user.balance || 0) + balance;
   }
 
   // Update bonus balance if provided
-  if (bonusBalance !== undefined) {
+  if (bonusBalance !== 'undefined') {
     user.bonusBalance = (user.bonusBalance || 0) + bonusBalance;
   }
 
@@ -571,69 +652,43 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
   res.status(202).json({ success: true, response })
 })
 
+exports.imageUpload = catchAsyncError(async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No images uploaded' });
+    }
 
+      let images = req.files.images; 
 
-// exports.registerUser = catchAsyncError(async (req, res, next) => {
-//   var { name, email, password, token, role } = req.body
-//   let isValidToken = null
-//   if (role === 'user') {
-//     isValidToken = await Token.findOne({ token: token, isUsed: false })
-//   }
+    // Check if images is not an array
+    if (!Array.isArray(images)) {
+      images = [images];
+    }
 
-//   if (!isValidToken && role === 'user' && token !== 'admin') {
-//     next(new ErrorHandler('The token is not valid or used.', 404))
-//   } else {
-//     const existingUser = await User.findOne({ email: email })
-//     if (existingUser) {
-//       if (existingUser.status == 'active') {
-//         return next(new ErrorHandler(`${email}  is already registered`, 401))
-//       }
-//     }
+    if (!images || images.length === 0) {
+      return next(new ErrorHandler('Images not found', 404));
+    }
 
-//     var getUser = await Otp.findOne({ email: email })
+    const uploadedImages = [];
+    for (const image of images) {
+      const tempFilePath = `temp_${Date.now()}_${image.name}`;
+      await image.mv(tempFilePath);
 
-//     var createdUser = null
-//     // create user
+      const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
+        folder: 'images',
+        crop: 'scale',
+      });
 
-//     // hash
-//     const salt = await bcrypt.genSalt(10)
-//     password = await bcrypt.hash(password, salt)
+      uploadedImages.push({
+        public_id: myCloudImage.public_id,
+        url: myCloudImage.secure_url,
+      });
 
-//     if (!getUser) {
-//       const otp = otpGenerator.generate(4, {
-//         digits: true,
-//         lowerCaseAlphabets: false,
-//         upperCaseAlphabets: false,
-//         specialChars: false,
-//       })
-//       const getOtp = otp
-//       await Otp.create({ email, otp, getOtp })
-//       createdUser = await User.create({ name, email, password, role })
-//     } else {
-//       const otp = otpGenerator.generate(4, {
-//         digits: true,
-//         lowerCaseAlphabets: false,
-//         upperCaseAlphabets: false,
-//         specialChars: false,
-//       })
+      await fs.unlink(tempFilePath);
+    }
 
-//       getUser.otp = otp
-//       getUser.getOtp = otp
-//       await getUser.save()
-//       // user should be upate with new req data
-//       createdUser = await User.findOneAndUpdate(
-//         { email },
-//         { name, email, password, role },
-//       )
-//     }
-//     const responsePayload = {
-//       id: createdUser._id,
-//       name: createdUser.name,
-//       email: createdUser.email,
-//       role: createdUser.role,
-//       isVefified: false,
-//       token: isValidToken,
-//     }
-//     sendTempToken(responsePayload, 201, res)
-//   }
-// })
+    res.status(200).json({ success: true, imageUrls: uploadedImages });
+  } catch (error) {
+    next(error);
+  }
+})

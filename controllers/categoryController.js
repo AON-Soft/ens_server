@@ -40,7 +40,7 @@ exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
-  res.status(201).json({ success: true, category: categoryWithout__v })
+  res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
 exports.createCategoryByShop = catchAsyncError(async (req, res, next) => {
@@ -81,7 +81,7 @@ exports.createCategoryByShop = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
-  res.status(201).json({ success: true, category: categoryWithout__v })
+  res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
 exports.updateCategory = catchAsyncError(async (req, res, next) => {
@@ -131,7 +131,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     const categoryWithout__v = category.toObject()
     delete categoryWithout__v.__v
 
-    res.status(200).json({ success: true, category: categoryWithout__v })
+    res.status(200).json({ success: true, data: categoryWithout__v })
   } else {
     return next(
       new ErrorHandler('You are not Authorized to Update this brand'),
@@ -182,6 +182,16 @@ exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
 
   let categories = await apiFeature.query
 
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
+
   let filteredCategoriesCount = categories.length
 
   res.status(200).json({
@@ -209,6 +219,16 @@ exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
     .pagination(resultPerPage)
 
   let categories = await apiFeature.query
+
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
 
   let filteredCategoriesCount = categories.length
 
@@ -240,6 +260,16 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
     .pagination(resultPerPage)
 
   let categories = await apiFeature.query
+
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
 
   let filteredCategoriesCount = categories.length
 

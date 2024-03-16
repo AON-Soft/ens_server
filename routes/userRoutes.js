@@ -20,6 +20,8 @@ const {
   getAllAgents,
   addBalance,
   getAllShopKeepers,
+  updateUserStatus,
+  imageUpload,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -61,12 +63,22 @@ router
 router
   .route('/admin/user/:id')
   .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getSingleUser)
-  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), updateUserRole)
   .delete(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), deleteUser)
+
+router
+  .route('/admin/user/role/:id')
+  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), updateUserRole)
+
+router
+  .route('/admin/user/status/:id')
+  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), updateUserStatus)
 
 router.route('/getOtp').get(getOtp)
 
 router.route('/self/balance').get(isAuthenticatedUser, getBalance)
 router.route('/self/balance/add/:id').post(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), addBalance)
+
+// file upload
+router.route('/upload').post(imageUpload)
 
 module.exports = router

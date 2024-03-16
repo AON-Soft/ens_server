@@ -3,6 +3,7 @@ const {
   isAuthenticated,
   isAuthorizeRoles,
   isAuthenticatedShop,
+  isAuthenticatedUser,
 } = require('../middleware/auth')
 const {
   placeOrder,
@@ -18,6 +19,14 @@ const {
   getAllDoneOrderOrderByShop,
   getAllCancelOrderOrderByShop,
   deleteSingleOrder,
+  changeOrderStatus,
+  getAllOrderByShop,
+  getAllOrderByUser,
+  getAllOrders,
+  getAllInvoice,
+  getSingleInvoice,
+  changePyamentStatus,
+  getOrderChart,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -28,6 +37,33 @@ const router = express.Router()
 router
   .route('/place/order/card/:id')
   .post(isAuthenticated, sendPayments, placeOrder, createTransaction)
+
+// all order
+router
+  .route('/all/order')
+  .get(
+    isAuthenticated,
+    getAllOrders,
+  )
+
+// all order by shop
+router
+  .route('/shop/all/order')
+  .get(
+    isAuthenticated,
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    getAllOrderByShop,
+  )
+
+
+// all order by user
+router
+  .route('/shop/all/order/user')
+  .get(
+    isAuthenticated,
+    getAllOrderByUser,
+  )
 
 // pending all order by shop
 router
@@ -49,7 +85,7 @@ router
     getAllConfirmOrderByShop,
   )
 
-  // On delivery all order by shop
+// On delivery all order by shop
 router
   .route('/shop/delivery/order')
   .get(
@@ -59,7 +95,7 @@ router
     getAllOnDeliveryOrderByShop,
   )
 
-  // done all order by shop
+// done all order by shop
 router
   .route('/shop/done/order')
   .get(
@@ -69,7 +105,7 @@ router
     getAllDoneOrderOrderByShop,
   )
 
-  // cancel all order by shop
+// cancel all order by shop
 router
   .route('/shop/cancel/order')
   .get(
@@ -79,7 +115,7 @@ router
     getAllCancelOrderOrderByShop,
   )
 
-  // pending oder by user
+// pending oder by user
 router
   .route('/shop/pending/order/user')
   .get(
@@ -132,5 +168,46 @@ router
 router
   .route('/delete/order/:id')
   .delete(isAuthenticated, deleteSingleOrder)
+
+// change order status
+router
+  .route('/shop/order/status/:id')
+  .put(isAuthenticated, changeOrderStatus, createTransaction)
+
+// all invoice
+router
+  .route('/invoice/all')
+  .get(
+    isAuthenticated,
+    getAllInvoice,
+  )
+
+// all invoice by shop
+router
+  .route('/invoice/shop/all')
+  .get(
+    isAuthenticated,
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    getAllOrderByShop,
+  )
+
+// get invoice details
+router
+  .route('/invoice/details/:id')
+  .get(
+    isAuthenticated,
+    getSingleInvoice,
+  )
+
+// change invoice payment status
+router
+  .route('/invoice/pyament/status/:id')
+  .put(
+    isAuthenticated,
+    isAuthorizeRoles('shop_keeper'),
+    changePyamentStatus,
+  )
+router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
 
 module.exports = router

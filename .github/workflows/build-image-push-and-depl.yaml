@@ -36,24 +36,24 @@ jobs:
               docker push ghcr.io/aon-soft/ens_backend:latest
 
 
-      restart-deployment:
-        needs: push-store-image
-        runs-on: ubuntu-latest
-        steps:
-          - name: Set up kubectl
-            uses: digitalocean/action-doctl@v2
-            with:
-              token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-              k8s-configuration-file: ./kube/kubeconfig.yaml
+      # restart-deployment:
+      #   needs: push-store-image
+      #   runs-on: ubuntu-latest
+      #   steps:
+      #     - name: Set up kubectl
+      #       uses: digitalocean/action-doctl@v2
+      #       with:
+      #         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      #         k8s-configuration-file: ./kube/kubeconfig.yaml
               
 
-          - name: Log All the Cluster list
-            run: doctl kubernetes cluster list
+      #     - name: Log All the Cluster list
+      #       run: doctl kubernetes cluster list
 
-          - name: Save DigitalOcean kubeconfig with short-lived credentials
-            run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 k8s-1-28-2-do-0-blr1-1703087737056
+      #     - name: Save DigitalOcean kubeconfig with short-lived credentials
+      #       run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 k8s-1-28-2-do-0-blr1-1703087737056
 
-          - name: Trigger Kubernetes Deployment Restart
-            run: |
-              kubectl get pods  # Print information about pods for debugging
-              kubectl rollout restart deployment ens-server-depl
+      #     - name: Trigger Kubernetes Deployment Restart
+      #       run: |
+      #         kubectl get pods  # Print information about pods for debugging
+      #         kubectl rollout restart deployment ens-server-depl

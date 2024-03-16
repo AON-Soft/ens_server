@@ -3,6 +3,7 @@ const app = express()
 const cookieParser = require('cookie-parser')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
+const cors = require('cors')
 const fileUpload = require('express-fileupload')
 
 const user = require('./routes/userRoutes')
@@ -16,10 +17,14 @@ const card = require('./routes/cardRoutes.js')
 const token = require('./routes/tokenRoutes.js')
 const orderedProducts = require('./routes/orderedProductRoutes.js')
 const notification = require('./routes/notificationRoutes.js')
+const location = require('./routes/locationRoutes.js')
+const tag = require('./routes/tagRoutes.js')
+const unit = require('./routes/unitRoutes.js')
 
 const errorMiddleware = require('./middleware/error')
 const { API_PREFIX } = require('./constant.js')
 
+app.use(cors());
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -44,6 +49,9 @@ app.use(`${API_PREFIX}/api/v1`, card)
 app.use(`${API_PREFIX}/api/v1`, token)
 app.use(`${API_PREFIX}/api/v1`, orderedProducts)
 app.use(`${API_PREFIX}/api/v1`, notification)
+app.use(`${API_PREFIX}/api/v1`, location)
+app.use(`${API_PREFIX}/api/v1`, tag)
+app.use(`${API_PREFIX}/api/v1`, unit)
 
 app.use(errorMiddleware)
 
