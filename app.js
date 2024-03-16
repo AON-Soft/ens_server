@@ -30,7 +30,7 @@ app.use(morgan('dev'))
 //
 // health checker
 app.get(`${API_PREFIX}/api/v1/health`, (_, res) => {
-  res.send('OK : Check CD')
+  res.send('OK : Check CD v2')
 })
 
 app.use(`${API_PREFIX}/api/v1`, user)
