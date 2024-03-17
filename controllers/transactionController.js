@@ -201,7 +201,6 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
   });
 });
 
-
 exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
   const pipeline = [
     {
@@ -386,6 +385,147 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
     count, 
     resultPerPage,
     filteredCount: earningHistory.length
+  });
+});
+
+exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.params.id);
+
+  
+  const resultPerPage = 10; 
+  const page = req.query.page || 1; 
+
+ const transactionPipeline = [
+  {
+    $match: {
+      $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
+    },
+  },
+  {
+    $lookup: {
+      from: 'users', 
+      let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $in: ['$_id', ['$$senderUserId', '$$receiverUserId']],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            name: 1,
+            email: 1,
+            flag: 1,
+            transactionHeading: 1,
+          },
+        },
+      ],
+      as: 'userInfo',
+    },
+  },
+  {
+    $addFields: {
+      sender: {
+        $mergeObjects: [
+          { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+          '$sender',
+        ],
+      },
+      receiver: {
+        $mergeObjects: [
+          { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+          '$receiver',
+        ],
+      },
+    },
+  },
+  {
+    $unset: ['userInfo'],
+  },
+  {
+    $group: {
+      _id: null,
+      totalUpcomingPoints: {
+        $sum: {
+          $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
+        },
+      },
+      totalOutgoingPoints: {
+        $sum: {
+          $cond: [{ $eq: ['$sender.user', userId] }, '$transactionAmount', 0],
+        },
+      },
+      transactionsHistory: {
+        $push: {
+          transactionID: '$transactionID',
+          transactionType: '$transactionType',
+          transactionAmount: '$transactionAmount',
+          flag: {
+            $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
+          },
+          transactionHeading: {
+            $cond: [
+              { $eq: ['$sender.user', userId] },
+              '$sender.transactionHeading',
+              '$receiver.transactionHeading',
+            ],
+          },
+          date: '$createdAt',
+          sender: '$sender',
+          receiver: '$receiver',
+          transactionRelation: '$transactionRelation',
+        },
+      },
+    },
+  },
+  {
+    $skip: (page - 1) * resultPerPage, // Skip results for pagination
+  },
+  {
+    $limit: resultPerPage, // Limit results for pagination
+  },
+];
+
+
+  const transactionResult = await Transaction.aggregate(transactionPipeline);
+
+  if (transactionResult.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: 'No transactions found for the user in the last 6 months.',
+      transactionResult,
+    });
+  }
+
+  const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
+    transactionResult[0];
+
+  // Count total number of transactions for the user
+  const countPipeline = [
+    {
+      $match: {
+        $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const countResult = await Transaction.aggregate(countPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    totalUpcomingPoints,
+    totalOutgoingPoints,
+    transactionsHistory,
+    count, 
+    resultPerPage,
+    filteredCount: transactionsHistory.length 
   });
 });
 
