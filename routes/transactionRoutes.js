@@ -7,6 +7,7 @@ const {
   transactionHistory,
   getUsersBasedOnLastPointsOut,
   earningHistory,
+  transactionHistoryByUserId,
 } = require('../controllers/transactionController')
 const {
   userToAgentPointsOut,
@@ -26,6 +27,10 @@ router
 router
   .route('/self/transaction-history')
   .get(isAuthenticated, transactionHistory)
+
+router
+  .route('/transaction-history/:id')
+  .get(isAuthenticated, transactionHistoryByUserId)
 
 router
   .route('/admin/getUsers/based-on/last-points-out')

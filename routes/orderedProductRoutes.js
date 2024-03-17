@@ -27,6 +27,7 @@ const {
   getSingleInvoice,
   changePyamentStatus,
   getOrderChart,
+  getAllOrderByUserId,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -56,7 +57,6 @@ router
     getAllOrderByShop,
   )
 
-
 // all order by user
 router
   .route('/shop/all/order/user')
@@ -64,6 +64,67 @@ router
     isAuthenticated,
     getAllOrderByUser,
   )
+
+// all order by ID
+router
+  .route('/shop/all/order/user/:id')
+  .get(
+    isAuthenticated,
+    getAllOrderByUserId,
+  )
+
+// get single oder details
+router
+  .route('/details/order/:id')
+  .get(isAuthenticated, getSingleOrderDetails)
+
+// delete single oder
+router
+  .route('/delete/order/:id')
+  .delete(isAuthenticated, deleteSingleOrder)
+
+// change order status
+router
+  .route('/shop/order/status/:id')
+  .put(isAuthenticated,  isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), changeOrderStatus, createTransaction)
+
+// all invoice
+router
+  .route('/invoice/all')
+  .get(
+    isAuthenticated,
+    getAllInvoice,
+  )
+
+// all invoice by shop
+router
+  .route('/invoice/shop/all')
+  .get(
+    isAuthenticated,
+    isAuthenticatedShop,
+    isAuthorizeRoles('shop_keeper'),
+    getAllOrderByShop,
+  )
+
+// get invoice details
+router
+  .route('/invoice/details/:id')
+  .get(
+    isAuthenticated,
+    getSingleInvoice,
+  )
+
+// change invoice payment status
+router
+  .route('/invoice/pyament/status/:id')
+  .put(
+    isAuthenticated,
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
+    changePyamentStatus,
+  )
+router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
+
+
 
 // pending all order by shop
 router
@@ -159,55 +220,5 @@ router
     getAllCancelOrderByUser,
   )
 
-// get single oder details
-router
-  .route('/details/order/:id')
-  .get(isAuthenticated, getSingleOrderDetails)
-
-// delete single oder
-router
-  .route('/delete/order/:id')
-  .delete(isAuthenticated, deleteSingleOrder)
-
-// change order status
-router
-  .route('/shop/order/status/:id')
-  .put(isAuthenticated,  isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), changeOrderStatus, createTransaction)
-
-// all invoice
-router
-  .route('/invoice/all')
-  .get(
-    isAuthenticated,
-    getAllInvoice,
-  )
-
-// all invoice by shop
-router
-  .route('/invoice/shop/all')
-  .get(
-    isAuthenticated,
-    isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper'),
-    getAllOrderByShop,
-  )
-
-// get invoice details
-router
-  .route('/invoice/details/:id')
-  .get(
-    isAuthenticated,
-    getSingleInvoice,
-  )
-
-// change invoice payment status
-router
-  .route('/invoice/pyament/status/:id')
-  .put(
-    isAuthenticated,
-    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
-    changePyamentStatus,
-  )
-router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
 
 module.exports = router
