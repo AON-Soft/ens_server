@@ -8,6 +8,7 @@ const uniqueTransactionID = require('../utils/transactionID')
 const orderedProductModel = require('../models/orderedProductModel')
 const ApiFeatures = require('../utils/apifeature')
 const transactionModel = require('../models/transactionModel')
+const shopModel = require('../models/shopModel')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
@@ -1148,10 +1149,10 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
         { new: true }
       ).session(session);
 
-      const { userId, totalBill, totalCommissionBill } = existOrder;
+      const { userId, shopID, totalBill, totalCommissionBill } = existOrder;
 
       let user = await userModel.findOne({ _id: userId }).session(session);
-
+      
       const receiver = await userModel.findOne({ _id: userId }).session(session);
 
       if (!user || user.balance < totalBill) {
@@ -1160,7 +1161,15 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler('Insufficient balance.', 400));
       }
 
-      const shopKeeper = await userModel.findById(req.user.id).session(session);
+      const shop = await shopModel.findById(shopID).session(session)
+
+      if (!shop) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('Shop not found.', 400));
+      }
+
+      const shopKeeper = await userModel.findOne({ _id: shop.userId }).session(session);
 
       if (!shopKeeper) {
         await session.abortTransaction();

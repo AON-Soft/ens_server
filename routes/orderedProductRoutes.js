@@ -172,7 +172,7 @@ router
 // change order status
 router
   .route('/shop/order/status/:id')
-  .put(isAuthenticated, changeOrderStatus, createTransaction)
+  .put(isAuthenticated,  isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), changeOrderStatus, createTransaction)
 
 // all invoice
 router
@@ -205,7 +205,7 @@ router
   .route('/invoice/pyament/status/:id')
   .put(
     isAuthenticated,
-    isAuthorizeRoles('shop_keeper'),
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
     changePyamentStatus,
   )
 router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
