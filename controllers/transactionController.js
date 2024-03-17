@@ -65,61 +65,101 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
   const resultPerPage = 10; 
   const page = req.query.page || 1; 
 
-  const transactionPipeline = [
-    {
-      $match: {
-        $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
-        createdAt: { $gte: sixMonthsAgo },
+ const transactionPipeline = [
+  {
+    $match: {
+      $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
+      createdAt: { $gte: sixMonthsAgo },
+    },
+  },
+  {
+    $lookup: {
+      from: 'users', // Assuming your user collection is named 'users'
+      let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $in: ['$_id', ['$$senderUserId', '$$receiverUserId']],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            name: 1,
+            email: 1,
+            flag: 1,
+            transactionHeading: 1,
+          },
+        },
+      ],
+      as: 'userInfo',
+    },
+  },
+  {
+    $addFields: {
+      sender: {
+        $mergeObjects: [
+          { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+          '$sender',
+        ],
+      },
+      receiver: {
+        $mergeObjects: [
+          { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+          '$receiver',
+        ],
       },
     },
-    {
-      $group: {
-        _id: null,
-        totalUpcomingPoints: {
-          $sum: {
+  },
+  {
+    $unset: ['userInfo'],
+  },
+  {
+    $group: {
+      _id: null,
+      totalUpcomingPoints: {
+        $sum: {
+          $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
+        },
+      },
+      totalOutgoingPoints: {
+        $sum: {
+          $cond: [{ $eq: ['$sender.user', userId] }, '$transactionAmount', 0],
+        },
+      },
+      transactionsHistory: {
+        $push: {
+          transactionID: '$transactionID',
+          transactionType: '$transactionType',
+          transactionAmount: '$transactionAmount',
+          flag: {
+            $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
+          },
+          transactionHeading: {
             $cond: [
-              { $eq: ['$receiver.user', userId] },
-              '$transactionAmount',
-              0,
+              { $eq: ['$sender.user', userId] },
+              '$sender.transactionHeading',
+              '$receiver.transactionHeading',
             ],
           },
-        },
-        totalOutgoingPoints: {
-          $sum: {
-            $cond: [{ $eq: ['$sender.user', userId] }, '$transactionAmount', 0],
-          },
-        },
-        transactionsHistory: {
-          $push: {
-            transactionID: '$transactionID',
-            transactionType: '$transactionType',
-            transactionAmount: '$transactionAmount',
-            flag: {
-              $cond: [
-                { $eq: ['$sender.user', userId] },
-                '$sender.flag',
-                '$receiver.flag',
-              ],
-            },
-            transactionHeading: {
-              $cond: [
-                { $eq: ['$sender.user', userId] },
-                '$sender.transactionHeading',
-                '$receiver.transactionHeading',
-              ],
-            },
-            date: '$createdAt',
-          },
+          date: '$createdAt',
+          sender: '$sender',
+          receiver: '$receiver',
+          transactionRelation: '$transactionRelation',
         },
       },
     },
-    {
-      $skip: (page - 1) * resultPerPage // Skip results for pagination
-    },
-    {
-      $limit: resultPerPage // Limit results for pagination
-    }
-  ];
+  },
+  {
+    $skip: (page - 1) * resultPerPage, // Skip results for pagination
+  },
+  {
+    $limit: resultPerPage, // Limit results for pagination
+  },
+];
+
 
   const transactionResult = await Transaction.aggregate(transactionPipeline);
 
@@ -238,6 +278,31 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: 'users', // Assuming your user collection is named 'users'
+        localField: 'sender.user',
+        foreignField: '_id',
+        as: 'senderInfo',
+      },
+    },
+    {
+      $lookup: {
+        from: 'users', // Assuming your user collection is named 'users'
+        localField: 'receiver.user',
+        foreignField: '_id',
+        as: 'receiverInfo',
+      },
+    },
+    {
+      $addFields: {
+        sender: { $arrayElemAt: ['$senderInfo', 0] },
+        receiver: { $arrayElemAt: ['$receiverInfo', 0] },
+      },
+    },
+    {
+      $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
+    },
+    {
       $group: {
         _id: null,
         totalEarnings: {
@@ -250,17 +315,34 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
             transactionAmount: '$transactionAmount',
             transactionHeading: '$receiver.transactionHeading',
             date: '$createdAt',
+            sender: {
+              name: '$sender.name',
+              email: '$sender.email',
+              mobile: '$sender.mobile',
+              avatar: '$sender.avatar',
+              balance: '$sender.balance',
+              dueBalance: '$sender.dueBalance',
+            },
+            receiver: {
+              name: '$receiver.name',
+              email: '$receiver.email',
+              mobile: '$receiver.mobile',
+              avatar: '$receiver.avatar',
+              balance: '$receiver.balance',
+              dueBalance: '$receiver.dueBalance',
+            },
           },
         },
       },
     },
     {
-      $skip: (page - 1) * resultPerPage // Skip results for pagination
+      $skip: (page - 1) * resultPerPage 
     },
     {
-      $limit: resultPerPage // Limit results for pagination
+      $limit: resultPerPage 
     }
   ];
+
 
   const earningResult = await Transaction.aggregate(earningPipeline);
 
