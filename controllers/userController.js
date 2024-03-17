@@ -692,3 +692,24 @@ exports.imageUpload = catchAsyncError(async (req, res, next) => {
     next(error);
   }
 })
+
+exports.userSerch = catchAsyncError(async (req, res, next) => {
+  const { query } = req.query;
+  try {
+    if (!query) {
+      return res.status(400).json({ success: false, message: 'Query parameter is required' });
+    }
+    const result = await User.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+        { mobile: { $regex: query, $options: 'i' } },
+      ]
+    });
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error)
+  }
+})
+

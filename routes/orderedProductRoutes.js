@@ -28,6 +28,7 @@ const {
   changePyamentStatus,
   getOrderChart,
   getAllOrderByUserId,
+  orderSerch,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -220,5 +221,10 @@ router
     getAllCancelOrderByUser,
   )
 
+
+// cancel oder by user
+router
+  .route('/order/search')
+  .get(orderSerch)
 
 module.exports = router

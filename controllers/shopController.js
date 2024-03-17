@@ -531,3 +531,28 @@ exports.getOrdersByShopID = catchAsyncError(async (req, res, next) => {
     next(error)
   }
 })
+
+exports.shopSerch = catchAsyncError(async (req, res, next) => {
+  const { query } = req.query;
+  try {
+    if (!query) {
+      return res.status(400).json({ success: false, message: 'Query parameter is required' });
+    }
+    const result = await Shop.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { info: { $regex: query, $options: 'i' } },
+      ]
+    }).populate({
+      path: 'category',
+      select: 'name image'
+    }).populate({
+      path: 'userId',
+      select: 'avatar name email mobile balance bonusBalance duebalance'
+    }).exec();
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error)
+  }
+})

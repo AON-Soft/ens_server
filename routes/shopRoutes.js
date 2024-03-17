@@ -19,6 +19,7 @@ const {
   getPrductsByShopID,
   getTransactionsByShopID,
   getOrdersByShopID,
+  shopSerch,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -58,8 +59,6 @@ router
   .route('/shop/orders/:id')
   .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), getOrdersByShopID)
 
-
-
 router
   .route('/admin/delete-shop/:id')
   .delete(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), deleteShop)
@@ -75,5 +74,7 @@ router
   .route('/admin/update-shop/status/:id')
   .put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateShopStatus)
 
+
+router.route('/shop/search').get(shopSerch)
 
 module.exports = router

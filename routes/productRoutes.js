@@ -11,6 +11,7 @@ const {
   adminGetAllProductsByShop,
   getSingleProduct,
   getAllProducts,
+  productSearch,
 } = require('../controllers/productController')
 
 const router = express.Router()
@@ -43,5 +44,7 @@ router
   .get(getSingleProduct)
   .put(isAuthenticated, isAuthorizeRoles('shop_keeper'), updateProduct)
   .delete(isAuthenticated, isAuthorizeRoles('shop_keeper'), deleteProduct)
+
+router.route('/product/search').get(productSearch)
 
 module.exports = router

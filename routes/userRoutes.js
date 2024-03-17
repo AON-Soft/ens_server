@@ -22,6 +22,7 @@ const {
   getAllShopKeepers,
   updateUserStatus,
   imageUpload,
+  userSerch,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -77,6 +78,8 @@ router.route('/getOtp').get(getOtp)
 
 router.route('/self/balance').get(isAuthenticatedUser, getBalance)
 router.route('/self/balance/add/:id').post(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), addBalance)
+
+router.route('/user/search').get(userSerch)
 
 // file upload
 router.route('/upload').post(imageUpload)

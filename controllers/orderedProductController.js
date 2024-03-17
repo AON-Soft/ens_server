@@ -1452,3 +1452,23 @@ exports.getAllCancelOrderByUser = catchAsyncError(async (req, res) => {
     filteredCount: result.length 
   });
 })
+
+exports.orderSerch = catchAsyncError(async (req, res, next) => {
+  const { query } = req.query;
+  try {
+    if (!query) {
+      return res.status(400).json({ success: false, message: 'Query parameter is required' });
+    }
+
+     const result = await Order.find({
+      'cardProducts.productName': { $regex: query, $options: 'i' }
+    })
+    .populate({ path: 'userId', select: 'avatar name email' })
+    .populate({ path: 'shopID', select: 'name info logo banner location address' })
+    .exec();
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error)
+  }
+})
