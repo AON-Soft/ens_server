@@ -303,11 +303,9 @@ exports.getSingleOrderDetails = catchAsyncError(async (req, res, next) => {
     .populate({ path: 'userId', select: 'avatar name email' })
     .populate({ path: 'shopID', select: 'name info logo banner location address' })
     .exec()
-  
   if (!order) {
     next(new ErrorHandler('No Details found for this order', 400))
   }
-
   res.status(200).json({ success: true, order: order })
 })
 
