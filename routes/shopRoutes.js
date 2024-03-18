@@ -67,7 +67,7 @@ router.route('/shops/nearby').get(isAuthenticated, getNearbyShops)
 
 router
   .route('/admin/shops')
-  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), getAllShops)
+  .get(isAuthenticated, getAllShops)
 
 
 router

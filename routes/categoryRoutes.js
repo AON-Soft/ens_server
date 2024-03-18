@@ -40,7 +40,7 @@ router
 
 router
   .route('/admin/shop/categories/:id')
-  .get(isAuthenticated,  isAuthorizeRoles('admin', 'super_admin'), getAllCategoriesByAdmin)
+  .get(isAuthenticated, getAllCategoriesByAdmin)
 
 router
   .route('/all/shop/categories/:id')
