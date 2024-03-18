@@ -63,8 +63,11 @@ router
 
 router
   .route('/admin/user/:id')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getSingleUser)
   .delete(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), deleteUser)
+
+router
+  .route('/user/details/:id')
+  .get(getSingleUser)
 
 router
   .route('/admin/user/role/:id')
