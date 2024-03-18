@@ -319,7 +319,8 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
     .populate({
       path: 'tags',
       select: 'name'
-    }),
+    })
+    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()

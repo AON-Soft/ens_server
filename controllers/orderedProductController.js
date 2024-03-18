@@ -174,7 +174,8 @@ exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ shopID: shopId })
         .populate({ path: 'userId', select: 'avatar name email' })
-        .populate({ path: 'shopID', select: 'name info logo banner location address' }),
+        .populate({ path: 'shopID', select: 'name info logo banner location address' })
+        .sort({ createdAt: -1 }),
       req.query
     )
       .search()
@@ -206,7 +207,8 @@ exports.getAllOrderByUser = catchAsyncError(async (req, res, next) => {
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ userId: userID })
         .populate({ path: 'userId', select: 'avatar name email' })
-        .populate({ path: 'shopID', select: 'name info logo banner location address' }),
+        .populate({ path: 'shopID', select: 'name info logo banner location address' })
+        .sort({ createdAt: -1 }),
       req.query
     )
       .search()
@@ -244,7 +246,8 @@ exports.getAllOrderByUserId = catchAsyncError(async (req, res, next) => {
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ userId: userID })
         .populate({ path: 'userId', select: 'avatar name email' })
-        .populate({ path: 'shopID', select: 'name info logo banner location address' }),
+        .populate({ path: 'shopID', select: 'name info logo banner location address' })
+        .sort({ createdAt: -1 }),
       req.query
     )
       .search()
@@ -277,7 +280,8 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
     const apiFeature = new ApiFeatures(
       orderedProductModel.find()
         .populate({ path: 'userId', select: 'avatar name email' })
-        .populate({ path: 'shopID', select: 'name info logo banner location address' }),
+        .populate({ path: 'shopID', select: 'name info logo banner location address' })
+        .sort({ createdAt: -1 }),
       req.query
     )
       .search()

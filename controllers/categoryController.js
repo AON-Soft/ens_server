@@ -289,7 +289,8 @@ exports.getAllCategory = catchAsyncError(async (req, res) => {
   const apiFeature = new ApiFeatures(
     Categories.find()
     .populate('shopID')
-    .populate('shopCategory'),
+    .populate('shopCategory')
+    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()

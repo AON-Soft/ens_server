@@ -221,7 +221,8 @@ exports.getAllShops = catchAsyncError(async (req, res) => {
   const resultPerPage = 10
   const count = await Shop.countDocuments()
   const apiFeature = new ApiFeatures(
-    Shop.find(),
+    Shop.find()
+    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()
