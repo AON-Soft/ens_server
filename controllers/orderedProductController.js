@@ -516,7 +516,8 @@ exports.getAllInvoice = catchAsyncError(async (req, res, next) => {
     const apiFeature = new ApiFeatures(
     orderedProductModel.find()
     .populate({path: 'userId', select: 'avatar name email'})
-    .populate({path: 'shopID', select: 'name info logo banner location address'}),
+    .populate({path: 'shopID', select: 'name info logo banner location address'})
+    .sort({ createdAt: -1 }),
     req.query)
     .search()
     .filter()
@@ -568,7 +569,8 @@ exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
     const apiFeature = new ApiFeatures(
     orderedProductModel.find({shopID : shopId})
     .populate({path: 'userId', select: 'avatar name email'})
-    .populate({path: 'shopID', select: 'name info logo banner location address'}),
+    .populate({path: 'shopID', select: 'name info logo banner location address'})
+    .sort({ createdAt: -1 }),
     req.query)
     .search()
     .filter()
