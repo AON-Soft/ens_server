@@ -355,3 +355,23 @@ exports.productSearch = catchAsyncError(async (req, res, next) => {
     next(error)
   }
 })
+
+//Update User status ---Admin
+exports.updateProductStatus = catchAsyncError(async (req, res, next) => {
+ try {
+   const newUserData = {
+    status: req.body.status,
+  }
+  await Product.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  })
+
+   const product = await Product.findById(req.params.id)
+
+  res.status(200).json({ success: true, data: product })
+ } catch (error) {
+  next(error)
+ }
+})

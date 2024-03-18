@@ -127,12 +127,16 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
       }
     }
 
+    const UniqOrderID = uniqueTransactionID();
+    const generateorderID = `OI${UniqOrderID}`;
+
     const data = {
       userId: card.userId,
       shopID: card.shopID,
       cardId: cardID,
       cardProducts: card.cardProducts,
       shippingAddress: address,
+      orderID: generateorderID,
       discount,
       deliveryCharge,
       paymentStatus,

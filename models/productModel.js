@@ -91,8 +91,8 @@ const productSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['live', 'disable', 'liters', 'grams', 'kilograms'],
-    required: [true, 'Please Enter Stock Unit'],
+    default: 'disable',
+    enum: ['live', 'disable'],
   },
   createdAt: {
     type: Date,

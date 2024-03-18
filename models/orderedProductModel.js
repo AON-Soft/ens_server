@@ -81,6 +81,9 @@ const orderedProductsSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please Enter Adress'],
   },
+  orderID: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
