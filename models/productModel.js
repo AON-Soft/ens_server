@@ -89,6 +89,11 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Unit',
   },
+  status: {
+    type: String,
+    enum: ['live', 'disable', 'liters', 'grams', 'kilograms'],
+    required: [true, 'Please Enter Stock Unit'],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

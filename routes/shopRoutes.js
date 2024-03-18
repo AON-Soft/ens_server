@@ -45,11 +45,11 @@ router
 
 router
   .route('/shop/details/:id')
-  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), getShopDetails)
+  .get(getShopDetails)
 
 router
   .route('/shop/products/:id')
-  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), getPrductsByShopID)
+  .get(getPrductsByShopID)
 
 router
   .route('/shop/transactions/:id')
@@ -63,11 +63,11 @@ router
   .route('/admin/delete-shop/:id')
   .delete(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), deleteShop)
 
-router.route('/shops/nearby').get(isAuthenticated, getNearbyShops)
+router.route('/shops/nearby').get(getNearbyShops)
 
 router
   .route('/admin/shops')
-  .get(isAuthenticated, getAllShops)
+  .get(getAllShops)
 
 
 router
