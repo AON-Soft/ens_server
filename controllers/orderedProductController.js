@@ -128,7 +128,7 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
     }
 
     const UniqOrderID = uniqueTransactionID();
-    const generateorderID = `OI${UniqOrderID}`;
+    const generateorderID = `ORD${UniqOrderID}`;
 
     const data = {
       userId: card.userId,
