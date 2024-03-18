@@ -281,3 +281,40 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
     categories,
   })
 })
+
+exports.getAllCategory = catchAsyncError(async (req, res) => {
+  const resultPerPage = 10
+
+  const categoryCount = await Categories.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Categories.find()
+    .populate('shopID')
+    .populate('shopCategory'),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let categories = await apiFeature.query
+
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: []
+    });
+  }
+
+  let filteredCategoriesCount = categories.length
+
+  res.status(200).json({
+    success: true,
+    categoryCount,
+    resultPerPage,
+    filteredCategoriesCount,
+    categories,
+  })
+})

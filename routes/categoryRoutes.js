@@ -12,6 +12,7 @@ const {
   getAllCategoriesByshop,
   getAllCategoriesByAdmin,
   getAllCategoriesByUser,
+  getAllCategory,
 } = require('../controllers/categoryController')
 
 const router = express.Router()
@@ -45,5 +46,10 @@ router
 router
   .route('/all/shop/categories/:id')
   .get(isAuthenticated, getAllCategoriesByUser)
+
+router
+  .route('/product/category/all')
+  .get(getAllCategory)
+
 
 module.exports = router
