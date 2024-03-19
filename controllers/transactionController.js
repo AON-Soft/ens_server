@@ -258,17 +258,19 @@ exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
 })
 
 exports.earningHistory = catchAsyncError(async (req, res) => {
-  let userId = req.user.id;
-  userId = new mongoose.Types.ObjectId(userId);
+  const userId = new mongoose.Types.ObjectId(req.user.id);
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  const resultPerPage = 10; 
+ let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+
   const page = req.query.page || 1; 
-
-  const skip = (page - 1) * resultPerPage;
-
+  
   const earningPipeline = [
     {
       $match: {
@@ -285,7 +287,7 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
     },
     {
       $lookup: {
-        from: 'users',
+        from: 'users', // Assuming your user collection is named 'users'
         localField: 'sender.user',
         foreignField: '_id',
         as: 'senderInfo',
@@ -293,7 +295,7 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
     },
     {
       $lookup: {
-        from: 'users',
+        from: 'users', // Assuming your user collection is named 'users'
         localField: 'receiver.user',
         foreignField: '_id',
         as: 'receiverInfo',
@@ -309,15 +311,46 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
       $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
     },
     {
-      $sort: { createdAt: -1 }
+      $group: {
+        _id: null,
+        totalEarnings: {
+          $sum: '$transactionAmount',
+        },
+        earningHistory: {
+          $push: {
+            transactionID: '$transactionID',
+            transactionType: '$transactionType',
+            transactionAmount: '$transactionAmount',
+            transactionHeading: '$receiver.transactionHeading',
+            date: '$createdAt',
+            sender: {
+              name: '$sender.name',
+              email: '$sender.email',
+              mobile: '$sender.mobile',
+              avatar: '$sender.avatar',
+              balance: '$sender.balance',
+              dueBalance: '$sender.dueBalance',
+            },
+            receiver: {
+              name: '$receiver.name',
+              email: '$receiver.email',
+              mobile: '$receiver.mobile',
+              avatar: '$receiver.avatar',
+              balance: '$receiver.balance',
+              dueBalance: '$receiver.dueBalance',
+            },
+          },
+        },
+      },
     },
     {
-      $skip: skip
+      $skip: (page - 1) * resultPerPage 
     },
     {
       $limit: resultPerPage 
     }
   ];
+
 
   const earningResult = await Transaction.aggregate(earningPipeline);
 
@@ -360,8 +393,6 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
     earningHistory,
     count, 
     resultPerPage,
-    currentPage: page,
-    totalPages: Math.ceil(count / resultPerPage),
     filteredCount: earningHistory.length
   });
 });
@@ -426,7 +457,7 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
       $unset: ['userInfo'],
     },
     {
-      $sort: { createdAt: -1 } // Sort in descending order based on createdAt field
+      $sort: { createdAt: -1 }
     },
     {
       $group: {
@@ -472,6 +503,7 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
       },
     }
   ];
+
 
   const transactionResult = await Transaction.aggregate(transactionPipeline);
 

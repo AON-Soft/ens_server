@@ -374,26 +374,68 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
     }
 
     const userId = new mongoose.Types.ObjectId(shop.userId);
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+   
+    const skip = (page - 1) * resultPerPage;
 
     const transactionPipeline = [
       {
         $match: {
           $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
-          createdAt: { $gte: sixMonthsAgo },
         },
+      },
+      {
+        $lookup: {
+          from: 'users', 
+          let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$_id', ['$$senderUserId', '$$receiverUserId']],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                name: 1,
+                email: 1,
+                flag: 1,
+                transactionHeading: 1,
+              },
+            },
+          ],
+          as: 'userInfo',
+        },
+      },
+      {
+        $addFields: {
+          sender: {
+            $mergeObjects: [
+              { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+              '$sender',
+            ],
+          },
+          receiver: {
+            $mergeObjects: [
+              { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+              '$receiver',
+            ],
+          },
+        },
+      },
+      {
+        $unset: ['userInfo'],
+      },
+      {
+        $sort: { createdAt: -1 }
       },
       {
         $group: {
           _id: null,
           totalUpcomingPoints: {
             $sum: {
-              $cond: [
-                { $eq: ['$receiver.user', userId] },
-                '$transactionAmount',
-                0,
-              ],
+              $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
             },
           },
           totalOutgoingPoints: {
@@ -407,11 +449,7 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
               transactionType: '$transactionType',
               transactionAmount: '$transactionAmount',
               flag: {
-                $cond: [
-                  { $eq: ['$sender.user', userId] },
-                  '$sender.flag',
-                  '$receiver.flag',
-                ],
+                $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
               },
               transactionHeading: {
                 $cond: [
@@ -421,17 +459,22 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
                 ],
               },
               date: '$createdAt',
+              sender: '$sender',
+              receiver: '$receiver',
+              transactionRelation: '$transactionRelation',
             },
           },
         },
       },
       {
-        $skip: (page - 1) * resultPerPage 
-      },
-      {
-        $limit: resultPerPage 
+        $project: {
+          totalUpcomingPoints: 1,
+          totalOutgoingPoints: 1,
+          transactionsHistory: { $slice: ['$transactionsHistory', skip, resultPerPage] },
+        },
       }
     ];
+
 
     const transactionResult = await transactionModel.aggregate(transactionPipeline);
 
@@ -451,7 +494,6 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
       {
         $match: {
           $or: [{ 'sender.user': userId }, { 'receiver.user': userId }],
-          createdAt: { $gte: sixMonthsAgo },
         },
       },
       {
@@ -469,10 +511,12 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
       data: transactionsHistory,
       count, 
       resultPerPage,
-      filteredCount: transactionsHistory.length,
+      currentPage: page,
+      totalPages: Math.ceil(count / resultPerPage),
+      filteredCount: transactionsHistory.length 
     });
-  }
-  catch(error){
+}
+    catch(error){
     next(error)
   }
 })
