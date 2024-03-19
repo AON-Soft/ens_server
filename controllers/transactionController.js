@@ -270,86 +270,88 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
   }
 
   const page = req.query.page || 1; 
+
+  const skip = (page - 1) * resultPerPage;
   
   const earningPipeline = [
-    {
-      $match: {
-        'receiver.user': userId,
-        'receiver.flag': 'Credit',
-        createdAt: { $gte: sixMonthsAgo },
-        paymentType: 'bonus_points',
-        $or: [
-          { transactionRelation: 'user-To-user' },
-          { transactionRelation: 'user-To-admin' },
-          { transactionRelation: 'user-To-super_admin' }
-        ]
+  {
+    $match: {
+      'receiver.user': userId,
+      'receiver.flag': 'Credit',
+      createdAt: { $gte: sixMonthsAgo },
+      paymentType: 'bonus_points',
+      $or: [
+        { transactionRelation: 'user-To-user' },
+        { transactionRelation: 'user-To-admin' },
+        { transactionRelation: 'user-To-super_admin' }
+      ]
+    },
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'sender.user',
+      foreignField: '_id',
+      as: 'senderInfo',
+    },
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'receiver.user',
+      foreignField: '_id',
+      as: 'receiverInfo',
+    },
+  },
+  {
+    $addFields: {
+      sender: { $arrayElemAt: ['$senderInfo', 0] },
+      receiver: { $arrayElemAt: ['$receiverInfo', 0] },
+    },
+  },
+  {
+    $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
+  },
+  {
+    $group: {
+      _id: null,
+      totalEarnings: {
+        $sum: '$transactionAmount',
       },
-    },
-    {
-      $lookup: {
-        from: 'users', // Assuming your user collection is named 'users'
-        localField: 'sender.user',
-        foreignField: '_id',
-        as: 'senderInfo',
-      },
-    },
-    {
-      $lookup: {
-        from: 'users', // Assuming your user collection is named 'users'
-        localField: 'receiver.user',
-        foreignField: '_id',
-        as: 'receiverInfo',
-      },
-    },
-    {
-      $addFields: {
-        sender: { $arrayElemAt: ['$senderInfo', 0] },
-        receiver: { $arrayElemAt: ['$receiverInfo', 0] },
-      },
-    },
-    {
-      $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
-    },
-    {
-      $group: {
-        _id: null,
-        totalEarnings: {
-          $sum: '$transactionAmount',
-        },
-        earningHistory: {
-          $push: {
-            transactionID: '$transactionID',
-            transactionType: '$transactionType',
-            transactionAmount: '$transactionAmount',
-            transactionHeading: '$receiver.transactionHeading',
-            date: '$createdAt',
-            sender: {
-              name: '$sender.name',
-              email: '$sender.email',
-              mobile: '$sender.mobile',
-              avatar: '$sender.avatar',
-              balance: '$sender.balance',
-              dueBalance: '$sender.dueBalance',
-            },
-            receiver: {
-              name: '$receiver.name',
-              email: '$receiver.email',
-              mobile: '$receiver.mobile',
-              avatar: '$receiver.avatar',
-              balance: '$receiver.balance',
-              dueBalance: '$receiver.dueBalance',
-            },
+      earningHistory: {
+        $push: {
+          transactionID: '$transactionID',
+          transactionType: '$transactionType',
+          transactionAmount: '$transactionAmount',
+          transactionHeading: '$receiver.transactionHeading',
+          date: '$createdAt',
+          sender: {
+            name: '$sender.name',
+            email: '$sender.email',
+            mobile: '$sender.mobile',
+            avatar: '$sender.avatar',
+            balance: '$sender.balance',
+            dueBalance: '$sender.dueBalance',
+          },
+          receiver: {
+            name: '$receiver.name',
+            email: '$receiver.email',
+            mobile: '$receiver.mobile',
+            avatar: '$receiver.avatar',
+            balance: '$receiver.balance',
+            dueBalance: '$receiver.dueBalance',
           },
         },
       },
     },
-    {
-      $skip: (page - 1) * resultPerPage 
+  },
+  {
+    $project: {
+      totalEarnings: 1,
+      earningHistory: { $slice: ['$earningHistory', skip, resultPerPage] },
     },
-    {
-      $limit: resultPerPage 
-    }
-  ];
+  }  
+];
 
 
   const earningResult = await Transaction.aggregate(earningPipeline);
