@@ -448,7 +448,11 @@ exports.updateProfile = catchAsyncError(async (req, res, _) => {
 
 //Get All Users(admin)
 exports.getAllUsers = catchAsyncError(async (req, res) => {   
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const count = await User.countDocuments({ role: 'user' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'user' }),
@@ -471,7 +475,11 @@ exports.getAllUsers = catchAsyncError(async (req, res) => {
 
 //Get All Admin(admin)
 exports.getAllAdmins = catchAsyncError(async (req, res) => { 
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const count = await User.countDocuments({ role: 'admin' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'admin' }),
@@ -494,7 +502,11 @@ exports.getAllAdmins = catchAsyncError(async (req, res) => {
 
 //Get All Agents (admin)
 exports.getAllAgents = catchAsyncError(async (req, res) => {
-const resultPerPage = 10
+let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const count = await User.countDocuments({ role: 'agent' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'agent' }),
@@ -517,7 +529,11 @@ const resultPerPage = 10
 
 //Get All Shopkeeper (admin)
 exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const count = await User.countDocuments({ role: 'shop_keeper' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'shop_keeper' }),

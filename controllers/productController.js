@@ -132,7 +132,11 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const productsCount = await Product.countDocuments({ user: req.user.id })
   const apiFeature = new ApiFeatures(
     Product.find({ user: req.user.id }).select('-__v')
@@ -175,7 +179,11 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
 })
 
 exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const productsCount = await Product.countDocuments({ shop: req.params.id })
   const apiFeature = new ApiFeatures(
     Product.find({ user: req.user.id }).select('-__v')
@@ -218,7 +226,11 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const productsCount = await Product.countDocuments({ shop: req.params.id })
   const apiFeature = new ApiFeatures(
     Product.find({ user: req.user.id }).select('-__v')
@@ -296,7 +308,11 @@ exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllProducts = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const productsCount = await Product.countDocuments()
   const apiFeature = new ApiFeatures(
     Product.find().select('-__v')

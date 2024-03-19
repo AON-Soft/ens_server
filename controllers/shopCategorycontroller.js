@@ -96,7 +96,11 @@ exports.deleteShopCategory = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllShopCategories = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const shopCategoryCount = await ShopCategory.countDocuments({})
   const apiFeature = new ApiFeatures(ShopCategory.find(), req.query)
     .search()

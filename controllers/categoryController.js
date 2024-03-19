@@ -165,7 +165,11 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
   const categoryCount = await Categories.countDocuments({
     $or: [{ shopCategory: req.shop.category }, { shopID: req.shop.id }],
@@ -205,7 +209,11 @@ exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
 
 exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
   const shopCategory = req.params.id
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
   const categoryCount = await Categories.countDocuments({
     shopCategory: shopCategory,
@@ -242,7 +250,11 @@ exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
   const shop = await Shops.findById(req.params.id)
 
@@ -283,7 +295,11 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllCategory = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
   const categoryCount = await Categories.countDocuments()
   const apiFeature = new ApiFeatures(

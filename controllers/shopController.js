@@ -244,7 +244,11 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
 
 
 exports.getAllShops = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const count = await Shop.countDocuments()
   const apiFeature = new ApiFeatures(
     Shop.find()
@@ -310,7 +314,11 @@ exports.getShopDetails = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getPrductsByShopID = catchAsyncError(async (req, res, next) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   try {
     const shop = await Shop.findById(req.params.id).exec();
 
@@ -530,9 +538,9 @@ exports.getOrdersByShopID = catchAsyncError(async (req, res, next) => {
    try {
     let resultPerPage = 10;  
 
-    if (req.query.limit) {
-      resultPerPage = parseInt(req.query.limit);
-    }
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
     const count = await orderedProductModel.countDocuments({ shopID: shopId });
 

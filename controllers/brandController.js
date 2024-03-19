@@ -162,7 +162,11 @@ exports.deleteBrand = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllBrandByshop = catchAsyncError(async (req, res) => {
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
   const brandCount = await Brands.countDocuments({
     $or: [{ shopCategory: req.shop.category }, { shopID: req.shop.id }],
@@ -192,7 +196,11 @@ exports.getAllBrandByshop = catchAsyncError(async (req, res) => {
 
 exports.getAllBrandsByAdmin = catchAsyncError(async (req, res) => {
   const shopCategory = req.params.id
-  const resultPerPage = 10
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
 
   const brandCount = await Brands.countDocuments({
     shopCategory: shopCategory,

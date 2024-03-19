@@ -168,7 +168,11 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
 exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
    try {
-    const resultPerPage = 10;
+    let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  };
     const count = await orderedProductModel.countDocuments({ shopID: shopId });
 
     const apiFeature = new ApiFeatures(
@@ -201,7 +205,11 @@ exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
 exports.getAllOrderByUser = catchAsyncError(async (req, res, next) => {
   const userID = new mongoose.Types.ObjectId(req.user.id);
   try {
-    const resultPerPage = 10;
+    let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  };
     const count = await orderedProductModel.countDocuments({ userId: userID });
 
     const apiFeature = new ApiFeatures(
@@ -234,7 +242,11 @@ exports.getAllOrderByUser = catchAsyncError(async (req, res, next) => {
 exports.getAllOrderByUserId = catchAsyncError(async (req, res, next) => {
   const userID = new mongoose.Types.ObjectId(req.params.id)
   try {
-    const resultPerPage = 10;
+    let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  };
 
     // total orders
     const count = await orderedProductModel.countDocuments({ userId: userID });
@@ -274,7 +286,11 @@ exports.getAllOrderByUserId = catchAsyncError(async (req, res, next) => {
 // get all order
 exports.getAllOrders = catchAsyncError(async (req, res, next) => {
   try {
-    const resultPerPage = 10;
+    let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  };
     const count = await orderedProductModel.countDocuments();
 
     const apiFeature = new ApiFeatures(
@@ -511,7 +527,11 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
 // get all invoice
 exports.getAllInvoice = catchAsyncError(async (req, res, next) => {
   try {
-    const resultPerPage = 10
+    let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
     const count = await orderedProductModel.countDocuments()
     const apiFeature = new ApiFeatures(
     orderedProductModel.find()
@@ -564,7 +584,11 @@ exports.getSingleInvoice = catchAsyncError(async (req, res, next) => {
 exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
   try {
-    const resultPerPage = 10
+    let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
     const count = await orderedProductModel.countDocuments({shopID : shopId})
     const apiFeature = new ApiFeatures(
     orderedProductModel.find({shopID : shopId})
