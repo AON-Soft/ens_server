@@ -188,34 +188,60 @@ exports.deleteShop = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
-  const longitude = parseFloat(req.query.longitude)
-  const latitude = parseFloat(req.query.latitude)
+  const longitude = parseFloat(req.query.longitude);
+  const latitude = parseFloat(req.query.latitude);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10; // Default limit is 10
+  const searchQuery = req.query.search;
 
   if (isNaN(longitude) || isNaN(latitude)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid coordinates' })
+    return res.status(400).json({ success: false, message: 'Invalid coordinates' });
   }
 
-  const shops = await Shop.aggregate([
-    {
-      $geoNear: {
-        near: {
-          type: 'Point',
-          coordinates: [longitude, latitude],
-        },
-        distanceField: 'distance',
-        maxDistance: 5000, // 5km in meters
-        spherical: true,
+  const startIndex = (page - 1) * limit;
+
+  // Define the geospatial query
+  const geoQuery = {
+    location: {
+      $geoWithin: {
+        $centerSphere: [[longitude, latitude], 5 / 6378.1], // 5km radius
       },
     },
-    { $sort: { distance: 1 } },
-  ])
-  if (!shops) {
-    return next(new ErrorHandler('No Shops are available in your area', 404))
+  };
+
+  if (searchQuery) {
+    geoQuery.name = { $regex: searchQuery, $options: 'i' };
   }
-  res.status(200).json({ success: true, data: shops })
-})
+
+  const shopsCount = await Shop.countDocuments(geoQuery);
+  const totalPages = Math.ceil(shopsCount / limit);
+
+  const pagination = {
+    currentPage: page,
+    pageSize: limit,
+    count: shopsCount,
+    totalPages,
+  };
+
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit: limit,
+    };
+  }
+
+  const shops = await Shop.find(geoQuery)
+    .skip(startIndex)
+    .limit(limit)
+    .sort({ distance: 1 });
+
+  if (!shops || shops.length === 0) {
+    return next(new ErrorHandler('No Shops are available in your area', 404));
+  }
+
+  res.status(200).json({ success: true, data: shops, ...pagination });
+});
+
 
 exports.getAllShops = catchAsyncError(async (req, res) => {
   const resultPerPage = 10

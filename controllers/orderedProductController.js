@@ -720,12 +720,10 @@ exports.getOrderChart = catchAsyncError(async (req, res, next) => {
             success: true,
             data: formattedData,
             totalRevenue,
-            pagination: {
-                currentPage: page,
-                pageSize,
-                totalPages,
-                totalItems
-            }
+            currentPage: page,
+            pageSize,
+            totalPages,
+            totalItems
         });
     } catch (error) {
         // Handle errors
