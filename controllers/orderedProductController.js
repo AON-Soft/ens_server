@@ -734,7 +734,11 @@ exports.getOrderChart = catchAsyncError(async (req, res, next) => {
 // get all pending order by shop
 exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -807,7 +811,11 @@ exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
 // get all confirm order by shop
 exports.getAllConfirmOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -880,7 +888,11 @@ exports.getAllConfirmOrderByShop = catchAsyncError(async (req, res) => {
 // get all on delivery order by shop
 exports.getAllOnDeliveryOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+      resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -953,7 +965,11 @@ exports.getAllOnDeliveryOrderByShop = catchAsyncError(async (req, res) => {
 // get all completed order by shop
 exports.getAllDoneOrderOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -1026,7 +1042,11 @@ exports.getAllDoneOrderOrderByShop = catchAsyncError(async (req, res) => {
 // get all cancel order by shop
 exports.getAllCancelOrderOrderByShop = catchAsyncError(async (req, res) => {
   const shopId = new mongoose.Types.ObjectId(req.shop.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -1099,7 +1119,11 @@ exports.getAllCancelOrderOrderByShop = catchAsyncError(async (req, res) => {
 // get all pending order by user
 exports.getAllPendingOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -1172,7 +1196,11 @@ exports.getAllPendingOrderByUser = catchAsyncError(async (req, res) => {
 // get all confirm order by user
 exports.getAllConfirmOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -1245,7 +1273,11 @@ exports.getAllConfirmOrderByUser = catchAsyncError(async (req, res) => {
 // get all on delivery order by user
 exports.getAllOnDeliveryOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -1318,7 +1350,11 @@ exports.getAllOnDeliveryOrderByUser = catchAsyncError(async (req, res) => {
 // get all completed order by user
 exports.getAllDoneOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [
@@ -1391,7 +1427,11 @@ exports.getAllDoneOrderByUser = catchAsyncError(async (req, res) => {
 // get all cancel order by user
 exports.getAllCancelOrderByUser = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id)
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
   
   const pipeline = [

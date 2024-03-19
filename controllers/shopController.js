@@ -363,7 +363,11 @@ exports.getPrductsByShopID = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
 
   try {
@@ -522,79 +526,36 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getOrdersByShopID = catchAsyncError(async (req, res, next) => {
-  const resultPerPage = 10; 
-  const page = req.query.page || 1; 
-  try {
-      const shop = await Shop.findById(req.params.id).exec();
+  const shopId = new mongoose.Types.ObjectId(req.params.id)
+   try {
+    let resultPerPage = 10;  
 
-      if(!shop){
-        return next(new ErrorHandler('Shop not found', 404))
-      }
-      const shopId = new mongoose.Types.ObjectId(shop._id)
-    
+    if (req.query.limit) {
+      resultPerPage = parseInt(req.query.limit);
+    }
 
-      const pipeline = [
-        {
-          $match: {
-            shopID: shopId,
-          },
-        },
-        {
-          $sort: {
-            createdAt: -1,
-          },
-        },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'userId',
-            foreignField: '_id',
-            as: 'userDetails',
-          },
-        },
-        {
-          $unwind: '$userDetails',
-        },
-        {
-          $project: {
-            name: '$userDetails.name',
-            email: '$userDetails.email',
-            avatar: '$userDetails.avatar',
-            orderId: '$_id',
-            orderStatus: 1,
-            totalBill: 1,
-          },
-        },
-        {
-          $skip: (page - 1) * resultPerPage
-        },
-        {
-          $limit: resultPerPage 
-        }
-      ]
+    const count = await orderedProductModel.countDocuments({ shopID: shopId });
 
-    const result = await orderedProductModel.aggregate(pipeline)
-    // Count total number of orders for the user
-    const countPipeline = [
-      {
-        $match: {
-          shopID: shopId,
-        },
-      },
-      {
-        $count: 'count'
-      }
-    ];
+    const apiFeature = new ApiFeatures(
+      orderedProductModel.find({ shopID: shopId })
+        .populate({ path: 'userId', select: 'avatar name email' })
+        .populate({ path: 'shopID', select: 'name info logo banner location address' })
+        .sort({ createdAt: -1 }),
+      req.query
+    )
+      .search()
+      .filter()
+      .pagination(resultPerPage);
 
-    const countResult = await orderedProductModel.aggregate(countPipeline);
-    const count = countResult.length > 0 ? countResult[0].count : 0;
+    let result = await apiFeature.query;
+    let filteredCount = result.length;
 
     res.status(200).json({
       success: true,
       data: result,
-      count, 
+      count,
       resultPerPage,
-      filteredCount: result.length 
+      filteredCount,
     });
     
     }

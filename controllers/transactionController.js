@@ -62,7 +62,11 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
 
   const skip = (page - 1) * resultPerPage;
@@ -403,7 +407,11 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
 exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.params.id);
   
-  const resultPerPage = 10; 
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
   const page = req.query.page || 1; 
 
   const skip = (page - 1) * resultPerPage;
