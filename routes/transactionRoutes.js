@@ -18,7 +18,7 @@ const router = express.Router()
 
 router
   .route('/user/user/sendPoints')
-  .post(isAuthenticated, isAuthorizeRoles('user'), sendPoints, createTransaction)
+  .post(isAuthenticated, sendPoints, createTransaction)
 
 router
   .route('/user/agent/pointsOut')
