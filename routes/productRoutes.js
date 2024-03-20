@@ -43,8 +43,8 @@ router
 router
   .route('/shop/product/:id')
   .get(getSingleProduct)
-  .put(isAuthenticated, isAuthorizeRoles('shop_keeper'), updateProduct)
-  .delete(isAuthenticated, isAuthorizeRoles('shop_keeper'), deleteProduct)
+  .put(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), updateProduct)
+  .delete(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), deleteProduct)
 
 router.route('/product/search').get(productSearch)
 
