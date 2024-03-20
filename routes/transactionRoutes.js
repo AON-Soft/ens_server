@@ -14,12 +14,17 @@ const {
   userToAgentPointsOut,
 } = require('../middleware/user-to-agent-points-out')
 const { sendPointsAgentToUser } = require('../middleware/sendPointsAgentToUser')
+const { sendPointAdminToAdminAgent } = require('../middleware/sendPointAdminToAdminAgent')
 
 const router = express.Router()
 
 router
   .route('/user/user/sendPoints')
   .post(isAuthenticated, sendPoints, createTransaction)
+
+router
+  .route('/admin/sendPoints')
+  .post(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), sendPointAdminToAdminAgent, createTransaction)
 
 router
   .route('/user/agent/pointsOut')

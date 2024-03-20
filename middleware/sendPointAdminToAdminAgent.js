@@ -6,7 +6,7 @@ const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
 // const serviceChargeModel = require('../models/serviceChargeModel.js')
 
-exports.sendPointAdminToAgent = catchAsyncError(async (req, res, next) => {
+exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body
 
   const session = await mongoose.startSession()
@@ -36,13 +36,13 @@ exports.sendPointAdminToAgent = catchAsyncError(async (req, res, next) => {
     }
     const serviceCharge = await calculateServiceCharge(amount, percentage)
 
-    if (sender.balance <= amount + serviceCharge) {
-      return next(new ErrorHandler('Insufficient Balance', 400))
-    }
+    // if (sender.balance <= amount + serviceCharge) {
+    //   return next(new ErrorHandler('Insufficient Balance', 400))
+    // }
 
     const trnxID = uniqueTransactionID()
     const sendPontsTranactionID = `SP${trnxID}`
-    sender.balance -= amount + serviceCharge
+    // sender.balance -= amount + serviceCharge
     receiver.balance += amount
     admin.balance += serviceCharge
 
