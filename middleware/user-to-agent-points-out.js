@@ -4,15 +4,25 @@ const User = require('../models/userModel.js')
 const calculateServiceCharge = require('../utils/calculateServiceCharge.js')
 const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
+// const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body
-  const percentage = 20
 
   const session = await mongoose.startSession()
   session.startTransaction()
 
   try {
+    // const charge = await serviceChargeModel.findOne().session(session);
+
+    // if (!charge) {
+    //   return next(new ErrorHandler('Service charge not found', 403))
+    // }
+
+    // const percentage = charge.cashoutCharge.amount;
+
+    const percentage = 20;
+
     const sender = await User.findOne({ _id: req.user.id }).session(session)
     const receiver = await User.findOne({ email: receiverEmail }).session(
       session,
