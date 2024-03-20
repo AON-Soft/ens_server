@@ -8,6 +8,7 @@ const ApiFeatures = require('../utils/apifeature')
 const productModel = require('../models/productModel')
 const transactionModel = require('../models/transactionModel')
 const orderedProductModel = require('../models/orderedProductModel')
+const userModel = require('../models/userModel')
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
 
@@ -18,6 +19,66 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 
   req.body.createdBy = req.user.id
   req.body.userId = req.user.id
+
+  if (req.files && req.files.banner) {
+    const tempFilePath = `temp1_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath, req.files.banner.data)
+
+    const myCloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: 'shopBanners',
+      crop: 'scale',
+    })
+
+    req.body.banner = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    }
+
+    await fs.unlink(tempFilePath)
+  }
+
+  if(!req.files.logo || req.files.logo === 'undefined'){
+    return next(new ErrorHandler('Logo not found', 404))
+  }
+
+  if (req.files && req.files.logo) {
+    const tempFilePath1 = `temp1_${Date.now()}.jpg`
+    await fs.writeFile(tempFilePath1, req.files.logo.data)
+
+    const myCloudForlogo = await cloudinary.v2.uploader.upload(tempFilePath1, {
+      folder: 'shopLogos',
+      crop: 'scale',
+    })
+    req.body.logo = {
+      public_id: myCloudForlogo.public_id,
+      url: myCloudForlogo.secure_url,
+    }
+    await fs.unlink(tempFilePath1)
+  }
+
+  const shop = await Shop.create(req.body)
+  res.status(200).json({ success: true, data:shop })
+})
+
+exports.registerShopByAdmin = catchAsyncError(async (req, res, next) => {
+  const {userId} = req.body;
+
+  const existUser = await userModel.findById(userId).exec()
+  if (!existUser) {
+    return next(new ErrorHandler('User is not found'))
+  }
+
+  if (existUser.role !== 'shop_keeper') {
+    return next(new ErrorHandler('User is not sopkeeper'))
+  }
+  
+  const getShop = await Shop.findOne({ createdBy: userId })
+  if (getShop) {
+    return next(new ErrorHandler('Shop Alredy Exist ! You can create one shop'))
+  }
+
+  req.body.createdBy = userId
+  req.body.userId = userId
 
   if (req.files && req.files.banner) {
     const tempFilePath = `temp1_${Date.now()}.jpg`
