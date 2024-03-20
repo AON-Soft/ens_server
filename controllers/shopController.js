@@ -376,7 +376,7 @@ exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
 
   try {
     const shop = await Shop.findById(req.params.id).exec();

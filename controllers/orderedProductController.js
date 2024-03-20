@@ -763,7 +763,7 @@ exports.getAllPendingOrderByShop = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -840,7 +840,7 @@ exports.getAllConfirmOrderByShop = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -917,7 +917,7 @@ exports.getAllOnDeliveryOrderByShop = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
       resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -994,7 +994,7 @@ exports.getAllDoneOrderOrderByShop = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -1071,7 +1071,7 @@ exports.getAllCancelOrderOrderByShop = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -1148,7 +1148,7 @@ exports.getAllPendingOrderByUser = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -1225,7 +1225,7 @@ exports.getAllConfirmOrderByUser = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -1302,7 +1302,7 @@ exports.getAllOnDeliveryOrderByUser = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -1379,7 +1379,7 @@ exports.getAllDoneOrderByUser = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
@@ -1456,7 +1456,7 @@ exports.getAllCancelOrderByUser = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const page = req.query.page || 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
   
   const pipeline = [
     {
