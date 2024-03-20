@@ -56,7 +56,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   try {
     const productId = req.params.id;
-    const userId = new mongoose.Types.ObjectId(req.user.id);
+    // const userId = new mongoose.Types.ObjectId(req.user.id);
 
     // Find the product
     let product = await Product.findById(productId);
@@ -64,12 +64,12 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Product not found', 404));
     }
 
-    // Check if the user owns the product
-    if (product.user.toString() !== userId.toString()) {
-      return next(new ErrorHandler('You are not authorized to update this product', 403));
-    }
+    // // Check if the user owns the product
+    // if (product.user.toString() !== userId.toString()) {
+    //   return next(new ErrorHandler('You are not authorized to update this product', 403));
+    // }
 
-    // Update product fields if provided in the request body
+    // Update product fields 
     if (req.body.name) {
       product.name = req.body.name;
     }
