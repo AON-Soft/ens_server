@@ -678,7 +678,7 @@ exports.imageUpload = catchAsyncError(async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No images uploaded' });
     }
 
-      let images = req.files.images; 
+    let images = req.files.images; 
 
     // Check if images is not an array
     if (!Array.isArray(images)) {
@@ -691,27 +691,33 @@ exports.imageUpload = catchAsyncError(async (req, res, next) => {
 
     const uploadedImages = [];
     for (const image of images) {
-      const tempFilePath = `temp_${Date.now()}_${image.name}`;
-      await image.mv(tempFilePath);
+      // Ensure 'image' object and 'name' property are defined before accessing
+      if (image && image.name) {
+        const tempFilePath = `temp_${Date.now()}_${image.name}`;
+        await image.mv(tempFilePath);
 
-      const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
-        folder: 'images',
-        crop: 'scale',
-      });
+        const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
+          folder: 'images',
+          crop: 'scale',
+        });
 
-      uploadedImages.push({
-        public_id: myCloudImage.public_id,
-        url: myCloudImage.secure_url,
-      });
+        uploadedImages.push({
+          public_id: myCloudImage.public_id,
+          url: myCloudImage.secure_url,
+        });
 
-      await fs.unlink(tempFilePath);
+        await fs.unlink(tempFilePath);
+      } else {
+        console.error('Image or image name is undefined:', image);
+      }
     }
 
     res.status(200).json({ success: true, imageUrls: uploadedImages });
   } catch (error) {
     next(error);
   }
-})
+});
+
 
 exports.userSerch = catchAsyncError(async (req, res, next) => {
   const { query } = req.query;
