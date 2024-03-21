@@ -159,7 +159,8 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
     .populate({
       path: 'tags',
       select: 'name'
-    }),
+    })
+    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()
@@ -206,7 +207,8 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
     .populate({
       path: 'tags',
       select: 'name'
-    }),
+    })
+    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()
@@ -253,7 +255,8 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
     .populate({
       path: 'tags',
       select: 'name'
-    }),
+    })
+    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()
