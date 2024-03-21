@@ -1,7 +1,6 @@
 const catchAsyncError = require('../middleware/catchAsyncError')
 const mongoose = require('mongoose')
 const User = require('../models/userModel.js')
-const calculateServiceCharge = require('../utils/calculateServiceCharge')
 const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
 const serviceChargeModel = require('../models/serviceChargeModel.js')
@@ -19,7 +18,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Service charge not found', 403))
     }
 
-    const percentage = charge.sendMoneyCharge.amount;
+    const serviceCharge = charge.sendMoneyCharge.amount;
 
     // const percentage = 5;
 
@@ -35,7 +34,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     if (!admin) {
       return next(new ErrorHandler('super_admin not found', 403))
     }
-    const serviceCharge = await calculateServiceCharge(amount, percentage)
+    // const serviceCharge = await calculateServiceCharge(amount, percentage)
 
     if (sender.balance <= amount + serviceCharge) {
       return next(new ErrorHandler('Insufficient Balance', 400))

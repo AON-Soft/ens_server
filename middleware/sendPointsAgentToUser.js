@@ -1,18 +1,26 @@
 const catchAsyncError = require('./catchAsyncError.js')
 const mongoose = require('mongoose')
 const User = require('../models/userModel.js')
-const calculateServiceCharge = require('../utils/calculateServiceCharge.js')
 const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
+const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body
-  const percentage = 5
-
+  
   const session = await mongoose.startSession()
   session.startTransaction()
 
   try {
+    const charge = await serviceChargeModel.findOne().session(session);
+
+    if (!charge) {
+      return next(new ErrorHandler('Service charge not found', 403))
+    }
+    
+    const serviceCharge = charge.sendMoneyCharge.amount;
+    // const percentage = 5
+
     const sender = await User.findOne({ _id: req.user.id }).session(session)
     const receiver = await User.findOne({ email: receiverEmail }).session(
       session,
@@ -25,7 +33,7 @@ exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
     if (!admin) {
       return next(new ErrorHandler('super_admin not found', 403))
     }
-    const serviceCharge = await calculateServiceCharge(amount, percentage)
+    // const serviceCharge = await calculateServiceCharge(amount, percentage)
 
     if (sender.balance <= amount + serviceCharge) {
       return next(new ErrorHandler('Insufficient Balance', 400))
