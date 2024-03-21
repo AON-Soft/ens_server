@@ -6,16 +6,16 @@ const router = express.Router()
 
 router
   .route('/tag/create')
-  .post(isAuthenticated, isAuthorizeRoles('shop_keeper'),  createTag)
+  .post(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),  createTag)
 
 router
   .route('/tag/update/:id')
-  .put(isAuthenticated, isAuthorizeRoles('shop_keeper'),  updateTag)
+  .put(isAuthenticated, isAuthorizeRoles('shop_keeper',  'admin', 'super_admin'),  updateTag)
 
 router
   .route('/tag/delete/:id')
-  .delete(isAuthenticated, isAuthorizeRoles('shop_keeper'),  deleteTag)
+  .delete(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),  deleteTag)
 
-router.route('/tag/all').get(isAuthenticated, isAuthorizeRoles('shop_keeper'), getAllTag)
+router.route('/tag/all').get(isAuthenticated, isAuthorizeRoles('shop_keeper',  'admin', 'super_admin'), getAllTag)
 
 module.exports = router

@@ -4,7 +4,7 @@ const User = require('../models/userModel.js')
 const calculateServiceCharge = require('../utils/calculateServiceCharge.js')
 const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
-// const serviceChargeModel = require('../models/serviceChargeModel.js')
+const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body
@@ -13,14 +13,14 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
   session.startTransaction()
 
   try {
-    // const charge = await serviceChargeModel.findOne().session(session);
+    const charge = await serviceChargeModel.findOne().session(session);
 
-    // if (!charge) {
-    //   return next(new ErrorHandler('Service charge not found', 403))
-    // }
+    if (!charge) {
+      return next(new ErrorHandler('Service charge not found', 403))
+    }
 
-    // const percentage = charge.sendMoneyCharge.amount;
-    const percentage = 5;
+    const percentage = charge.sendMoneyCharge.amount;
+    // const percentage = 5;
 
     const sender = await User.findOne({ _id: req.user.id }).session(session)
     const receiver = await User.findOne({ email: receiverEmail }).session(

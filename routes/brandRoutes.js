@@ -24,7 +24,7 @@ router
   .post(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper'),
+    isAuthorizeRoles('shop_keeper', 'shop_keeper', 'admin', 'super_admin'),
     createBrandByShop,
   )
 
