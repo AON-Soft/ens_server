@@ -52,6 +52,52 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
   }
 });
 
+exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
+
+   const { name, userId, description, price, points, images, categoryId, stockUnit, availableStock, commission, unit, tags } = req.body;
+
+    if (!name || !description || !price || !points || !userId || !stockUnit || !availableStock || !images || !categoryId || !commission) {
+      return next(new ErrorHandler('Please provide all required fields', 400));
+    }
+
+  try {
+    const userID = new mongoose.Types.ObjectId(userId);
+
+    // Find the shop associated with the user
+    const shop = await Shop.findOne({ userID });
+    if (!shop) {
+      return next(new ErrorHandler('Shop not found', 404));
+    }
+
+    // Create the product
+    let productData = {
+      name: name,
+      description: description,
+      price: price,
+      points: points,
+      images: { url: images },
+      categoryId: categoryId || null,
+      stockUnit: stockUnit,
+      availableStock: availableStock,
+      commission: commission || 0,
+      user: userID,
+      shop: shop._id,
+    };
+
+    if (unit) {
+      productData.unit = unit;
+    }
+    if (tags && tags.length > 0) {
+      productData.tags = tags;
+    }
+
+    const product = await Product.create(productData);
+
+    res.status(201).json({ success: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+});
 
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   try {

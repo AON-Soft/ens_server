@@ -13,6 +13,7 @@ const {
   getAllProducts,
   productSearch,
   updateProductStatus,
+  createProductByAdmin,
 } = require('../controllers/productController')
 
 const router = express.Router()
@@ -39,6 +40,10 @@ router
 router
   .route('/shop/product/new')
   .post(isAuthenticated, isAuthorizeRoles('shop_keeper'), createProduct)
+
+router
+  .route('/shop/admin/product/new')
+  .post(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), createProductByAdmin)
 
 router
   .route('/shop/product/:id')
