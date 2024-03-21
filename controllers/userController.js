@@ -529,7 +529,7 @@ let resultPerPage = 10;
 
 //Get All Shopkeeper (admin)
 exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
-  let resultPerPage = 10;  
+  let resultPerPage ;  
 
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
