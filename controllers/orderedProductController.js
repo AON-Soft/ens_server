@@ -95,7 +95,7 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
     if (commissionAmount > 0) {
       const superAdmin = await userModel.findOne({ role: 'super_admin' }).session(session);
       if (superAdmin) {
-      await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { bonusBalance: commissionAmount } }, { session });
+      await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { balance: commissionAmount } }, { session });
     
       const transaction = new transactionModel({
         transactionID: uniqueTransactionID(),

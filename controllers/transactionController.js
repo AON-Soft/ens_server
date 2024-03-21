@@ -757,3 +757,159 @@ exports.allTransactionHistory = catchAsyncError(async (req, res) => {
     filteredCount: transactionsHistory.length 
   });
 });
+
+exports.earningHistoryAdmin = catchAsyncError(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user.id);
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
+  const skip = (page - 1) * resultPerPage;
+  const keyword = req.query.keyword;
+
+  let matchStage = {};
+  if (keyword && keyword.trim() !== '') {
+    matchStage = {
+      $match: {
+        $or: [
+          { 'sender.name': { $regex: keyword, $options: 'i' } },
+          { 'receiver.name': { $regex: keyword, $options: 'i' } }
+        ]
+      }
+    };
+  }
+
+  const earningPipeline = [
+    matchStage,
+    {
+      $match: {
+        'receiver.user': userId,
+        'receiver.flag': 'Credit',
+        createdAt: { $gte: sixMonthsAgo },
+        paymentType: 'bonus_points',
+        $or: [
+          { transactionRelation: 'user-To-user' },
+          { transactionRelation: 'user-To-admin' },
+          { transactionRelation: 'user-To-super_admin' }
+        ]
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'sender.user',
+        foreignField: '_id',
+        as: 'senderInfo',
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'receiver.user',
+        foreignField: '_id',
+        as: 'receiverInfo',
+      },
+    },
+    {
+      $addFields: {
+        sender: { $arrayElemAt: ['$senderInfo', 0] },
+        receiver: { $arrayElemAt: ['$receiverInfo', 0] },
+      },
+    },
+    {
+      $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
+    },
+    {
+      $group: {
+        _id: null,
+        totalEarnings: {
+          $sum: '$transactionAmount',
+        },
+        earningHistory: {
+          $push: {
+            transactionID: '$transactionID',
+            transactionType: '$transactionType',
+            transactionAmount: '$transactionAmount',
+            transactionHeading: '$receiver.transactionHeading',
+            date: '$createdAt',
+            sender: {
+              name: '$sender.name',
+              email: '$sender.email',
+              mobile: '$sender.mobile',
+              avatar: '$sender.avatar',
+              balance: '$sender.balance',
+              dueBalance: '$sender.dueBalance',
+            },
+            receiver: {
+              name: '$receiver.name',
+              email: '$receiver.email',
+              mobile: '$receiver.mobile',
+              avatar: '$receiver.avatar',
+              balance: '$receiver.balance',
+              dueBalance: '$receiver.dueBalance',
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        totalEarnings: 1,
+        earningHistory: { $slice: ['$earningHistory', skip, resultPerPage] },
+      },
+    }  
+  ];
+
+  const filteredPipeline = earningPipeline.filter(stage => Object.keys(stage).length > 0);
+  const earningResult = await Transaction.aggregate(filteredPipeline);
+
+  if (earningResult.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: 'No earnings found for the user in the last 6 months.',
+      earningResult,
+    });
+  }
+
+  const { totalEarnings, earningHistory } = earningResult[0];
+
+  // Count total number of earnings
+  const countPipeline = [
+    matchStage,
+    {
+      $match: {
+        'receiver.user': userId,
+        'receiver.flag': 'Credit',
+        createdAt: { $gte: sixMonthsAgo },
+        paymentType: 'bonus_points',
+        $or: [
+          { transactionRelation: 'user-To-user' },
+          { transactionRelation: 'user-To-admin' },
+          { transactionRelation: 'user-To-super_admin' }
+        ]
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
+  const countResult = await Transaction.aggregate(filteredCountPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    totalEarnings,
+    earningHistory,
+    count, 
+    resultPerPage,
+    filteredCount: earningHistory.length
+  });
+});
