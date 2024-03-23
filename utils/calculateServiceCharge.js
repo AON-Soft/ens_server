@@ -1,6 +1,8 @@
 const calculateServiceCharge = async (amount, percentage) => {
-  if (typeof amount !== 'number' || isNaN(amount)) {
-    throw new Error('Invalid input: amount must be a number')
+  amount = typeof amount === 'number' ? amount : parseFloat(amount);
+
+  if (isNaN(amount)) {
+    throw new Error('Invalid input: amount must be a number');
   }
 
   const serviceCharge = amount * (percentage / 1000)
