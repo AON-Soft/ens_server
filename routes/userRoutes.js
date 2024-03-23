@@ -23,11 +23,13 @@ const {
   updateUserStatus,
   imageUpload,
   userSerch,
+  updateAdminAgentPassword,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
   isAuthorizeRoles,
   isAuthenticatedUserTemp,
+  isAuthenticated,
 } = require('../middleware/auth')
 
 const router = express.Router()
@@ -86,5 +88,7 @@ router.route('/user/search').get(userSerch)
 
 // file upload
 router.route('/upload').post(imageUpload)
+
+router.route('/admin/agent/update/:id').put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateAdminAgentPassword)
 
 module.exports = router
