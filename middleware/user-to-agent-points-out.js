@@ -19,7 +19,7 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Service charge not found', 403))
     }
 
-    const percentage = charge.cashoutCharge.amount;
+    const percentage = charge.cashoutCharge;
 
     // const percentage = 20;
 
@@ -36,9 +36,7 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('super_admin not found', 403))
     }
 
-    ///////////////////// We will dynamic here///////////////////////////
     const serviceCharge = await calculateServiceCharge(amount, percentage)
-    ////////////////////////////////////////////////////////////////////
     if (sender.balance <= amount + serviceCharge) {
       return next(new ErrorHandler('Insufficient Balance', 400))
     }

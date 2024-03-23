@@ -10,6 +10,7 @@ const {
   transactionHistoryByUserId,
   allTransactionHistory,
   earningHistoryByAdmin,
+  pointOutHistory,
 } = require('../controllers/transactionController')
 const {
   userToAgentPointsOut,
@@ -62,5 +63,9 @@ router
 router
   .route('/admin/transaction-history')
   .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), allTransactionHistory)
+
+router
+  .route('/self/pointout-history')
+  .get(isAuthenticated, pointOutHistory)
 
 module.exports = router

@@ -914,3 +914,185 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
     filteredCount: earningHistory.length
   });
 });
+
+exports.pointOutHistory = catchAsyncError(async (req, res) => {
+  let userId = req.user.id;
+  userId = new mongoose.Types.ObjectId(userId);
+
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
+
+  const skip = (page - 1) * resultPerPage;
+
+  const keyword = req.query.keyword;
+
+  let matchStage = {};
+  if (keyword && keyword.trim() !== '') {
+      matchStage = {
+          $match: {
+              $or: [
+                  { 'sender.name': { $regex: keyword, $options: 'i' } },
+                  { 'receiver.name': { $regex: keyword, $options: 'i' } }
+              ]
+          }
+      };
+  }
+
+  const transactionPipeline = [
+    matchStage,
+    {
+      $match: {
+        $and: [
+          { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] },
+          { transactionType: 'points_out' }, 
+          { paymentType: 'points' }
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: 'users', 
+        let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ['$_id', ['$$senderUserId', '$$receiverUserId']],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+              email: 1,
+              flag: 1,
+              transactionHeading: 1,
+            },
+          },
+        ],
+        as: 'userInfo',
+      },
+    },
+    {
+      $addFields: {
+        sender: {
+          $mergeObjects: [
+            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+            '$sender',
+          ],
+        },
+        receiver: {
+          $mergeObjects: [
+            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+            '$receiver',
+          ],
+        },
+      },
+    },
+    {
+      $unset: ['userInfo'],
+    },
+    {
+      $sort: { createdAt: -1 }
+    },
+    {
+      $group: {
+        _id: null,
+        totalUpcomingPoints: {
+          $sum: {
+            $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
+          },
+        },
+        totalOutgoingPoints: {
+          $sum: {
+            $cond: [{ $eq: ['$sender.user', userId] }, '$transactionAmount', 0],
+          },
+        },
+        transactionsHistory: {
+          $push: {
+            transactionID: '$transactionID',
+            transactionType: '$transactionType',
+            transactionAmount: '$transactionAmount',
+            flag: {
+              $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
+            },
+            transactionHeading: {
+              $cond: [
+                { $eq: ['$sender.user', userId] },
+                '$sender.transactionHeading',
+                '$receiver.transactionHeading',
+              ],
+            },
+            date: '$createdAt',
+            sender: '$sender',
+            receiver: '$receiver',
+            transactionRelation: '$transactionRelation',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        totalUpcomingPoints: 1,
+        totalOutgoingPoints: 1,
+        transactionsHistory: { $slice: ['$transactionsHistory', skip, resultPerPage] },
+      },
+    }
+  ];
+
+  const filteredPipeline = transactionPipeline.filter(stage => Object.keys(stage).length > 0);
+
+  const transactionResult = await Transaction.aggregate(filteredPipeline);
+
+  if (transactionResult.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: 'No transactions found for the user in the last 6 months.',
+      transactionResult,
+    });
+  }
+
+  const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
+    transactionResult[0];
+
+  // Count total number of transactions
+  const countPipeline = [
+    matchStage,
+    {
+      $match: {
+        $and: [
+          { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] },
+          { transactionType: 'points_out' }, 
+          { paymentType: 'points' }
+        ],
+      },
+    },
+    {
+      $count: 'count'
+    }
+  ];
+
+  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
+  const countResult = await Transaction.aggregate(filteredCountPipeline);
+  const count = countResult.length > 0 ? countResult[0].count : 0;
+
+  res.status(200).json({
+    success: true,
+    totalUpcomingPoints,
+    totalOutgoingPoints,
+    transactionsHistory,
+    count, 
+    resultPerPage,
+    currentPage: page,
+    totalPages: Math.ceil(count / resultPerPage),
+    filteredCount: transactionsHistory.length 
+  });
+});
