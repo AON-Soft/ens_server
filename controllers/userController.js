@@ -448,23 +448,26 @@ exports.updateProfile = catchAsyncError(async (req, res, _) => {
 
 //Update admin agent password
 exports.updateAdminAgentPassword = catchAsyncError(async (req, res, next) => {
-   const {name, email, mobile} = req.body
+   const {name, email, mobile, oldPassword, newPassword, confirmPassword} = req.body
 
   const user = await User.findById(req.params.id).select('+password')
-  const isPasswordMatched = await user.comparePassword(req.body.oldPassword)
+  if (oldPassword) {
+    const isPasswordMatched = await user.comparePassword(oldPassword);
 
-  if (!isPasswordMatched) {
-    return next(new ErrorHandler('Old Password is incorrect', 400))
-  }
+    if (!isPasswordMatched) {
+      return next(new ErrorHandler('Old Password is incorrect', 400));
+    }
 
-  if (req.body.newPassword !== req.body.confirmPassword) {
-    return next(new ErrorHandler("Password doesn't matched", 400))
+    if (newPassword !== confirmPassword) {
+      return next(new ErrorHandler("Password doesn't match", 400));
+    }
+
+    user.password = newPassword;
   }
 
   if (name) user.name = name;
   if (email) user.email = email;
   if (mobile) user.mobile = mobile;
-  user.password = req.body.newPassword
 
   await user.save()
 
