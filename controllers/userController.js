@@ -468,7 +468,9 @@ exports.updateAdminAgentPassword = catchAsyncError(async (req, res, next) => {
 
   await user.save()
 
-  sendToken(user, 200, res)
+  const result = await User.findById(req.params.id).exec()
+
+  res.status(200).json({ success: true, data:result })
 })
 
 //Get All Users(admin)
