@@ -4,6 +4,7 @@ const catchAsyncError = require('../middleware/catchAsyncError')
 const ShopCategory = require('../models/shopCategoryModel')
 const ApiFeatures = require('../utils/apifeature')
 const ErrorHandler = require('../utils/errorhander')
+const shopModel = require('../models/shopModel')
 
 exports.createShopCategory = catchAsyncError(async (req, res, next) => {
   const exist = await ShopCategory.findOne({ name: req.body.name })
@@ -82,18 +83,23 @@ exports.updateShopCategory = catchAsyncError(async (req, res, next) => {
 })
 
 exports.deleteShopCategory = catchAsyncError(async (req, res, next) => {
-  const deleteShopCategory = await ShopCategory.findById(req.params.id)
+  const deleteShopCategory = await ShopCategory.findById(req.params.id);
 
   if (!deleteShopCategory) {
-    return next(new ErrorHandler('shop category not found', 404))
+    return next(new ErrorHandler('Shop category not found', 404));
   }
 
-  await ShopCategory.deleteOne({ _id: req.params.id })
+  const shopUsingCategory = await shopModel.findOne({ category: req.params.id });
 
-  res
-    .status(200)
-    .json({ success: true, message: 'shop category deleted sucesfully' })
-})
+  if (shopUsingCategory) {
+    return next(new ErrorHandler('Already in use by a shop', 400));
+  }
+
+  await ShopCategory.deleteOne({ _id: req.params.id });
+
+  res.status(200).json({ success: true, message: 'Shop category deleted successfully' });
+});
+
 
 exports.getAllShopCategories = catchAsyncError(async (req, res) => {
   let resultPerPage = 10;  

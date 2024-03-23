@@ -758,7 +758,7 @@ exports.allTransactionHistory = catchAsyncError(async (req, res) => {
   });
 });
 
-exports.earningHistoryAdmin = catchAsyncError(async (req, res) => {
+exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id);
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -787,18 +787,19 @@ exports.earningHistoryAdmin = catchAsyncError(async (req, res) => {
 
   const earningPipeline = [
     matchStage,
-    {
+      {
       $match: {
-        'receiver.user': userId,
-        'receiver.flag': 'Credit',
-        createdAt: { $gte: sixMonthsAgo },
-        paymentType: 'bonus_points',
-        $or: [
-          { transactionRelation: 'user-To-user' },
-          { transactionRelation: 'user-To-admin' },
-          { transactionRelation: 'user-To-super_admin' }
-        ]
-      },
+    'receiver.user': userId,
+    'receiver.flag': 'Credit',
+      $or: [
+        { paymentType: 'points' },
+        { paymentType: 'bonus_points' },
+        { transactionRelation: 'user-To-user' },
+        { transactionRelation: 'user-To-admin' },
+        { transactionRelation: 'user-To-super_admin' },
+        { transactionRelation: 'agent-To-super_admin' },
+      ],
+    },
     },
     {
       $lookup: {

@@ -9,6 +9,7 @@ const {
   earningHistory,
   transactionHistoryByUserId,
   allTransactionHistory,
+  earningHistoryByAdmin,
 } = require('../controllers/transactionController')
 const {
   userToAgentPointsOut,
@@ -53,6 +54,10 @@ router
 router
   .route('/self/earnings')
   .get(isAuthenticated, earningHistory)
+
+router
+  .route('/admin/earnings')
+  .get(isAuthenticated, earningHistoryByAdmin)
 
 router
   .route('/admin/transaction-history')
