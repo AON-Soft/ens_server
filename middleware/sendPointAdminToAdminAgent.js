@@ -19,7 +19,7 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Service charge not found', 403))
     }
 
-    const percentage = charge.sendMoneyCharge.amount;
+    const percentage = charge.sendMoneyCharge;
     // const percentage = 5;
 
     const sender = await User.findOne({ _id: req.user.id }).session(session)
