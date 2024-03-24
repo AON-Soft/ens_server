@@ -30,9 +30,6 @@ exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
     await fs.unlink(tempFilePath)
   }
 
-  req.body.shopCategory = req.params.id
-  req.body.createdBy = req.user.id
-
   const category = await Categories.create(req.body)
   if (!category) {
     return next(new ErrorHandler('Category is not created.'))
@@ -148,14 +145,14 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
   }
 
   if (
-    req.user.role === 'admin' ||
+    req.user.role === 'admin' || req.user.role === 'super_admin' ||
     req.user.id.toString() === category.createdBy.toString()
   ) {
     await Categories.deleteOne({ _id: req.params.id })
 
     res
       .status(200)
-      .json({ success: true, message: 'category deleted sucesfully' })
+      .json({ success: true, message: 'Deleted sucesfully' })
   } else {
     return next(
       new ErrorHandler('You are not Authorized to Delete this category'),

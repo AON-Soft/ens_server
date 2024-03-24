@@ -10,7 +10,6 @@ const {
   createCategoryByAdmin,
   createCategoryByShop,
   getAllCategoriesByshop,
-  getAllCategoriesByAdmin,
   getAllCategoriesByUser,
   getAllCategory,
 } = require('../controllers/categoryController')
@@ -18,14 +17,14 @@ const {
 const router = express.Router()
 
 router
-  .route('/admin/shop/category/new/:id')
+  .route('/admin/shop/category/new')
   .post(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), createCategoryByAdmin)
 
 router
   .route('/shop/category/new')
   .post(
     isAuthenticated,
-    isAuthorizeRoles('shop_keeper', 'shop_keeper', 'admin', 'super_admin'),
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
     isAuthenticatedShop,
     createCategoryByShop,
   )
@@ -37,11 +36,8 @@ router
   
 router
   .route('/shop/categories')
-  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'shop_keeper', 'admin', 'super_admin'), isAuthenticatedShop, getAllCategoriesByshop)
+  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), isAuthenticatedShop, getAllCategoriesByshop)
 
-router
-  .route('/admin/shop/categories/:id')
-  .get(isAuthenticated, getAllCategoriesByAdmin)
 
 router
   .route('/all/shop/categories/:id')
