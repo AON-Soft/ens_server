@@ -19,15 +19,17 @@ const brandSchema = new mongoose.Schema({
   shopCategory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'shop_categories',
+    default: null,
     required: function () {
-      return this.shopCategory === 'shopCategory'
+      return !['admin', 'super_admin'].includes(this.role);
     },
   },
   shopID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'shop',
+    default: null,
     required: function () {
-      return this.shopID === 'shopID'
+      return !['admin', 'super_admin'].includes(this.role);
     },
   },
   createdBy: {

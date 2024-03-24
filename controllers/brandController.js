@@ -195,7 +195,36 @@ exports.getAllBrandByshop = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllBrandsByAdmin = catchAsyncError(async (req, res) => {
-  const shopCategory = req.params.id
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+
+  const brandCount = await Brands.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Brands.find(),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let brands = await apiFeature.query
+
+  let filteredBrandsCount = brands.length
+
+  res.status(200).json({
+    success: true,
+    brandCount,
+    resultPerPage,
+    filteredBrandsCount,
+    brands,
+  })
+})
+
+exports.getAllBrandsByID = catchAsyncError(async (req, res) => {
+  const shopId = req.params.id
   let resultPerPage = 10;  
 
   if (req.query.limit) {
@@ -203,10 +232,10 @@ exports.getAllBrandsByAdmin = catchAsyncError(async (req, res) => {
   }
 
   const brandCount = await Brands.countDocuments({
-    shopCategory: shopCategory,
+    shopID: shopId,
   })
   const apiFeature = new ApiFeatures(
-    Brands.find({ shopCategory: shopCategory }),
+    Brands.find({ shopID: shopId }),
     req.query,
   )
     .search()

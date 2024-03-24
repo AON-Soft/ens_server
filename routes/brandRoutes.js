@@ -11,6 +11,7 @@ const {
   deleteBrand,
   getAllBrandByshop,
   getAllBrandsByAdmin,
+  getAllBrandsByID,
 } = require('../controllers/brandController')
 
 const router = express.Router()
@@ -24,7 +25,7 @@ router
   .post(
     isAuthenticated,
     isAuthenticatedShop,
-    isAuthorizeRoles('shop_keeper', 'shop_keeper', 'admin', 'super_admin'),
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
     createBrandByShop,
   )
 
@@ -36,6 +37,8 @@ router
   .route('/shop/brands')
   .get(isAuthenticated, isAuthenticatedShop, getAllBrandByshop)
 
-router.route('/admin/shop/brands/:id').get(isAuthenticated, getAllBrandsByAdmin)
+router.route('/admin/shop/brands').get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), getAllBrandsByAdmin)
+
+router.route('/shop/brand/:id').get(getAllBrandsByID)
 
 module.exports = router
