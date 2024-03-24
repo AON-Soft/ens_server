@@ -4,8 +4,15 @@ const ErrorHandler = require('../utils/errorhander')
 
 exports.createTag = catchAsyncError(async (req, res, next) => {
   try {
-    req.body.createdBy = req.user.id;
-    const result = await tagModel.create(req.body);
+    let createdBy = req.user.id; 
+
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      createdBy = null;
+    }
+
+    const tagData = { ...req.body, createdBy }; 
+
+    const result = await tagModel.create(tagData);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     if (error.code === 11000 && error.keyValue && error.keyValue.name) {
@@ -14,7 +21,6 @@ exports.createTag = catchAsyncError(async (req, res, next) => {
     next(error);
   }
 });
-
 exports.updateTag = catchAsyncError(async (req, res, next) => {
   try {
     const exist = await tagModel.findById(req.params.id);
@@ -46,7 +52,13 @@ exports.deleteTag = catchAsyncError(async (req, res, next) => {
 
 exports.getAllTag = catchAsyncError(async (req, res, next) => {
   try {
-    const result = await tagModel.find({ createdBy: req.user.id });
+    let query;
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      query = {};
+    } else {
+      query = { createdBy: req.user.id };
+    }
+    const result = await tagModel.find(query);
     res.status(200).json({ success: true, data: result || [] });
   } catch (error) {
     next(error);

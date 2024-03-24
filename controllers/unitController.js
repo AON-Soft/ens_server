@@ -3,13 +3,20 @@ const unitModel = require('../models/unitModel')
 const ErrorHandler = require('../utils/errorhander')
 
 exports.createUnit = catchAsyncError(async (req, res, next) => {
-  try {
-    req.body.createdBy = req.user.id;
-    const result = await unitModel.create(req.body);
+   try {
+    let createdBy = req.user.id; 
+
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      createdBy = null;
+    }
+
+    const unitData = { ...req.body, createdBy }; 
+
+    const result = await unitModel.create(unitData);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     if (error.code === 11000 && error.keyValue && error.keyValue.name) {
-      return next(new ErrorHandler('Unit already exists.', 400));
+      return next(new ErrorHandler('Tag already exists.', 400));
     }
     next(error);
   }
@@ -46,7 +53,13 @@ exports.deleteUnit = catchAsyncError(async (req, res, next) => {
 
 exports.getAllUnit = catchAsyncError(async (req, res, next) => {
   try {
-    const result = await unitModel.find({ createdBy: req.user.id });
+    let query;
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      query = {};
+    } else {
+      query = { createdBy: req.user.id };
+    }
+    const result = await unitModel.find(query);
     res.status(200).json({ success: true, data: result || [] });
   } catch (error) {
     next(error);
