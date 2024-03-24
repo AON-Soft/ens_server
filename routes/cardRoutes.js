@@ -7,6 +7,7 @@ const {
   removeFromCard,
   getCard,
   getCardByAdmin,
+  removeProductFromCard,
 } = require('../controllers/cardController')
 const { existcard } = require('../middleware/existcard')
 
@@ -24,7 +25,9 @@ router
   .route('/card/decreaseQuantity/product/:id')
   .put(isAuthenticated, decreaseQuantity)
 
-router.route('/card/remove/product/:id').delete(isAuthenticated, removeFromCard)
+router.route('/card/remove/:id').delete(isAuthenticated, removeFromCard)
+
+router.route('/card/remove/product/:id').delete(isAuthenticated, existcard, removeProductFromCard)
 
 router.route('/user/getCard').get(isAuthenticated, getCard)
 
