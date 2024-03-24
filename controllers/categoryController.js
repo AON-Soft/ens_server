@@ -98,7 +98,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
   }
 
   if (
-    req.user.role === 'admin' ||
+    req.user.role === 'admin' || req.user.role === 'super_admin' ||
     req.user.id.toString() === category.createdBy.toString()
   ) {
     if (req.files && req.files.image) {
@@ -131,7 +131,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     res.status(200).json({ success: true, data: categoryWithout__v })
   } else {
     return next(
-      new ErrorHandler('You are not Authorized to Update this brand'),
+      new ErrorHandler('You are not authorized'),
       404,
     )
   }
