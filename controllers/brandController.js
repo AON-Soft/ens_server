@@ -10,8 +10,8 @@ exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
   if (exist) {
     return next(new ErrorHandler('Brands is already exist.'))
   }
-  req.body.shopCategory = req.params.id
-  req.body.createdBy = req.user.id
+  // req.body.shopCategory = req.params.shopCategory
+  // req.body.createdBy = req.user.id
 
   if (req.files && req.files.image) {
     const tempFilePath = `temp_${Date.now()}.jpg`

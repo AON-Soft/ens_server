@@ -17,8 +17,8 @@ const {
 const router = express.Router()
 
 router
-  .route('/admin/shop/brand/new/:id')
-  .post(isAuthenticated, isAuthorizeRoles('admin'), createBrandByAdmin)
+  .route('/admin/shop/brand/new')
+  .post(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), createBrandByAdmin)
 
 router
   .route('/shop/brand/new')
