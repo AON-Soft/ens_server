@@ -143,19 +143,19 @@ exports.deleteBrand = catchAsyncError(async (req, res, next) => {
   const brand = await Brands.findById(req.params.id)
 
   if (!brand) {
-    return next(new ErrorHandler('brand not found', 404))
+    return next(new ErrorHandler('Brand not found', 404))
   }
 
   if (
-    req.user.role === 'admin' ||
+    req.user.role === 'admin' || req.user.role === 'super_admin'||
     req.user.id.toString() === brand.createdBy.toString()
   ) {
     await Brands.deleteOne({ _id: req.params.id })
 
-    res.status(200).json({ success: true, message: 'brand deleted sucesfully' })
+    res.status(200).json({ success: true, message: 'Deleted successfully' })
   } else {
     return next(
-      new ErrorHandler('You are not Authorized to Delete this brand'),
+      new ErrorHandler('You are not Authorized'),
       404,
     )
   }
