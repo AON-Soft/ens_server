@@ -247,7 +247,7 @@ exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
-  let resultPerPage = 10;  
+  let resultPerPage;
 
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
@@ -292,7 +292,7 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllCategory = catchAsyncError(async (req, res) => {
-  let resultPerPage = 10;  
+  let resultPerPage; 
 
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
