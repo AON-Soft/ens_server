@@ -102,7 +102,6 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   try {
     const productId = req.params.id;
-    // const userId = new mongoose.Types.ObjectId(req.user.id);
 
     // Find the product
     let product = await Product.findById(productId);
@@ -132,7 +131,8 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
       product.ratings = req.body.ratings;
     }
     if (req.body.categoryId) {
-      product.categoryId = req.body.categoryId;
+      const catId = new mongoose.Types.ObjectId(req.body.categoryId);
+      product.categoryId = catId;
     }
     if (req.body.stockUnit) {
       product.stockUnit = req.body.stockUnit;
@@ -150,7 +150,8 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
       product.images = req.body.images; 
     }
     if (req.body.unit) {
-      product.unit = req.body.unit;
+      const unitId = new mongoose.Types.ObjectId(req.body.unit);
+      product.unit = unitId;
     }
     if (req.body.tags && req.body.tags.length > 0) {
       product.tags = req.body.tags;
