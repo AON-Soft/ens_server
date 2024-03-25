@@ -1544,3 +1544,58 @@ exports.orderSerch = catchAsyncError(async (req, res, next) => {
     next(error)
   }
 })
+
+// get all cancel order by user
+exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+
+  const page = req.query.page ? parseInt(req.query.page) : 1; 
+
+  const pipeline = [
+    {
+      $unwind: "$cardProducts" 
+    },
+    {
+      $group: {
+        _id: "$cardProducts.productId",
+        totalQuantitySold: { $sum: "$cardProducts.productQuantity" }
+      }
+    },
+    {
+      $lookup: {
+        from: "products", 
+        localField: "_id",
+        foreignField: "_id",
+        as: "details"
+      }
+    },
+    {
+      $unwind: "$details"
+    },
+    {
+      $sort: { totalQuantitySold: -1 } 
+    },
+    {
+      $skip: (page - 1) * resultPerPage
+    },
+    {
+      $limit: resultPerPage 
+    }
+  ];
+
+  const topSellingProducts = await Order.aggregate(pipeline).exec();
+
+  const totalCount = topSellingProducts.length;
+
+  res.status(200).json({
+    success: true,
+    data: topSellingProducts,
+    currentPage: page,
+    resultPerPage,
+    count: totalCount,
+  });
+});

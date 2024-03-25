@@ -29,6 +29,7 @@ const {
   getOrderChart,
   getAllOrderByUserId,
   orderSerch,
+  getTopSellingProduct,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -226,5 +227,10 @@ router
 router
   .route('/order/search')
   .get(orderSerch)
+
+
+router
+  .route('/order/top-selling')
+  .get(getTopSellingProduct)
 
 module.exports = router
