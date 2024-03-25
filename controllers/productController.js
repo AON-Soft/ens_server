@@ -28,7 +28,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
       description: description,
       price: price,
       points: points,
-      images: { url: images },
+      images: images,
       categoryId: categoryId || null,
       stockUnit: stockUnit,
       availableStock: availableStock,
@@ -64,7 +64,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
     const userID = new mongoose.Types.ObjectId(userId);
 
     // Find the shop associated with the user
-    const shop = await Shop.findOne({ userID });
+    const shop = await Shop.findOne({ userId: userID });
     if (!shop) {
       return next(new ErrorHandler('Shop not found', 404));
     }
@@ -75,7 +75,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
       description: description,
       price: price,
       points: points,
-      images: { url: images },
+      images: images,
       categoryId: categoryId || null,
       stockUnit: stockUnit,
       availableStock: availableStock,
@@ -147,7 +147,7 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
       product.commission = req.body.commission;
     }
     if (req.body.images) {
-      product.images = { url: req.body.images }; 
+      product.images = req.body.images; 
     }
     if (req.body.unit) {
       product.unit = req.body.unit;

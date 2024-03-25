@@ -1570,11 +1570,66 @@ exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
         from: "products", 
         localField: "_id",
         foreignField: "_id",
-        as: "details"
+        as: "productDetails"
       }
     },
     {
-      $unwind: "$details"
+      $unwind: "$productDetails"
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "productDetails.user",
+        foreignField: "_id",
+        as: "productDetails.user"
+      }
+    },
+    {
+      $lookup: {
+        from: "shops",
+        localField: "productDetails.shop",
+        foreignField: "_id",
+        as: "productDetails.shop"
+      }
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "productDetails.categoryId",
+        foreignField: "_id",
+        as: "productDetails.category"
+      }
+    },
+    {
+      $unwind: "$productDetails.user"
+    },
+    {
+      $unwind: "$productDetails.shop"
+    },
+    {
+      $unwind: "$productDetails.category"
+    },
+    {
+      $project: {
+        _id: "$productDetails._id",
+        name: "$productDetails.name",
+        description: "$productDetails.description",
+        price: "$productDetails.price",
+        points: "$productDetails.points",
+        ratings: "$productDetails.ratings",
+        images: "$productDetails.images",
+        category: "$productDetails.category",
+        stockUnit: "$productDetails.stockUnit",
+        availableStock: "$productDetails.availableStock",
+        numOfReviews: "$productDetails.numOfReviews",
+        commission: "$productDetails.commission",
+        user: "$productDetails.user",
+        shop: "$productDetails.shop",
+        reviews: "$productDetails.reviews",
+        createdAt: "$productDetails.createdAt",
+        __v: "$productDetails.__v",
+        totalQuantitySold: 1
+      }
     },
     {
       $sort: { totalQuantitySold: -1 } 
@@ -1589,13 +1644,10 @@ exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
 
   const topSellingProducts = await Order.aggregate(pipeline).exec();
 
-  const totalCount = topSellingProducts.length;
-
   res.status(200).json({
     success: true,
     data: topSellingProducts,
     currentPage: page,
-    resultPerPage,
-    count: totalCount,
+    resultPerPage
   });
 });

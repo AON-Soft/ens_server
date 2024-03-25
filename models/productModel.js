@@ -30,6 +30,12 @@ const productSchema = new mongoose.Schema({
   categoryId: {
     type: mongoose.Schema.ObjectId,
     ref: 'Categories',
+    required: false,
+  },
+  brandId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'brands',
+    required: false,
   },
   stockUnit: {
     type: String,
