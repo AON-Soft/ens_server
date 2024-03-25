@@ -30,6 +30,7 @@ const {
   getAllOrderByUserId,
   orderSerch,
   getTopSellingProduct,
+  getLastSevenDaysOrder,
 } = require('../controllers/orderedProductController')
 const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
@@ -232,5 +233,9 @@ router
 router
   .route('/order/top-selling')
   .get(getTopSellingProduct)
+
+router
+  .route('/order/seven-days-order')
+  .get(getLastSevenDaysOrder)
 
 module.exports = router

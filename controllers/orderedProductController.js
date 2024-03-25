@@ -1545,7 +1545,7 @@ exports.orderSerch = catchAsyncError(async (req, res, next) => {
   }
 })
 
-// get all cancel order by user
+// get top selling product
 exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
   let resultPerPage = 10;  
 
@@ -1651,3 +1651,40 @@ exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
     resultPerPage
   });
 });
+
+// get last 7days order product
+exports.getLastSevenDaysOrder = catchAsyncError(async(_, res, next)=>{
+   try {
+         const today = new Date();
+        const last7Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6); // adjust to get the last 7 days
+
+        const data = {
+            labels: [],
+            totalOrders: Array(7).fill(0),
+            deliveredOrders: Array(7).fill(0),
+            canceledOrders: Array(7).fill(0)
+        };
+
+        const dayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        for (let i = 0; i < 7; i++) {
+            const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const orders = await Order.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
+
+            data.labels.unshift(dayLabels[currentDate.getDay()]);
+
+            orders.forEach(order => {
+                if (order.orderStatus === 'order_done') {
+                    data.deliveredOrders[i]++;
+                } else if (order.orderStatus === 'canceled') {
+                    data.canceledOrders[i]++;
+                }
+                data.totalOrders[i]++;
+            });
+        }
+
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+})
