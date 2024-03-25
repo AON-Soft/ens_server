@@ -305,7 +305,7 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
 
 
 exports.getAllShops = catchAsyncError(async (req, res) => {
-  let resultPerPage = 10;  
+  let resultPerPage; 
 
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
