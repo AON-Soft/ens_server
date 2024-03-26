@@ -1656,7 +1656,6 @@ exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
 exports.getLastSevenDaysOrder = catchAsyncError(async(_, res, next)=>{
    try {
          const today = new Date();
-        const last7Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6); // adjust to get the last 7 days
 
         const data = {
             labels: [],

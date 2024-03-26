@@ -24,6 +24,7 @@ const {
   imageUpload,
   userSerch,
   updateAdminAgentPassword,
+  getLastSevenDaysUsers,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -90,5 +91,7 @@ router.route('/user/search').get(userSerch)
 router.route('/upload').post(imageUpload)
 
 router.route('/admin/agent/update/:id').put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateAdminAgentPassword)
+
+router.route('/user/seven-days-order').get(getLastSevenDaysUsers)
 
 module.exports = router

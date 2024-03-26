@@ -769,3 +769,27 @@ exports.userSerch = catchAsyncError(async (req, res, next) => {
   }
 })
 
+exports.getLastSevenDaysUsers = catchAsyncError(async(_, res, next)=>{
+   try {
+         const today = new Date();
+
+        const data = {
+            labels: [],
+            userCounts: Array(7).fill(0),
+        };
+
+        const dayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        for (let i = 0; i < 7; i++) {
+            const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const users = await User.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
+
+            data.labels.unshift(dayLabels[currentDate.getDay()]);
+            data.userCounts[i] = users.length; 
+        }
+
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+})
