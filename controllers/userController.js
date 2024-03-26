@@ -778,7 +778,7 @@ exports.getLastSevenDaysUsers = catchAsyncError(async(_, res, next)=>{
             userCounts: Array(7).fill(0),
         };
 
-        const dayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
