@@ -25,7 +25,8 @@ const productSchema = new mongoose.Schema({
     default: 0,
   },
   images: {
-    url: String
+    type: String,
+    required: [true, 'Please Enter Image'],
   },
   categoryId: {
     type: mongoose.Schema.ObjectId,
