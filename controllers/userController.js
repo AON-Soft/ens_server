@@ -2,6 +2,7 @@ const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const bcrypt = require('bcryptjs')
 const otpGenerator = require('otp-generator')
+const { validate } = require('email-validator');
 const User = require('../models/userModel')
 const Otp = require('../models/otpModel.js')
 const Shop = require('../models/shopModel.js')
@@ -760,20 +761,17 @@ exports.imageUpload = catchAsyncError(async (req, res, next) => {
 });
 
 
-exports.userSerch = catchAsyncError(async (req, res, next) => {
-  const { query } = req.query;
+exports.userSerchByEmail = catchAsyncError(async (req, res, next) => {
+  const { email } = req.query;
   try {
-    if (!query) {
-      return res.status(400).json({ success: false, message: 'Query parameter is required' });
+    if (!email || !validate(email)) {
+      return next(new ErrorHandler('Email is invalid or not found', 400));
     }
-    const result = await User.find({
-      $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { email: { $regex: query, $options: 'i' } },
-        { mobile: { $regex: query, $options: 'i' } },
-      ]
-    });
+    const result = await User.findOne({email: { $regex: new RegExp(email, 'i') }});
 
+    if(!result){
+      return next(new ErrorHandler('User not found', 400));
+    }
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error)
