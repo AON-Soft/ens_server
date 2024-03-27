@@ -35,7 +35,7 @@ exports.getSingleTokenDetails = catchAsyncError(async (req, res, next) => {
 exports.getAllToken = catchAsyncError(async (req, res, next) => {
   let userId = req.user.id
   userId = new mongoose.Types.ObjectId(userId)
-  const tokens = await Token.find({ userId: userId })
+  const tokens = await Token.find({ userId: userId }).populate('userId', 'name email createdAt avatar')
   if (!tokens) {
     return next(new ErrorHandler('Token is not found', 400))
   }

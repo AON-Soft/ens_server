@@ -82,7 +82,7 @@ router
 router.route('/shop/search').get(shopSerch)
 
 router
-  .route('/shop/all/:id')
+  .route('/shops/category/:id')
   .get(isAuthenticated, getShopsByShopID)
 
 

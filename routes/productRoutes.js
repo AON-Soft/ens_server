@@ -14,6 +14,8 @@ const {
   productSearch,
   updateProductStatus,
   createProductByAdmin,
+  getProductsByCategory,
+  getProductsByBrand,
 } = require('../controllers/productController')
 
 const router = express.Router()
@@ -56,6 +58,14 @@ router.route('/product/search').get(productSearch)
 router
   .route('/admin/product/status/:id')
   .put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateProductStatus)
+
+router
+  .route('/products/category/:id')
+  .get(isAuthenticated, getProductsByCategory)
+
+router
+  .route('/products/brand/:id')
+  .get(isAuthenticated, getProductsByBrand)
 
 
 module.exports = router

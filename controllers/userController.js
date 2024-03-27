@@ -370,8 +370,8 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 //Get User Details
 exports.getUserDetails = catchAsyncError(async (req, res) => {
   const user = await User.findById(req.user.id)
-    .populate('parent', 'name email') 
-    .populate('children', 'name email').exec() 
+    .populate('parent', 'name email createdAt avatar') 
+    .populate('children', 'name email createdAt avatar').exec() 
 
   res.status(200).json({ success: true, user })
 })
@@ -486,6 +486,8 @@ exports.getAllUsers = catchAsyncError(async (req, res) => {
   const count = await User.countDocuments({ role: 'user' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'user' })
+    .populate('parent', 'name email createdAt avatar') 
+    .populate('children', 'name email createdAt avatar')
     .sort({ createdAt: -1 }),
     req.query)
     .search()
@@ -514,6 +516,8 @@ exports.getAllAdmins = catchAsyncError(async (req, res) => {
   const count = await User.countDocuments({ role: 'admin' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'admin' })
+    .populate('parent', 'name email createdAt avatar') 
+    .populate('children', 'name email createdAt avatar')
     .sort({ createdAt: -1 }),
     req.query)
     .search()
@@ -542,6 +546,8 @@ let resultPerPage = 10;
   const count = await User.countDocuments({ role: 'agent' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'agent' })
+    .populate('parent', 'name email createdAt avatar') 
+    .populate('children', 'name email createdAt avatar')
     .sort({ createdAt: -1 }),
     req.query)
     .search()
@@ -570,6 +576,8 @@ exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
   const count = await User.countDocuments({ role: 'shop_keeper' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'shop_keeper' })
+    .populate('parent', 'name email createdAt avatar') 
+    .populate('children', 'name email createdAt avatar')
     .sort({ createdAt: -1 }),
     req.query)
     .search()
@@ -591,6 +599,9 @@ exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
 //Get Single Users(admin)
 exports.getSingleUser = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.params.id)
+    .populate('parent', 'name email createdAt avatar') 
+    .populate('children', 'name email createdAt avatar')
+    .exec();
   if (!user) {
     return next(
       new ErrorHandler(`User doesn't exist with Id: ${req.params.id}`, 400),

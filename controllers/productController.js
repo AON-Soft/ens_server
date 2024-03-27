@@ -1,4 +1,4 @@
-const { default: mongoose } = require('mongoose')
+const { default: mongoose, Types } = require('mongoose')
 const Product = require('../models/productModel')
 const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
@@ -192,6 +192,10 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
       select: 'image name'
     })
     .populate({
+      path: 'brandId',
+      select: 'image name'
+    })
+    .populate({
       path: 'user',
       select: 'image name'
     })
@@ -237,6 +241,10 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
     Product.find({ user: req.user.id }).select('-__v')
     .populate({
       path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'brandId',
       select: 'image name'
     })
     .populate({
@@ -288,6 +296,10 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
       select: 'image name'
     })
     .populate({
+      path: 'brandId',
+      select: 'image name'
+    })
+    .populate({
       path: 'user',
       select: 'image name'
     })
@@ -330,6 +342,10 @@ exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
       select: 'image name'
     })
     .populate({
+      path: 'brandId',
+      select: 'image name'
+    })
+    .populate({
       path: 'user',
       select: 'image name'
     })
@@ -366,8 +382,12 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
   const productsCount = await Product.countDocuments()
   const apiFeature = new ApiFeatures(
     Product.find().select('-__v')
-    .populate({
+.populate({
       path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'brandId',
       select: 'image name'
     })
     .populate({
@@ -441,4 +461,110 @@ exports.updateProductStatus = catchAsyncError(async (req, res, next) => {
  } catch (error) {
   next(error)
  }
+})
+
+exports.getProductsByCategory = catchAsyncError(async (req, res) => {
+  const categoryId = new Types.ObjectId(req.params.id)
+  let resultPerPage;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+  const productsCount = await Product.countDocuments({categoryId})
+  const apiFeature = new ApiFeatures(
+    Product.find({categoryId}).select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'brandId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
+    })
+    .sort({ createdAt: -1 }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let products = await apiFeature.query
+  let filteredCount = products.length
+
+  res.status(200).json({
+    success: true,
+    data: products,
+    productsCount,
+    resultPerPage,
+    filteredCount,
+  })
+})
+
+exports.getProductsByBrand = catchAsyncError(async (req, res) => {
+  const brandId = new Types.ObjectId(req.params.id)
+  let resultPerPage;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+  const productsCount = await Product.countDocuments({brandId})
+  const apiFeature = new ApiFeatures(
+    Product.find({brandId}).select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'brandId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
+    })
+    .sort({ createdAt: -1 }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let products = await apiFeature.query
+  let filteredCount = products.length
+
+  res.status(200).json({
+    success: true,
+    data: products,
+    productsCount,
+    resultPerPage,
+    filteredCount,
+  })
 })
