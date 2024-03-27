@@ -657,3 +657,33 @@ exports.shopSerch = catchAsyncError(async (req, res, next) => {
     next(error)
   }
 })
+
+exports.getShopsByShopID = catchAsyncError(async (req, res) => {
+  const shopId = new mongoose.Types.ObjectId(req.params.id);
+
+  let resultPerPage; 
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+  const count = await Shop.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Shop.find({category: shopId})
+    .sort({ createdAt: -1 }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let shops = await apiFeature.query
+  let filteredCount = shops.length
+
+  res.status(200).json({
+    success: true,
+    data: shops,
+    count,
+    resultPerPage,
+    filteredCount,
+  })
+})

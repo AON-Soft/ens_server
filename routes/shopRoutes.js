@@ -21,6 +21,7 @@ const {
   getOrdersByShopID,
   shopSerch,
   registerShopByAdmin,
+  getShopsByShopID,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -79,5 +80,10 @@ router
 
 
 router.route('/shop/search').get(shopSerch)
+
+router
+  .route('/shop/all/:id')
+  .get(isAuthenticated, getShopsByShopID)
+
 
 module.exports = router
