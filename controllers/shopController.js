@@ -374,62 +374,6 @@ exports.getShopDetails = catchAsyncError(async (req, res, next) => {
   }
 })
 
-exports.getPrductsByShopID = catchAsyncError(async (req, res, next) => {
-  let resultPerPage = 10;  
-
-  if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
-  }
-  try {
-    const shop = await Shop.findById(req.params.id).exec();
-
-    if(!shop){
-      return next(new ErrorHandler('Shop not found', 404))
-    }
-    const productsCount = await productModel.countDocuments({ shop: req.params.id })
-    const apiFeature = new ApiFeatures(
-      productModel.find({ shop: shop._id }).select('-__v')
-      .populate({
-        path: 'categoryId',
-        select: 'image name'
-      })
-      .populate({
-        path: 'user',
-        select: 'image name'
-      })
-      .populate({
-        path: 'shop',
-        select: 'logo banner name'
-      })
-      .populate({
-        path: 'unit', 
-        select: 'name abbreviation'
-      })
-      .populate({
-        path: 'tags',
-        select: 'name'
-      }),
-      req.query,
-    )
-      .search()
-      .filter()
-      .pagination(resultPerPage)
-
-    let products = await apiFeature.query
-    let filteredProductsCount = products.length
-
-    res.status(200).json({
-      success: true,
-      data: products,
-      count: productsCount,
-      resultPerPage,
-      filteredProductsCount,
-    })
-    }
-  catch(error){
-    next(error)
-  }
-})
 
 exports.getTransactionsByShopID = catchAsyncError(async (req, res, next) => {
   let resultPerPage = 10;  

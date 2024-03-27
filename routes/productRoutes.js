@@ -16,6 +16,8 @@ const {
   createProductByAdmin,
   getProductsByCategory,
   getProductsByBrand,
+  getPrductsByShopID,
+  getAllProductsByAdmin,
 } = require('../controllers/productController')
 
 const router = express.Router()
@@ -24,6 +26,10 @@ const router = express.Router()
 router
   .route('/get/products')
   .get(getAllProducts)
+
+router
+  .route('/get/products/admin')
+  .get(getAllProductsByAdmin)
 
 
 //get all products by shop//
@@ -66,6 +72,10 @@ router
 router
   .route('/products/brand/:id')
   .get(isAuthenticated, getProductsByBrand)
+
+router
+  .route('/shop/products/:id')
+  .get(getPrductsByShopID)
 
 
 module.exports = router

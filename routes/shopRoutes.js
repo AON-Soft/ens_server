@@ -16,7 +16,6 @@ const {
   getAllShops,
   updateShopStatus,
   getShopDetailsByShopKeeper,
-  getPrductsByShopID,
   getTransactionsByShopID,
   getOrdersByShopID,
   shopSerch,
@@ -50,10 +49,6 @@ router
 router
   .route('/shop/details/:id')
   .get(getShopDetails)
-
-router
-  .route('/shop/products/:id')
-  .get(getPrductsByShopID)
 
 router
   .route('/shop/transactions/:id')

@@ -236,7 +236,7 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const productsCount = await Product.countDocuments({ shop: req.params.id })
+  const productsCount = await Product.countDocuments({ shop: req.params.id, status: 'live' })
   const apiFeature = new ApiFeatures(
     Product.find({ user: req.user.id }).select('-__v')
     .populate({
@@ -288,9 +288,9 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const productsCount = await Product.countDocuments({ shop: req.params.id })
+  const productsCount = await Product.countDocuments({ shop: req.params.id, status: 'live' })
   const apiFeature = new ApiFeatures(
-    Product.find({ user: req.user.id }).select('-__v')
+    Product.find({ shop: req.params.id, status: 'live' }).select('-__v')
     .populate({
       path: 'categoryId',
       select: 'image name'
@@ -379,10 +379,10 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const productsCount = await Product.countDocuments()
+  const productsCount = await Product.countDocuments({status: 'live'})
   const apiFeature = new ApiFeatures(
-    Product.find().select('-__v')
-.populate({
+    Product.find({status: 'live'}).select('-__v')
+    .populate({
       path: 'categoryId',
       select: 'image name'
     })
@@ -424,6 +424,59 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
     filteredProductsCount,
   })
 })
+
+exports.getAllProductsByAdmin = catchAsyncError(async (req, res) => {
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+  const productsCount = await Product.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Product.find().select('-__v')
+    .populate({
+      path: 'categoryId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'brandId',
+      select: 'image name'
+    })
+    .populate({
+      path: 'user',
+      select: 'image name'
+    })
+    .populate({
+      path: 'shop',
+      select: 'logo banner name'
+    })
+    .populate({
+      path: 'unit', 
+      select: 'name abbreviation'
+    })
+    .populate({
+      path: 'tags',
+      select: 'name'
+    })
+    .sort({ createdAt: -1 }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let products = await apiFeature.query
+  let filteredProductsCount = products.length
+
+  res.status(200).json({
+    success: true,
+    products,
+    productsCount,
+    resultPerPage,
+    filteredProductsCount,
+  })
+})
+
 
 exports.productSearch = catchAsyncError(async (req, res, next) => {
   const { query } = req.query;
@@ -470,9 +523,9 @@ exports.getProductsByCategory = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const productsCount = await Product.countDocuments({categoryId})
+  const productsCount = await Product.countDocuments({categoryId, status: 'live'})
   const apiFeature = new ApiFeatures(
-    Product.find({categoryId}).select('-__v')
+    Product.find({categoryId, status: 'live'}).select('-__v')
     .populate({
       path: 'categoryId',
       select: 'image name'
@@ -523,9 +576,9 @@ exports.getProductsByBrand = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
   }
-  const productsCount = await Product.countDocuments({brandId})
+  const productsCount = await Product.countDocuments({brandId, status: 'live'})
   const apiFeature = new ApiFeatures(
-    Product.find({brandId}).select('-__v')
+    Product.find({brandId, status: 'live'}).select('-__v')
     .populate({
       path: 'categoryId',
       select: 'image name'
@@ -567,4 +620,61 @@ exports.getProductsByBrand = catchAsyncError(async (req, res) => {
     resultPerPage,
     filteredCount,
   })
+})
+
+exports.getPrductsByShopID = catchAsyncError(async (req, res, next) => {
+  let resultPerPage = 10;  
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit);
+  }
+  try {
+    const shop = await Shop.findById(req.params.id).exec();
+
+    if(!shop){
+      return next(new ErrorHandler('Shop not found', 404))
+    }
+    const productsCount = await Product.countDocuments({ shop: req.params.id })
+    const apiFeature = new ApiFeatures(
+      Product.find({ shop: shop._id }).select('-__v')
+      .populate({
+        path: 'categoryId',
+        select: 'image name'
+      })
+      .populate({
+        path: 'user',
+        select: 'image name'
+      })
+      .populate({
+        path: 'shop',
+        select: 'logo banner name'
+      })
+      .populate({
+        path: 'unit', 
+        select: 'name abbreviation'
+      })
+      .populate({
+        path: 'tags',
+        select: 'name'
+      }),
+      req.query,
+    )
+      .search()
+      .filter()
+      .pagination(resultPerPage)
+
+    let products = await apiFeature.query
+    let filteredProductsCount = products.length
+
+    res.status(200).json({
+      success: true,
+      data: products,
+      count: productsCount,
+      resultPerPage,
+      filteredProductsCount,
+    })
+    }
+  catch(error){
+    next(error)
+  }
 })
