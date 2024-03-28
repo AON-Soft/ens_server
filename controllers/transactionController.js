@@ -1,6 +1,7 @@
 const { default: mongoose } = require('mongoose')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const Transaction = require('../models/transactionModel.js')
+const userModel = require('../models/userModel.js')
 
 exports.createTransaction = catchAsyncError(async (req, res) => {
   const { session } = req
@@ -787,7 +788,8 @@ exports.allTransactionHistory = catchAsyncError(async (req, res) => {
 });
 
 exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
-  const userId = new mongoose.Types.ObjectId(req.user.id);
+  const superAdmin = await userModel.findOne({ role: 'super_admin' }).exec();
+  
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -817,23 +819,22 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
     matchStage,
       {
       $match: {
-    'receiver.user': userId,
-    'receiver.flag': 'Credit',
-      $or: [
-        { paymentType: 'points' },
-        { paymentType: 'bonus_points' },
-        { transactionType: 'points_in'},
-        { transactionType: 'payment'},
-        { transactionType: 'send_points'},
-        { transactionType: 'referal_bonus'},
-        { transactionType: 'received_bonus'},
-        { transactionType: 'token_charge'},
-        { transactionRelation: 'user-To-user' },
-        { transactionRelation: 'user-To-super_admin' },
-        { transactionRelation: 'agent-To-super_admin' },
-        { transactionRelation: 'agent-To-user' },
-        { transactionRelation: 'user-To-agent' },
-      ],
+      'receiver.user': superAdmin._id,
+      'receiver.flag': 'Credit',
+      // $or: [
+      //   { paymentType: 'points' },
+      //   { paymentType: 'bonus_points' },
+      //   { transactionType: 'points_in'},
+      //   { transactionType: 'payment'},
+      //   { transactionType: 'send_points'},
+      //   { transactionType: 'points_out'},
+      //   { transactionType: 'referal_bonus'},
+      //   { transactionType: 'received_bonus'},
+      //   { transactionType: 'token_charge'},
+      //   { transactionRelation: 'user-To-super_admin' },
+      //   { transactionRelation: 'agent-To-super_admin' },
+      //   { transactionRelation: 'admin-To-super_admin' },
+      // ],
     },
     },
     {
@@ -860,6 +861,9 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
     },
     {
       $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
+    },
+    {
+      $sort: { createdAt: -1 }
     },
     {
       $group: {
@@ -920,15 +924,22 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
     matchStage,
     {
       $match: {
-        'receiver.user': userId,
-        'receiver.flag': 'Credit',
-        createdAt: { $gte: sixMonthsAgo },
-        paymentType: 'bonus_points',
-        $or: [
-          { transactionRelation: 'user-To-user' },
-          { transactionRelation: 'user-To-admin' },
-          { transactionRelation: 'user-To-super_admin' }
-        ]
+      'receiver.user': superAdmin._id,
+      'receiver.flag': 'Credit',
+      // $or: [
+      //   { paymentType: 'points' },
+      //   { paymentType: 'bonus_points' },
+      //   { transactionType: 'payment'},
+      //   { transactionType: 'points_in'},
+      //   { transactionType: 'send_points'},
+      //   { transactionType: 'points_out'},
+      //   { transactionType: 'referal_bonus'},
+      //   { transactionType: 'received_bonus'},
+      //   { transactionType: 'token_charge'},
+      //   { transactionRelation: 'user-To-super_admin' },
+      //   { transactionRelation: 'agent-To-super_admin' },
+      //   { transactionRelation: 'admin-To-super_admin' },
+      // ],
       },
     },
     {
