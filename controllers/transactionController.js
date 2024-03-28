@@ -189,10 +189,10 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
   const transactionResult = await Transaction.aggregate(filteredPipeline);
 
   if (transactionResult.length === 0) {
-    return res.status(404).json({
-      success: false,
+    return res.status(200).json({
+      success: true,
       message: 'No transactions found for the user in the last 6 months.',
-      transactionResult,
+      transactionsHistory: transactionResult,
     });
   }
 
@@ -392,10 +392,10 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
   const earningResult = await Transaction.aggregate(filteredPipeline);
 
   if (earningResult.length === 0) {
-    return res.status(404).json({
-      success: false,
+    return res.status(200).json({
+      success: true,
       message: 'No earnings found for the user in the last 6 months.',
-      earningResult,
+      earningHistory: earningResult,
     });
   }
 
@@ -568,10 +568,10 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
   const transactionResult = await Transaction.aggregate(filteredPipeline);
 
   if (transactionResult.length === 0) {
-    return res.status(404).json({
-      success: false,
+    return res.status(200).json({
+      success: true,
       message: 'No transactions found for the user in the last 6 months.',
-      transactionResult,
+      transactionsHistory: transactionResult,
     });
   }
 
@@ -722,10 +722,10 @@ exports.allTransactionHistory = catchAsyncError(async (req, res) => {
   const transactionResult = await Transaction.aggregate(filteredPipeline);
 
   if (transactionResult.length === 0) {
-    return res.status(404).json({
-      success: false,
+    return res.status(200).json({
+      success: true,
       message: 'No transactions found for the user in the last 6 months.',
-      transactionResult,
+      transactionsHistory:transactionResult,
     });
   }
 
@@ -794,10 +794,17 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
       $or: [
         { paymentType: 'points' },
         { paymentType: 'bonus_points' },
+        {transactionType: 'points_in'},
+        {transactionType: 'payment'},
+        {transactionType: 'send_points'},
+        {transactionType: 'referal_bonus'},
+        {transactionType: 'received_bonus'},
+        {transactionType: 'token_charge'},
         { transactionRelation: 'user-To-user' },
-        { transactionRelation: 'user-To-admin' },
         { transactionRelation: 'user-To-super_admin' },
         { transactionRelation: 'agent-To-super_admin' },
+        { transactionRelation: 'agent-To-user' },
+        { transactionRelation: 'user-To-agent' },
       ],
     },
     },
@@ -871,10 +878,10 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
   const earningResult = await Transaction.aggregate(filteredPipeline);
 
   if (earningResult.length === 0) {
-    return res.status(404).json({
+    return res.status(200).json({
       success: false,
       message: 'No earnings found for the user in the last 6 months.',
-      earningResult,
+      earningHistory: earningResult,
     });
   }
 
@@ -1053,10 +1060,10 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
   const transactionResult = await Transaction.aggregate(filteredPipeline);
 
   if (transactionResult.length === 0) {
-    return res.status(404).json({
-      success: false,
+    return res.status(200).json({
+      success: true,
       message: 'No transactions found for the user in the last 6 months.',
-      transactionResult,
+      transactionsHistory: transactionResult,
     });
   }
 

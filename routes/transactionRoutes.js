@@ -58,7 +58,7 @@ router
 
 router
   .route('/admin/earnings')
-  .get(isAuthenticated, earningHistoryByAdmin)
+  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), earningHistoryByAdmin)
 
 router
   .route('/admin/transaction-history')
