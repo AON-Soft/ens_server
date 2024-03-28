@@ -25,15 +25,23 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
     // const percentage = 20;
 
     const sender = await User.findOne({ _id: req.user.id }).session(session)
+    if (!sender) {
+      await session.abortTransaction()
+      session.endSession()
+      return next(new ErrorHandler('Sender not found', 403))
+    }
     const receiver = await User.findOne({ email: receiverEmail }).session(
       session,
     )
-
-    const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!receiver) {
+      await session.abortTransaction()
+      session.endSession()
       return next(new ErrorHandler('Receiver not found', 403))
     }
+    const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!admin) {
+      await session.abortTransaction()
+      session.endSession()
       return next(new ErrorHandler('super_admin not found', 403))
     }
 
@@ -52,6 +60,7 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
     await admin.save({ session })
 
     req.transactionID = pointsOutTranactionID
+    req.admin = admin
     req.sender = sender
     req.receiver = receiver
     req.transactionAmount = transactionAmount

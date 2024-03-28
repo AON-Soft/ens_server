@@ -16,6 +16,8 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     const charge = await serviceChargeModel.findOne().session(session);
 
     if (!charge) {
+      await session.abortTransaction();
+      session.endSession();
       return next(new ErrorHandler('Service charge not found', 403))
     }
 
@@ -24,15 +26,24 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     // const percentage = 5;
 
     const sender = await User.findOne({ _id: req.user.id }).session(session)
+     if (!sender) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Sender not found', 403))
+    }
     const receiver = await User.findOne({ email: receiverEmail }).session(
       session,
     )
-
-    const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!receiver) {
+      await session.abortTransaction();
+      session.endSession();
       return next(new ErrorHandler('Receiver not found', 403))
     }
+
+    const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!admin) {
+      await session.abortTransaction();
+      session.endSession();
       return next(new ErrorHandler('super_admin not found', 403))
     }
     // const serviceCharge = await calculateServiceCharge(amount, percentage)

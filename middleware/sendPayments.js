@@ -47,14 +47,12 @@ exports.sendPayments = catchAsyncError(async (req, _, next) => {
     return next(new ErrorHandler('Shop Keeper not found', 400));
   }
 
-  // const admin = await User.findOne({ role: 'super_admin' }).session(session)
-
-  // if (!admin) {
-  //   await session.abortTransaction()
-  //   session.endSession()
-
-  //   return next(new ErrorHandler('super_admin not found', 400))
-  // }
+  const admin = await User.findOne({ role: 'super_admin' }).session(session)
+  if (!admin) {
+    await session.abortTransaction();
+    session.endSession();
+    return next(new ErrorHandler('super_admin not found', 403))
+  }
   
   const trnxID = uniqueTransactionID()
   const generatePaymentTranactionID = `OP${trnxID}`
@@ -65,6 +63,7 @@ exports.sendPayments = catchAsyncError(async (req, _, next) => {
   await shopKeeper.save({ session })
 
   req.transactionID = generatePaymentTranactionID
+  req.admin = admin
   req.sender = user
   req.receiver = shopKeeper
   req.transactionAmount = totalBill - (totalCommissionBill/2)

@@ -32,7 +32,6 @@ exports.setUpToken = catchAsyncError(async (req, _, next) => {
   if (!admin) {
     await session.abortTransaction()
     session.endSession()
-
     return next(new ErrorHandler('super_admin not found', 400))
   }
 
@@ -46,6 +45,7 @@ exports.setUpToken = catchAsyncError(async (req, _, next) => {
 
   req.tokenPrice = tokenCharge
   req.transactionID = generateTokenTranactionID
+  req.admin = admin
   req.sender = user
   req.receiver = admin
   req.transactionAmount = tokenCharge

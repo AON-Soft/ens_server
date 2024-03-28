@@ -30,6 +30,34 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
 
   await transaction.save({ session })
 
+  //============= super admin transaction history ==================
+  if(req.transactionType === 'send_point' || req.transactionType === 'points_out'){
+    const superAdminTransaction = new Transaction({
+      transactionID: req.transactionID,
+      transactionAmount: req.serviceCharge,
+      serviceCharge: req.serviceCharge,
+      sender: {
+        user: req.sender._id,
+        name: req.sender.name,
+        email: req.sender.email,
+        flag: 'Debit',
+        transactionHeading: req.senderTransactionHeading,
+      },
+      receiver: {
+        user: req.admin._id, 
+        name: req.admin.name,
+        email: req.admin.email,
+        flag: 'Credit',
+        transactionHeading: req.receiverTransactionHeading,
+      },
+      paymentType: req.paymentType,
+      transactionType: req.transactionType,
+      transactionRelation: `${req.sender.role}-To-${req.admin.role}`,
+    })
+    // Save the transaction for the super admin
+    await superAdminTransaction.save({ session })
+  }
+
   await session.commitTransaction()
   session.endSession()
 
@@ -794,12 +822,12 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
       $or: [
         { paymentType: 'points' },
         { paymentType: 'bonus_points' },
-        {transactionType: 'points_in'},
-        {transactionType: 'payment'},
-        {transactionType: 'send_points'},
-        {transactionType: 'referal_bonus'},
-        {transactionType: 'received_bonus'},
-        {transactionType: 'token_charge'},
+        { transactionType: 'points_in'},
+        { transactionType: 'payment'},
+        { transactionType: 'send_points'},
+        { transactionType: 'referal_bonus'},
+        { transactionType: 'received_bonus'},
+        { transactionType: 'token_charge'},
         { transactionRelation: 'user-To-user' },
         { transactionRelation: 'user-To-super_admin' },
         { transactionRelation: 'agent-To-super_admin' },
