@@ -7,7 +7,8 @@ const ErrorHandler = require('../utils/errorhander.js')
 const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
-  const { receiverEmail, amount } = req.body
+  const { receiverEmail, amount } = req.body;
+  const transactionAmount = parseFloat(amount);
 
   const session = await mongoose.startSession()
   session.startTransaction()
@@ -36,14 +37,14 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('super_admin not found', 403))
     }
 
-    const serviceCharge = await calculateServiceCharge(amount, percentage)
-    if (sender.balance <= amount + serviceCharge) {
+    const serviceCharge = await calculateServiceCharge(transactionAmount, percentage)
+    if (sender.balance <= transactionAmount + serviceCharge) {
       return next(new ErrorHandler('Insufficient Balance', 400))
     }
     const trnxID = uniqueTransactionID()
     const pointsOutTranactionID = `PO${trnxID}`
-    sender.balance -= amount + serviceCharge
-    receiver.balance += amount + serviceCharge / 2
+    sender.balance -= transactionAmount + serviceCharge
+    receiver.balance += transactionAmount + serviceCharge / 2
     admin.balance += serviceCharge / 2
 
     await sender.save({ session })
@@ -53,7 +54,7 @@ exports.userToAgentPointsOut = catchAsyncError(async (req, res, next) => {
     req.transactionID = pointsOutTranactionID
     req.sender = sender
     req.receiver = receiver
-    req.transactionAmount = amount
+    req.transactionAmount = transactionAmount
     req.serviceCharge = serviceCharge
     req.transactionType = 'points_out'
     req.paymentType = 'points'

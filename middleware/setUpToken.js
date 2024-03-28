@@ -4,11 +4,20 @@ const catchAsyncError = require('./catchAsyncError')
 const User = require('../models/userModel')
 const ErrorHandler = require('../utils/errorhander')
 const { default: mongoose } = require('mongoose')
+const serviceChargeModel = require('../models/serviceChargeModel')
 
 exports.setUpToken = catchAsyncError(async (req, _, next) => {
-  const tokenCharge = 40
+  // const tokenCharge = 40
   const session = await mongoose.startSession()
   session.startTransaction()
+
+  const charge = await serviceChargeModel.findOne().session(session);
+
+  if (!charge) {
+    return next(new ErrorHandler('Token charge not found', 403))
+  }
+    
+  const tokenCharge = charge.tokenCharge || 40;
 
   const user = await User.findOne({ _id: req.user.id }).session(session)
   if (!user || user.balance < 40) {

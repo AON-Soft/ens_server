@@ -7,6 +7,7 @@ const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.sendPoints = catchAsyncError(async (req, res, next) => {
   const { receiverEmail, amount } = req.body
+  const transactionAmount = parseFloat(amount);
   
   const session = await mongoose.startSession()
   session.startTransaction()
@@ -36,14 +37,14 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     }
     // const serviceCharge = await calculateServiceCharge(amount, percentage)
 
-    if (sender.balance <= amount + serviceCharge) {
+    if (sender.balance <= transactionAmount + serviceCharge) {
       return next(new ErrorHandler('Insufficient Balance', 400))
     }
 
     const trnxID = uniqueTransactionID()
     const sendPontsTranactionID = `SP${trnxID}`
-    sender.balance -= amount + serviceCharge
-    receiver.balance += amount
+    sender.balance -= transactionAmount + serviceCharge
+    receiver.balance += transactionAmount
     admin.balance += serviceCharge
 
     await sender.save({ session })
@@ -53,7 +54,7 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
     req.transactionID = sendPontsTranactionID
     req.sender = sender
     req.receiver = receiver
-    req.transactionAmount = amount
+    req.transactionAmount = transactionAmount
     req.serviceCharge = serviceCharge
     req.transactionType = 'send_points'
     req.paymentType = 'points'

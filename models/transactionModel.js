@@ -9,10 +9,22 @@ const transactionSchema = new mongoose.Schema({
   transactionAmount: {
     type: Number,
     required: true,
+    validate: {
+      validator: function(value) {
+        return !isNaN(parseFloat(value)) && isFinite(value);
+      },
+      message: 'Transaction amount must be a valid number.'
+    }
   },
   serviceCharge: {
     type: Number,
     required: true,
+    validate: {
+      validator: function(value) {
+        return !isNaN(parseFloat(value)) && isFinite(value);
+      },
+      message: 'Service charge must be a valid number.'
+    }
   },
   sender: {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

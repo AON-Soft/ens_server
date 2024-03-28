@@ -1,13 +1,13 @@
 const catchAsyncError = require('./catchAsyncError.js')
 const mongoose = require('mongoose')
 const User = require('../models/userModel.js')
-const calculateServiceCharge = require('../utils/calculateServiceCharge.js')
 const uniqueTransactionID = require('../utils/transactionID.js')
 const ErrorHandler = require('../utils/errorhander.js')
 const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
-  const { receiverEmail, amount } = req.body
+  const { receiverEmail, amount } = req.body;
+  const transactionAmount = parseFloat(amount);
 
   const session = await mongoose.startSession()
   session.startTransaction()
@@ -19,7 +19,7 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Service charge not found', 403))
     }
 
-    const percentage = charge.sendMoneyCharge;
+    const serviceCharge = charge.sendMoneyCharge;
     // const percentage = 5;
 
     const sender = await User.findOne({ _id: req.user.id }).session(session)
@@ -34,16 +34,11 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
     if (!admin) {
       return next(new ErrorHandler('super_admin not found', 403))
     }
-    const serviceCharge = await calculateServiceCharge(amount, percentage)
-
-    // if (sender.balance <= amount + serviceCharge) {
-    //   return next(new ErrorHandler('Insufficient Balance', 400))
-    // }
-
+    
     const trnxID = uniqueTransactionID()
     const sendPontsTranactionID = `SP${trnxID}`
     // sender.balance -= amount + serviceCharge
-    receiver.balance += amount
+    receiver.balance += transactionAmount
     admin.balance += serviceCharge
 
     await sender.save({ session })
@@ -53,7 +48,7 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
     req.transactionID = sendPontsTranactionID
     req.sender = sender
     req.receiver = receiver
-    req.transactionAmount = amount
+    req.transactionAmount = transactionAmount
     req.serviceCharge = serviceCharge
     req.transactionType = 'send_points'
     req.paymentType = 'points'
