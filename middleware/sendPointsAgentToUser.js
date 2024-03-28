@@ -50,6 +50,7 @@ exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
 
     const trnxID = uniqueTransactionID()
     const sendPontsTranactionID = `SP${trnxID}`
+    const adminTrxID = `SPA${trnxID}`
     sender.balance -= transactionAmount + serviceCharge
     receiver.balance += transactionAmount
     admin.balance += serviceCharge
@@ -59,6 +60,7 @@ exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
     await admin.save({ session })
 
     req.transactionID = sendPontsTranactionID
+    req.adminTrxID = adminTrxID
     req.admin = admin
     req.sender = sender
     req.receiver = receiver

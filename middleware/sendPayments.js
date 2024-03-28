@@ -56,6 +56,7 @@ exports.sendPayments = catchAsyncError(async (req, _, next) => {
   
   const trnxID = uniqueTransactionID()
   const generatePaymentTranactionID = `OP${trnxID}`
+  const adminTrxID = `OPA${trnxID}`
   user.balance -= totalBill
   shopKeeper.balance += totalBill - (totalCommissionBill/2)
 
@@ -63,6 +64,7 @@ exports.sendPayments = catchAsyncError(async (req, _, next) => {
   await shopKeeper.save({ session })
 
   req.transactionID = generatePaymentTranactionID
+  req.adminTrxID = adminTrxID
   req.admin = admin
   req.sender = user
   req.receiver = shopKeeper

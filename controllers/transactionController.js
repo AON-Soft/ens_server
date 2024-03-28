@@ -31,9 +31,9 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
   await transaction.save({ session })
 
   //============= super admin transaction history ==================
-  if(req.transactionType === 'send_point' || req.transactionType === 'points_out'){
+  if(req.transactionType === 'send_points' || req.transactionType === 'points_out'){
     const superAdminTransaction = new Transaction({
-      transactionID: req.transactionID,
+      transactionID: req.adminTrxID,
       transactionAmount: req.serviceCharge,
       serviceCharge: req.serviceCharge,
       sender: {
