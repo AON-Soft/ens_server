@@ -207,13 +207,13 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select('+password')
   if (!user) {
-    await createLog('login:failed', null, `Invalid login attempt for email: ${email}`, 'Login attempt failed');
+    await createLog('login:failed', null, `Invalid login attempt by ${email}`, 'Login attempt failed');
     return next(new ErrorHandler('Invalid Email & Password', 401))
   }
   const isPasswordMatched = await user.comparePassword(password)
 
   if (!isPasswordMatched) {
-    await createLog('login:failed', null, `Invalid login attempt for email: ${email}`, 'Login attempt failed');
+    await createLog('login:failed', null, `Invalid login attempt by ${email}`, 'Login attempt failed');
     return next(new ErrorHandler('Invalid Email & Password !', 401))
   }
   if (user.role === 'shop_keeper') {
