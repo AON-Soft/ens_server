@@ -83,6 +83,7 @@ const transactionSchema = new mongoose.Schema({
       'super_admin-To-agent',
       'super_admin-To-shop_keeper',
       'super_admin-To-admin',
+      'super_admin-To-super_admin',
       'shop_keeper-To-user',
     ],
   },
