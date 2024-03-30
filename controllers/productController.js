@@ -4,6 +4,7 @@ const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ApiFeatures = require('../utils/apifeature')
+const createLog = require('../utils/createLogs')
 
 exports.createProduct = catchAsyncError(async (req, res, next) => {
 
@@ -46,6 +47,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
 
     const product = await Product.create(productData);
 
+    await createLog('product_add', userId, 'Add Product', 'Product add successfully');
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     next(error);
@@ -93,6 +95,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
 
     const product = await Product.create(productData);
 
+    await createLog('product_add', req.user, 'Add Product', 'Product add successfully');
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     next(error);
@@ -158,7 +161,7 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
     }
     // Save product
     await product.save();
-
+    await createLog('product_edit', product.user, 'Update product', 'Product update successfully');
     res.status(200).json({ success: true, data: product });
   } catch (error) {
     next(error);
@@ -175,6 +178,7 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 
   await Product.deleteOne({ _id: req.params.id })
 
+  await createLog('product_delete', product.user, 'Delete product', 'Product delete successfully');
   res.status(200).json({ success: true, message: 'Product deleted sucesfully' })
 })
 
