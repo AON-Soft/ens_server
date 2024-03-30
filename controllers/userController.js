@@ -14,7 +14,8 @@ const sendTempToken = require('../utils/TempJwtToken.js')
 const ErrorHandler = require('../utils/errorhander.js')
 
 const catchAsyncError = require('../middleware/catchAsyncError.js')
-const ApiFeatures = require('../utils/apifeature.js')
+const ApiFeatures = require('../utils/apifeature.js');
+const sendEmail = require('../utils/sendEmail.js');
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -203,12 +204,10 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('Please Enter Email & Password', 400))
   }
 
-  const user = await User.findOne({ email }).select('+password')
-
+  const user = await User.findOne({ email }).select('+password name')
   if (!user) {
     return next(new ErrorHandler('Invalid Email & Password', 401))
   }
-
   const isPasswordMatched = await user.comparePassword(password)
 
   if (!isPasswordMatched) {
@@ -237,7 +236,7 @@ exports.logout = catchAsyncError(async (_, res, a) => {
 
 //forgot password
 exports.forgotPassword = catchAsyncError(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email }).select('status')
+  const user = await User.findOne({ email: req.body.email }).select('status name')
 
   if (!user) {
     return next(new ErrorHandler('User not found', 404))
@@ -258,13 +257,28 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
 
   const getOtp = otp
 
-  // remove OTP from db
-  await Otp.deleteOne({ email: req.body.email })
-  await Otp.create({ email: req.body.email, otp, getOtp, otpVerified: false })
-  return res.json({
-    success: true,
-    message: 'OTP sent successfully',
-  })
+  try {
+    await sendEmail({
+      name: user.name,
+      email: req.body.email,
+      otp: getOtp,
+      subject: "Forgot Password OTP",
+      message: `<p>You are receiving this email because you requested to reset your password.</p> 
+                <p>Please use the following OTP:</p>`
+    });
+
+    // Save OTP to database
+    await Otp.deleteOne({ email: req.body.email });
+    await Otp.create({ email: req.body.email, otp, getOtp, otpVerified: false });
+
+    return res.json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+  } catch (error) {
+    return next(new ErrorHandler("Failed to send OTP", 500));
+  }
+
 })
 
 //Reset password
@@ -288,12 +302,10 @@ exports.forgotPasswordverifyOtp = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('User not active', 404))
   }
 
-  if (otp === '1234') {
-    // this otp from development and no need to be checked
-  } else {
-    if (OtpData.otp != otp) {
-      return next(new ErrorHandler("OTP doesn't matched", 401))
-    }
+   // Verify OTP
+  const isOtpValid = await OtpData.compareOtp(otp);
+  if (!isOtpValid) {
+    return next(new ErrorHandler("OTP doesn't match", 401));
   }
 
   // Verify OTP
@@ -319,13 +331,14 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 
   // check otp with email and if it is true then update password to new password
   const OtpData = await Otp.findOne({ email }).select('otp')
-  // check user
-  const user = await User.findOne({ email })
-
+  
   if (!OtpData) {
     return next(new ErrorHandler('OTP is Expired', 403))
   }
 
+  const user = await User.findOne({ email })
+  
+  // check user
   if (!user) {
     return next(new ErrorHandler('User not found', 404))
   }
@@ -334,12 +347,10 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('User not active', 404))
   }
 
-  if (otp === '1234') {
-    // this otp from development and no need to be checked
-  } else {
-    if (OtpData.otp != otp) {
-      return next(new ErrorHandler("OTP doesn't matched", 401))
-    }
+  // Verify OTP
+  const isOtpValid = await OtpData.compareOtp(otp);
+  if (!isOtpValid) {
+    return next(new ErrorHandler("OTP doesn't match", 401));
   }
 
   // update otp as varified

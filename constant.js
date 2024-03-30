@@ -18,21 +18,21 @@ module.exports.COOKIE_EXPIRE = process.env.COOKIE_EXPIRE
 module.exports.SMPT_SERVICE = process.env.SMPT_SERVICE
   ? process.env.SMPT_SERVICE
   : "gmail";
-module.exports.SMPT_HOST = process.env.SMPT_HOST
-  ? process.env.SMPT_HOST
-  : "smtp.gmail.com";
-module.exports.SMPT_PORT = process.env.SMPT_PORT
-  ? process.env.SMPT_PORT
-  : "465";
-module.exports.SMPT_MAIL = process.env.SMPT_MAIL
-  ? process.env.SMPT_MAIL
-  : "sciencetent@gmail.com";
-module.exports.SMPT_PASSWORD = process.env.SMPT_PASSWORD
-  ? process.env.SMPT_PASSWORD
-  : "qcrxflkltzbfgjuy";
 module.exports.SMS_TOKEN = process.env.SMS_TOKEN
   ? process.env.SMS_TOKEN
   : "qcrxflkltzbfgjuy";
 module.exports.APP_PASSWORD = process.env.APP_PASSWORD
   ? process.env.APP_PASSWORD
   : "qcrxflkltzbfgjuy";
+  module.exports.SMPT_HOST = process.env.SMPT_HOST
+  ? process.env.SMPT_HOST
+  : "ensellers.com";
+module.exports.SMPT_PORT = process.env.SMPT_PORT
+  ? process.env.SMPT_PORT
+  : "465";
+module.exports.SMPT_MAIL = process.env.SMPT_MAIL
+  ? process.env.SMPT_MAIL
+  : "admin@ensellers.com";
+module.exports.SMPT_PASSWORD = process.env.SMPT_PASSWORD
+  ? process.env.SMPT_PASSWORD
+  : "9*}tw*9e3z!q";
