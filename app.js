@@ -21,6 +21,7 @@ const location = require('./routes/locationRoutes.js')
 const tag = require('./routes/tagRoutes.js')
 const unit = require('./routes/unitRoutes.js')
 const serviceCharge = require('./routes/serviceChargeRoutes.js')
+const log = require('./routes/logRoutes.js')
 
 const errorMiddleware = require('./middleware/error')
 const { API_PREFIX } = require('./constant.js')
@@ -54,6 +55,7 @@ app.use(`${API_PREFIX}/api/v1`, location)
 app.use(`${API_PREFIX}/api/v1`, tag)
 app.use(`${API_PREFIX}/api/v1`, unit)
 app.use(`${API_PREFIX}/api/v1`, serviceCharge)
+app.use(`${API_PREFIX}/api/v1`, log)
 
 
 app.use(errorMiddleware)

@@ -16,6 +16,7 @@ const ErrorHandler = require('../utils/errorhander.js')
 const catchAsyncError = require('../middleware/catchAsyncError.js')
 const ApiFeatures = require('../utils/apifeature.js');
 const sendEmail = require('../utils/sendEmail.js');
+const createLog = require('../utils/createLogs.js');
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -204,13 +205,15 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('Please Enter Email & Password', 400))
   }
 
-  const user = await User.findOne({ email }).select('+password name')
+  const user = await User.findOne({ email }).select('+password')
   if (!user) {
+    await createLog('login:failed', null, `Invalid login attempt for email: ${email}`, 'Login attempt failed');
     return next(new ErrorHandler('Invalid Email & Password', 401))
   }
   const isPasswordMatched = await user.comparePassword(password)
 
   if (!isPasswordMatched) {
+    await createLog('login:failed', null, `Invalid login attempt for email: ${email}`, 'Login attempt failed');
     return next(new ErrorHandler('Invalid Email & Password !', 401))
   }
   if (user.role === 'shop_keeper') {
@@ -221,12 +224,13 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
     console.log(isRegisteredShop)
   }
 
+  await createLog('login:success', user._id, 'User logged in successfully', 'User logged in');
+
   sendToken(user, 200, res, isRegisteredShop)
 })
 
 //Logout
-exports.logout = catchAsyncError(async (_, res, a) => {
-  console.log(a)
+exports.logout = catchAsyncError(async (_, res) => {
   res.cookie('token', null, {
     expires: new Date(Date.now()),
     httpOnly: true,
