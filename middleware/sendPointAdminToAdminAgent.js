@@ -48,7 +48,7 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
     const adminTrxID = `SPA${trnxID}`
     // sender.balance -= amount + serviceCharge
     receiver.balance += transactionAmount
-    admin.balance += serviceCharge
+    // admin.balance += serviceCharge
 
     await sender.save({ session })
     await receiver.save({ session })
@@ -60,7 +60,7 @@ exports.sendPointAdminToAdminAgent = catchAsyncError(async (req, res, next) => {
     req.sender = sender
     req.receiver = receiver
     req.transactionAmount = transactionAmount
-    req.serviceCharge = serviceCharge
+    req.serviceCharge = 0
     req.transactionType = 'send_points'
     req.paymentType = 'points'
     req.senderTransactionHeading = 'Points Sent'

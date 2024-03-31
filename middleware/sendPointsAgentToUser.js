@@ -44,16 +44,16 @@ exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
     }
     // const serviceCharge = await calculateServiceCharge(amount, percentage)
 
-    if (sender.balance <= transactionAmount + serviceCharge) {
+    if (sender.balance <= transactionAmount) {
       return next(new ErrorHandler('Insufficient Balance', 400))
     }
 
     const trnxID = uniqueTransactionID()
     const sendPontsTranactionID = `SP${trnxID}`
     const adminTrxID = `SPA${trnxID}`
-    sender.balance -= transactionAmount + serviceCharge
+    sender.balance -= transactionAmount
     receiver.balance += transactionAmount
-    admin.balance += serviceCharge
+    // admin.balance += serviceCharge
 
     await sender.save({ session })
     await receiver.save({ session })
@@ -65,7 +65,7 @@ exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
     req.sender = sender
     req.receiver = receiver
     req.transactionAmount = transactionAmount
-    req.serviceCharge = serviceCharge
+    req.serviceCharge = 0
     req.transactionType = 'send_points'
     req.paymentType = 'points'
     req.senderTransactionHeading = 'Points Sent'
