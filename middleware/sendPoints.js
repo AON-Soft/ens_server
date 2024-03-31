@@ -40,6 +40,12 @@ exports.sendPoints = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Receiver not found', 403))
     }
 
+    if (receiver.role === 'admin' || receiver.role === 'agent') {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler("User can send point only user", 403))
+    }
+
     const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!admin) {
       await session.abortTransaction();
