@@ -74,7 +74,7 @@ router
   .get(getSingleUser)
 
 router
-  .route('/user/single/:id')
+  .route('/user/single')
   .get(getSingleChildrens)
 
 router
