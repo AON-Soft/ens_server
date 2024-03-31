@@ -25,6 +25,7 @@ const {
   userSerchByEmail,
   updateAdminAgentPassword,
   getLastSevenDaysUsers,
+  getSingleChildrens,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -71,6 +72,10 @@ router
 router
   .route('/user/details/:id')
   .get(getSingleUser)
+
+router
+  .route('/user/single/:id')
+  .get(getSingleChildrens)
 
 router
   .route('/admin/user/role/:id')

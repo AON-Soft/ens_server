@@ -817,3 +817,40 @@ exports.getLastSevenDaysUsers = catchAsyncError(async(_, res, next)=>{
         next(error);
     }
 })
+
+//Get Single Children Users(admin)
+exports.getSingleChildrens = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id)
+    .populate('parent', 'name email createdAt avatar') 
+    .populate({
+      path: 'children',
+        select: 'name -_id',
+        populate: {
+          path: 'children',
+          select: 'name -_id',
+          populate: {
+            path: 'children',
+            select: 'name -_id',
+            populate: {
+              path: 'children',
+              select: 'name -_id',
+              populate: {
+                path: 'children',
+                select: 'name -_id',
+                populate: {
+                  path: 'children',
+                  select: 'name -_id'
+                }
+              }
+            }
+          }
+        }
+    }) 
+    .exec();
+  if (!user) {
+    return next(
+      new ErrorHandler(`User doesn't exist with Id: ${req.params.id}`, 400),
+    )
+  }
+  res.status(200).json({ success: true, user })
+})
