@@ -830,7 +830,26 @@ exports.getSingleChildrens = catchAsyncError(async (req, res, next) => {
     .populate({
       path: 'children',
       select: 'name -_id',
-      options: { maxDepth: 5 }
+      populate: {
+        path: 'children',
+        select: 'name -_id',
+        populate: {
+          path: 'children',
+          select: 'name -_id',
+          populate: {
+            path: 'children',
+            select: 'name -_id',
+            populate: {
+              path: 'children',
+              select: 'name -_id',
+              populate: {
+                path: 'children',
+                select: 'name -_id'
+              }
+            }
+          }
+        }
+      }
     })
     .exec();
 
