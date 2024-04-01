@@ -4,6 +4,7 @@ const catchAsyncError = require('../middleware/catchAsyncError')
 const Brands = require('../models/brandModel')
 const ApiFeatures = require('../utils/apifeature')
 const ErrorHandler = require('../utils/errorhander')
+const createLog = require('../utils/createLogs')
 
 exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
   const exist = await Brands.findOne({ name: req.body.name })
@@ -37,6 +38,7 @@ exports.createBrandByAdmin = catchAsyncError(async (req, res, next) => {
   const brandWithout__v = brand.toObject()
   delete brandWithout__v.__v
 
+  await createLog('brand_add', req.user.id, 'Add Brand', 'New Brand Added');
   res.status(201).json({ success: true, data: brandWithout__v })
 })
 
@@ -79,6 +81,7 @@ exports.createBrandByShop = catchAsyncError(async (req, res, next) => {
   const brandWithout__v = brand.toObject()
   delete brandWithout__v.__v
 
+  await createLog('brand_add', req.user.id, 'Add Brand', 'New Brand Added');
   res.status(201).json({ success: true, data: brandWithout__v })
 })
 
@@ -130,6 +133,7 @@ exports.updateBrand = catchAsyncError(async (req, res, next) => {
     const brandWithout__v = brand.toObject()
     delete brandWithout__v.__v
 
+    await createLog('brand_edit', req.user.id, 'Update Brand', 'Brand Update Success');
     res.status(200).json({ success: true, data: brandWithout__v })
   } else {
     return next(
@@ -152,6 +156,7 @@ exports.deleteBrand = catchAsyncError(async (req, res, next) => {
   ) {
     await Brands.deleteOne({ _id: req.params.id })
 
+    await createLog('brand_delete', req.user.id, 'Delete Brand', 'Brand Delete Success');
     res.status(200).json({ success: true, message: 'Deleted successfully' })
   } else {
     return next(

@@ -5,6 +5,7 @@ const Categories = require('../models/categoryModel')
 const Shops = require('../models/shopModel')
 const ApiFeatures = require('../utils/apifeature')
 const ErrorHandler = require('../utils/errorhander')
+const createLog = require('../utils/createLogs')
 
 exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   // check the category name is already exist or not
@@ -37,6 +38,7 @@ exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
+  await createLog('category_add', req.user.id, 'Add Category', 'New Category Added');
   res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
@@ -78,6 +80,7 @@ exports.createCategoryByShop = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
+  await createLog('category_add', req.user.id, 'Add Category', 'New Category Added');
   res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
@@ -128,6 +131,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     const categoryWithout__v = category.toObject()
     delete categoryWithout__v.__v
 
+    await createLog('category_edit', req.user.id, 'Update Category', 'Category Update Suceess');
     res.status(200).json({ success: true, data: categoryWithout__v })
   } else {
     return next(
@@ -150,6 +154,7 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
   ) {
     await Categories.deleteOne({ _id: req.params.id })
 
+    await createLog('category_delete', req.user.id, 'Delete Category', 'Category Delete Suceess');
     res
       .status(200)
       .json({ success: true, message: 'Deleted sucesfully' })

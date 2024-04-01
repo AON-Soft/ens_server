@@ -5,10 +5,10 @@ const { default: mongoose } = require('mongoose')
 const Shop = require('../models/shopModel')
 const ErrorHandler = require('../utils/errorhander')
 const ApiFeatures = require('../utils/apifeature')
-const productModel = require('../models/productModel')
 const transactionModel = require('../models/transactionModel')
 const orderedProductModel = require('../models/orderedProductModel')
 const userModel = require('../models/userModel')
+const createLog = require('../utils/createLogs')
 
 exports.registerShop = catchAsyncError(async (req, res, next) => {
 
@@ -57,6 +57,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
   }
 
   const shop = await Shop.create(req.body)
+  await createLog('shop_add', req.user.id, 'Add Shop', 'New shop added');
   res.status(200).json({ success: true, data:shop })
 })
 
@@ -117,6 +118,7 @@ exports.registerShopByAdmin = catchAsyncError(async (req, res, next) => {
   }
 
   const shop = await Shop.create(req.body)
+  await createLog('shop_add', req.user.id, 'Add Shop', 'New shop added');
   res.status(200).json({ success: true, data:shop })
 })
 
@@ -177,6 +179,7 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
   });
 
   // Return updated shop
+  await createLog('shop_edit', req.user.id, 'Update Shop', 'Shop Update Success');
   res.status(201).json({ success: true, data:updatedShop });
 });
 
@@ -245,6 +248,7 @@ exports.deleteShop = catchAsyncError(async (req, res, next) => {
   }
 
   await shop.deleteOne()
+  await createLog('shop_delete', req.user.id, 'Delete Shop', 'Shop Delete Success');
   res.status(200).json({ success: true, message: 'Shop Deleted Successfully' })
 })
 

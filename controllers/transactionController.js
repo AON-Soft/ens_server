@@ -2,6 +2,7 @@ const { default: mongoose } = require('mongoose')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const Transaction = require('../models/transactionModel.js')
 const userModel = require('../models/userModel.js')
+const createLog = require('../utils/createLogs.js')
 
 exports.createTransaction = catchAsyncError(async (req, res) => {
   const { session } = req
@@ -64,18 +65,21 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
   session.endSession()
 
   if (req.token) {
+    await createLog(`${req.sender.role}-To-${req.receiver.role}`, req.sender._id, 'Create Token', 'Token created successful');
     res.status(200).json({
       success: true,
       message: 'Token created successful',
       data: req.token,
     });
   } else if (req.order) {
+    await createLog(`${req.sender.role}-To-${req.receiver.role}`, req.sender._id, 'Create Order', 'Order created successful');
     res.status(200).json({
       success: true,
       message: 'Order placed successfully',
       data: req.order,
     });
   } else {
+    await createLog(`${req.sender.role}-To-${req.receiver.role}`, req.sender._id, req.senderTransactionHeading, 'Transaction successful');
     res.status(200).json({
       success: true,
       message: 'Transaction successful',
@@ -466,8 +470,6 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
   });
 });
 
-
-
 exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.params.id);
   
@@ -637,7 +639,6 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
     filteredCount: transactionsHistory.length 
   });
 });
-
 
 exports.allTransactionHistory = catchAsyncError(async (req, res) => {
   let resultPerPage = 10;  

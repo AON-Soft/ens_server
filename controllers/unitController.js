@@ -1,5 +1,6 @@
 const catchAsyncError = require('../middleware/catchAsyncError')
-const unitModel = require('../models/unitModel')
+const unitModel = require('../models/unitModel');
+const createLog = require('../utils/createLogs');
 const ErrorHandler = require('../utils/errorhander')
 
 exports.createUnit = catchAsyncError(async (req, res, next) => {
@@ -13,6 +14,7 @@ exports.createUnit = catchAsyncError(async (req, res, next) => {
     const unitData = { ...req.body, createdBy }; 
 
     const result = await unitModel.create(unitData);
+    await createLog('unit_add', req.user.id, 'Add Unit', 'New Unit Added');
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     if (error.code === 11000 && error.keyValue && error.keyValue.name) {
@@ -33,6 +35,7 @@ exports.updateUnit = catchAsyncError(async (req, res, next) => {
       runValidators: true,
       useFindAndModify: false
     });
+    await createLog('unit_edit', req.user.id, 'Update Unit', 'Unit Update Success');
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -45,6 +48,7 @@ exports.deleteUnit = catchAsyncError(async (req, res, next) => {
     if (!deleted) {
       return next(new ErrorHandler('Unit not found', 404));
     }
+    await createLog('unit_delete', req.user.id, 'Delete Unit', 'Unit Delete Success');
     res.status(200).json({ success: true, message: "Deleted successfully" });
   } catch (error) {
     next(error);

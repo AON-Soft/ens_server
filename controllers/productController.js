@@ -95,7 +95,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
 
     const product = await Product.create(productData);
 
-    await createLog('product_add', req.user, 'Add Product', 'Product add successfully');
+    await createLog('product_add', req.user, 'Add Product', 'New product addded');
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     next(error);
