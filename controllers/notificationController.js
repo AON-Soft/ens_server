@@ -37,19 +37,8 @@ exports.sendNotification = catchAsyncError(async (req, res, next) => {
 
    try {
     // Extract request parameters
-    const { orderId, title, message } = req.body;
+    const { orderId, title, message, fcmToken } = req.body;
     const userId = req.user.id
-
-    // Retrieve user's FCM token (assuming you have stored it in your database)
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return next(new ErrorHandler('User is not found'), 404)
-    }
-
-    // Check if the user has an FCM token
-    if (!user.fcmToken) {
-      return next(new ErrorHandler('FCM token is not available for the user.'));
-    }
 
     // Prepare the notification payload
     const payload = {
@@ -57,11 +46,12 @@ exports.sendNotification = catchAsyncError(async (req, res, next) => {
         title: title,
         body: message
       },
-      token: user.fcmToken,
+      token: fcmToken,
     };
 
     // Send the notification
     await admin.messaging().send(payload);
+
 
     // Save the notification in the database
     const response = await notificationModel.create({ userId, orderId, title, message });
