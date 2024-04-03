@@ -147,3 +147,21 @@ exports.allNotification = catchAsyncError(async (req, res, next) => {
 })
 
 
+exports.markRead = catchAsyncError(async (req, res, next)=>{
+   try {
+    const notificationId = req.params.id;
+    const notification = await notificationModel.findById(notificationId);
+    if (!notification) {
+      return next(new ErrorHandler('Notification not found', 404));
+    }
+    if (notification.isRead) {
+      return res.status(200).json({ success: true, message: 'Notification is already marked as read' });
+    }
+    notification.isRead = true;
+    await notification.save();
+
+    return res.status(200).json({ success: true, message: 'Notification marked as read' });
+  } catch (error) {
+   next(error)
+  }
+})
