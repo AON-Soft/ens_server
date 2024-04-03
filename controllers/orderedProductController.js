@@ -383,11 +383,6 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       
       const receiver = await userModel.findOne({ _id: userId }).session(session);
 
-      if (!user || user.balance < totalBill) {
-        await session.abortTransaction();
-        session.endSession();
-        return next(new ErrorHandler('Insufficient balance.', 400));
-      }
 
       const shop = await shopModel.findById(shopID).session(session)
 
@@ -403,6 +398,12 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
         await session.abortTransaction();
         session.endSession();
         return next(new ErrorHandler('Shop Keeper not found', 400));
+      }
+      
+      if (shopKeeper.balance < totalBill) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('Insufficient balance.', 400));
       }
 
       const trnxID = uniqueTransactionID();
