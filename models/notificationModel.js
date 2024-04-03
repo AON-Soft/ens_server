@@ -10,7 +10,7 @@ const notificationModelSchema = new mongoose.Schema({
         ref: 'orderedProducts', 
         required: true
     },
-     title: {
+    title: {
         type: String,
         required: [true, 'Please Enter Title'],
         trim: true,

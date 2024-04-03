@@ -5,6 +5,7 @@ const ErrorHandler = require('../utils/errorhander')
 const notificationModel = require('../models/notificationModel');
 const userModel = require('../models/userModel');
 const serviceAccount = require('../serviceAccountKey.json'); 
+const ApiFeatures = require('../utils/apifeature');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -26,7 +27,7 @@ exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
     existingUser.fcmToken = fcmToken;
     await existingUser.save();
 
-    res.status(200).json({ message: 'FCM token created successfully', user: existingUser });
+    res.status(201).json({ success: true, message: 'FCM token created successfully', user: existingUser || [] });
   } catch (error) {
     return next(error);
   }
@@ -52,15 +53,97 @@ exports.sendNotification = catchAsyncError(async (req, res, next) => {
     // Send the notification
     await admin.messaging().send(payload);
 
-
-    // Save the notification in the database
+    // Save into database
     const response = await notificationModel.create({ userId, orderId, title, message });
    
-
-    res.status(200).json({ message: 'Notification sent successfully', data: response});
+    res.status(200).json({ success: true, message: 'Notification sent successfully', data: response || []});
   } catch (error) {
     return next(error)
   }
   
 })
+
+
+exports.selfNotification = catchAsyncError(async (req, res, next) => {
+  try {
+      let resultPerPage;  
+      if (req.query.limit) {
+        resultPerPage = parseInt(req.query.limit);
+      }
+      
+      const count = await notificationModel.countDocuments({userId: req.user.id})
+      const apiFeature = new ApiFeatures(
+        notificationModel.find({userId: req.user.id}).select('-__v')
+        .populate({
+          path: 'orderId',
+          model: 'orderedProducts',
+        })
+        .populate({
+          path: 'userId',
+          model: 'User',
+          select: 'avatar name email mobile'
+        })
+        .sort({ createdAt: -1 }),
+        req.query,
+        )
+        .search()
+        .filter()
+        .pagination(resultPerPage)
+
+      let result = await apiFeature.query
+      let filteredCount = result.length
+
+      res.status(200).json({
+        success: true,
+        data: result || [],
+        count,
+        resultPerPage,
+        filteredCount,
+      })
+  } catch (error) {
+    return next(error)
+  }
+})
+
+exports.allNotification = catchAsyncError(async (req, res, next) => {
+  try {
+      let resultPerPage;  
+      if (req.query.limit) {
+        resultPerPage = parseInt(req.query.limit);
+      }
+      
+      const count = await notificationModel.countDocuments()
+      const apiFeature = new ApiFeatures(
+        notificationModel.find().select('-__v')
+        .populate({
+          path: 'orderId',
+          model: 'orderedProducts',
+        })
+        .populate({
+          path: 'userId',
+          model: 'User',
+          select: 'avatar name email mobile'
+        })
+        .sort({ createdAt: -1 }),
+        req.query,
+        )
+        .search()
+        .filter()
+        .pagination(resultPerPage)
+
+      let result = await apiFeature.query
+      let filteredCount = result.length
+
+      res.status(200).json({
+        success: true,
+        data: result || [],
+        count,
+        resultPerPage,
+        filteredCount,
+      })
+  } catch (error) {
+    return next(error)
+  }
+})
+
 

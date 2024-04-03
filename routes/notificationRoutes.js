@@ -1,6 +1,6 @@
 const express = require('express')
-const { isAuthenticated } = require('../middleware/auth')
-const { sendNotification, createFcmtoken } = require('../controllers/notificationController')
+const { isAuthenticated, isAuthorizeRoles } = require('../middleware/auth')
+const { sendNotification, createFcmtoken, selfNotification, allNotification } = require('../controllers/notificationController')
 const router = express.Router()
 
 router
@@ -10,6 +10,14 @@ router
 router
   .route('/notification/send')
   .post(isAuthenticated, sendNotification)
+
+router
+  .route('/notification/self')
+  .get(isAuthenticated, selfNotification)
+
+router
+  .route('/notification/all')
+  .get(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), allNotification)
 
 
 module.exports = router
