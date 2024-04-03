@@ -28,8 +28,7 @@ exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
 
     res.status(200).json({ message: 'FCM token created successfully', user: existingUser });
   } catch (error) {
-    console.error('Error creating FCM token:', error);
-    return next(new ErrorHandler('FCM token is not created.'));
+    return next(error);
   }
 
 })
@@ -70,8 +69,7 @@ exports.sendNotification = catchAsyncError(async (req, res, next) => {
 
     res.status(200).json({ message: 'Notification sent successfully', data: response});
   } catch (error) {
-    console.error('Error sending notification:', error);
-    return next(new ErrorHandler('Notification is not created.'))
+    return next(error)
   }
   
 })
