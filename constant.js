@@ -36,3 +36,6 @@ module.exports.SMPT_MAIL = process.env.SMPT_MAIL
 module.exports.SMPT_PASSWORD = process.env.SMPT_PASSWORD
   ? process.env.SMPT_PASSWORD
   : "9*}tw*9e3z!q";
+module.exports.FCM_SERVER_KEY= process.env.FCM_SERVER_KEY
+  ? process.env.FCM_SERVER_KEY
+  : "key=AAAAQR60ZX0:APA91bFLDan_hqiMi0HWYlr1OxOxfumSKUtKQBylcS3Sap9KzZJ1UjpnbpQHiRB5d5KZPYnnHZRo5WPR3_5YrB8YEkiASA8W6H8BrypzSK3a1m-PsN9fBOAW2wpfbiEy3Z2Y1s_QnLPC";
