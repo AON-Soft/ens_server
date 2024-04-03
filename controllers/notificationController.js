@@ -35,13 +35,10 @@ exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
 })
 
 exports.sendNotification = catchAsyncError(async (req, res, next) => {
+  const { title, message, fcmToken, orderId } = req.body;
+  const userId = req.user.id;
 
-   try {
-    // Extract request parameters
-    const { orderId, title, message, fcmToken } = req.body;
-    const userId = req.user.id
-
-    // Prepare the notification payload
+  try {
     const payload = {
       notification: {
         title: title,
@@ -50,18 +47,21 @@ exports.sendNotification = catchAsyncError(async (req, res, next) => {
       token: fcmToken,
     };
 
-    // Send the notification
-    await admin.messaging().send(payload);
-
-    // Save into database
-    const response = await notificationModel.create({ userId, orderId, title, message });
-   
-    res.status(200).json({ success: true, message: 'Notification sent successfully', data: response || []});
+    const response = await admin.messaging().send(payload);
+    if (response) {
+      const result = await notificationModel.create({ userId, orderId, title, message });
+      return res.status(200).json({ success: true, message: 'Notification sent successfully', data: result || [] });
+    }
   } catch (error) {
-    return next(error)
+    if (error.code === 'messaging/registration-token-not-registered') {
+      return next(new ErrorHandler('FCM Token is not registered', 500));
+    } else {
+      console.error('FCM Notification Error:', error);
+      return next(error);
+    }
   }
-  
-})
+});
+
 
 
 exports.selfNotification = catchAsyncError(async (req, res, next) => {
