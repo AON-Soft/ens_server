@@ -555,7 +555,7 @@ exports.getOrdersByShopID = catchAsyncError(async (req, res, next) => {
 
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ shopID: shopId })
-        .populate({ path: 'userId', select: 'avatar name email' })
+        .populate({ path: 'userId', select: 'avatar name email fcmToken' })
         .populate({ path: 'shopID', select: 'name info logo banner location address' })
         .sort({ createdAt: -1 }),
       req.query

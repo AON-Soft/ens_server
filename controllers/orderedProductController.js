@@ -13,7 +13,7 @@ const shopModel = require('../models/shopModel')
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
   const { address, discount, deliveryCharge, paymentStatus, totalBill, totalCommissionBill } = req.body;
-  const cardID = req.params.id;
+  const cardID = new mongoose.Types.ObjectId(req.params.id)
   const userID = req.user.id;
 
   try {
@@ -27,13 +27,13 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
       return next(new ErrorHandler('User not found', 400));
     }
 
-    const userOrder = await Order.findOne({ userId: userID });
+    // const userOrder = await Order.findOne({ userId: userID });
 
-    if (!userOrder) {
-      await session.abortTransaction();
-      session.endSession();
-      return next(new ErrorHandler('Your order not found', 400));
-    }
+    // if (!userOrder) {
+    //   await session.abortTransaction();
+    //   session.endSession();
+    //   return next(new ErrorHandler('Your order not found', 400));
+    // }
 
     const existOrder = await Order.findOne({ cardId: cardID });
     if (existOrder) {
@@ -42,7 +42,8 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
       return next(new ErrorHandler('You have already placed this order. Try on a new card', 400));
     }
 
-    const card = await Card.findById(cardID);
+    const card = await Card.findOne({ _id: req.params.id });
+
     if (!card) {
       await session.abortTransaction();
       session.endSession();
@@ -177,7 +178,7 @@ exports.getAllOrderByShop = catchAsyncError(async (req, res, next) => {
 
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ shopID: shopId })
-        .populate({ path: 'userId', select: 'avatar name email' })
+        .populate({ path: 'userId', select: 'avatar name email fcmToken' })
         .populate({ path: 'shopID', select: 'name info logo banner location address' })
         .sort({ createdAt: -1 }),
       req.query
@@ -214,7 +215,7 @@ exports.getAllOrderByUser = catchAsyncError(async (req, res, next) => {
 
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ userId: userID })
-        .populate({ path: 'userId', select: 'avatar name email' })
+        .populate({ path: 'userId', select: 'avatar name email fcmToken' })
         .populate({ path: 'shopID', select: 'name info logo banner location address' })
         .sort({ createdAt: -1 }),
       req.query
@@ -257,7 +258,7 @@ exports.getAllOrderByUserId = catchAsyncError(async (req, res, next) => {
 
     const apiFeature = new ApiFeatures(
       orderedProductModel.find({ userId: userID })
-        .populate({ path: 'userId', select: 'avatar name email' })
+        .populate({ path: 'userId', select: 'avatar name email fcmToken' })
         .populate({ path: 'shopID', select: 'name info logo banner location address' })
         .sort({ createdAt: -1 }),
       req.query
@@ -295,7 +296,7 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
 
     const apiFeature = new ApiFeatures(
       orderedProductModel.find()
-        .populate({ path: 'userId', select: 'avatar name email' })
+        .populate({ path: 'userId', select: 'avatar name email fcmToken' })
         .populate({ path: 'shopID', select: 'name info logo banner location address' })
         .sort({ createdAt: -1 }),
       req.query
@@ -324,7 +325,7 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
 exports.getSingleOrderDetails = catchAsyncError(async (req, res, next) => {
   const orderId = new mongoose.Types.ObjectId(req.params.id)
   const order = await Order.findById(orderId)
-    .populate({ path: 'userId', select: 'avatar name email' })
+    .populate({ path: 'userId', select: 'avatar name email fcmToken' })
     .populate({ path: 'shopID', select: 'name info logo banner location address' })
     .exec()
   if (!order) {
@@ -1535,7 +1536,7 @@ exports.orderSerch = catchAsyncError(async (req, res, next) => {
      const result = await Order.find({
       'cardProducts.productName': { $regex: query, $options: 'i' }
     })
-    .populate({ path: 'userId', select: 'avatar name email' })
+    .populate({ path: 'userId', select: 'avatar name email fcmToken' })
     .populate({ path: 'shopID', select: 'name info logo banner location address' })
     .exec();
 
