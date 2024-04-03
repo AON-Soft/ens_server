@@ -205,9 +205,6 @@ exports.removeProductFromCard = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ success: true, data: updatedCard });
 });
 
-
-
-
 exports.getCard = catchAsyncError(async (req, res, next) => {
   let myCard = await cardModel.aggregate([
     {
@@ -243,11 +240,42 @@ exports.getCard = catchAsyncError(async (req, res, next) => {
       },
     },
     {
+      $lookup: {
+        from: 'shops',
+        localField: 'shopID',
+        foreignField: '_id',
+        as: 'shopInfo',
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'shopInfo.userId',
+        foreignField: '_id',
+        as: 'shopUser',
+      },
+    },
+    {
+    $addFields: {
+        'shopInfo.userId': { $arrayElemAt: ['$shopUser._id', 0] },
+        'shopInfo.fcmToken': { $arrayElemAt: ['$shopUser.fcmToken', 0] },
+      },
+    },
+    {
+      $unset: ['shopInfo._id'] 
+    },
+    {
+      $addFields: {
+        'shopInfo': { $arrayElemAt: ['$shopInfo', 0] }
+      },
+    },
+    {
       $group: {
         _id: '$_id',
         userId: { $first: '$userId' },
         shopID: { $first: '$shopID' },
         cardProducts: { $push: '$cardProducts' },
+        shopInfo: { $first: '$shopInfo' },
       },
     },
     {
@@ -256,9 +284,16 @@ exports.getCard = catchAsyncError(async (req, res, next) => {
         userId: 1,
         shopID: 1,
         cardProducts: 1,
+        shopInfo: {
+          _id: 1,
+          userId: 1,
+          name: 1,
+          fcmToken: 1
+        }
       },
     },
-  ])
+  ]);
+
 
   if (!myCard || myCard.length === 0) {
     return next(new ErrorHandler('Card is not found', 404))
@@ -302,22 +337,59 @@ exports.getCardByAdmin = catchAsyncError(async (req, res, next) => {
       },
     },
     {
+      $lookup: {
+        from: 'shops',
+        localField: 'shopID',
+        foreignField: '_id',
+        as: 'shopInfo',
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'shopInfo.userId',
+        foreignField: '_id',
+        as: 'shopUser',
+      },
+    },
+    {
+    $addFields: {
+        'shopInfo.userId': { $arrayElemAt: ['$shopUser._id', 0] },
+        'shopInfo.fcmToken': { $arrayElemAt: ['$shopUser.fcmToken', 0] },
+      },
+    },
+    {
+      $unset: ['shopInfo._id'] 
+    },
+    {
+      $addFields: {
+        'shopInfo': { $arrayElemAt: ['$shopInfo', 0] }
+      },
+    },
+    {
       $group: {
         _id: '$_id',
         userId: { $first: '$userId' },
         shopID: { $first: '$shopID' },
         cardProducts: { $push: '$cardProducts' },
+        shopInfo: { $first: '$shopInfo' },
       },
     },
     {
       $project: {
-        _id: 0,
+        _id: 1,
         userId: 1,
         shopID: 1,
         cardProducts: 1,
+        shopInfo: {
+          _id: 1,
+          userId: 1,
+          name: 1,
+          fcmToken: 1
+        }
       },
     },
-  ])
+  ]);
 
   if (!myCard || myCard.length === 0) {
     return next(new ErrorHandler('Card is not found', 404))

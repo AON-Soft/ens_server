@@ -85,7 +85,6 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-
   children: [
     {
       type: mongoose.Schema.Types.ObjectId,

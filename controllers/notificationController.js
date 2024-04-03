@@ -11,8 +11,8 @@ admin.initializeApp({
 });
 
 exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
-  const {userId, fcmToken} = req.body
-  const userID = new mongoose.Types.ObjectId(userId)
+  const {fcmToken} = req.body
+  const userID = new mongoose.Types.ObjectId(req.user.id)
 
  try {
     // Check if the user exists

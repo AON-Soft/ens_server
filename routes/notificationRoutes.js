@@ -5,7 +5,7 @@ const router = express.Router()
 
 router
   .route('/notification/create/fcm-token')
-  .post(createFcmtoken)
+  .post(isAuthenticated, createFcmtoken)
 
 router
   .route('/notification/send')

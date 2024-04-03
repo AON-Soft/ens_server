@@ -225,7 +225,7 @@ exports.getShopDetailsByShopKeeper = catchAsyncError(async (req, res, next) => {
       select: 'name image'
     }).populate({
       path: 'userId',
-      select: 'avatar name email mobile balance bonusBalance duebalance'
+      select: 'avatar name email mobile balance bonusBalance duebalance fcmToken'
     }).exec();
 
     if(!shop){
@@ -365,7 +365,7 @@ exports.getShopDetails = catchAsyncError(async (req, res, next) => {
       select: 'name image'
     }).populate({
       path: 'userId',
-      select: 'avatar name email mobile balance bonusBalance duebalance'
+      select: 'avatar name email mobile balance bonusBalance duebalance fcmToken'
     }).exec();
 
     if(!shop){
