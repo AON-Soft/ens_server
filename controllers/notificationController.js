@@ -64,8 +64,8 @@ exports.sendCampaignNotification = catchAsyncError(async (req, res, next) => {
     orderId
   }
    try {
-        const result = await sendNotification(payload);
-        res.status(200).json(result);
+      const result = await sendNotification(payload);
+      res.status(200).json(result);
     } catch (error) {
         next(new ErrorHandler(error.message, 500));
     }
@@ -75,13 +75,14 @@ exports.sendCampaignNotification = catchAsyncError(async (req, res, next) => {
 
 exports.sendCampaignNotification = async (req, res, next) => {
   try {
-    const { campaignTitle, title, body, payload } = req.body;
+    const { campaignTitle, title, body, payload, bgImage } = req.body;
 
     // Create the campaign
     const newCampaign = await campaignModel.create({
       campaignTitle: campaignTitle,
       title: title,
       body: body,
+      bgImage: bgImage || null,
       payload: payload,
     });
 
