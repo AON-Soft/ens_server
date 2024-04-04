@@ -1657,7 +1657,7 @@ exports.getTopSellingProduct = catchAsyncError(async (req, res) => {
 // get last 7days order product
 exports.getLastSevenDaysOrder = catchAsyncError(async(_, res, next)=>{
    try {
-         const today = new Date();
+        const today = new Date();
 
         const data = {
             labels: [],
@@ -1672,7 +1672,7 @@ exports.getLastSevenDaysOrder = catchAsyncError(async(_, res, next)=>{
             const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
             const orders = await Order.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
 
-            data.labels.unshift(dayLabels[currentDate.getDay()]);
+            data.labels.push(dayLabels[currentDate.getDay()]);
 
             orders.forEach(order => {
                 if (order.orderStatus === 'order_done') {
@@ -1684,8 +1684,13 @@ exports.getLastSevenDaysOrder = catchAsyncError(async(_, res, next)=>{
             });
         }
 
+        data.labels.reverse();
+        data.totalOrders.reverse();
+        data.deliveredOrders.reverse();
+        data.canceledOrders.reverse();
+
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);
     }
-})
+});

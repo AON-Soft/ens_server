@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const bcrypt = require('bcryptjs')
@@ -795,23 +796,48 @@ exports.userSerchByEmail = catchAsyncError(async (req, res, next) => {
 
 exports.getLastSevenDaysUsers = catchAsyncError(async(_, res, next)=>{
    try {
-         const today = new Date();
+        //  const today = new Date();
+
+        // const data = {
+        //     labels: [],
+        //     userCounts: Array(7).fill(0),
+        // };
+
+        // const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        // for (let i = 0; i < 7; i++) {
+        //     const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        //     const users = await User.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
+
+        //     data.labels.unshift(dayLabels[currentDate.getDay()]);
+        //     data.userCounts[i] = users.length; 
+        // }
+
+        // // data.labels.reverse();
+        // // data.userCounts.reverse();
+        const today = new Date();
 
         const data = {
             labels: [],
             userCounts: Array(7).fill(0),
         };
 
-        const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const dayLabels = ['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat'];
 
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
             const users = await User.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
 
-            data.labels.unshift(dayLabels[currentDate.getDay()]);
-            data.userCounts[i] = users.length; 
+            data.labels.push(dayLabels[currentDate.getDay()]);
+
+            users.forEach(order => {
+                data.userCounts[i]++;
+            });
         }
 
+        data.labels.reverse();
+        data.userCounts.reverse();
+       
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);
