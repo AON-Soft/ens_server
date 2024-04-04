@@ -17,6 +17,24 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('Shop Alredy Exist ! You can create one shop'))
   }
 
+    if (!req.body.latitude || !req.body.longitude) {
+    return res.status(400).json({ success: false, message: 'Latitude and longitude are required.' });
+  }
+
+  const longitudeValue = parseFloat(req.body.longitude);
+  const latitudeValue = parseFloat(req.body.latitude);
+
+  // Validate latitude and longitude
+  if (isNaN(latitudeValue) || isNaN(longitudeValue) || latitudeValue < -90 || latitudeValue > 90 || longitudeValue < -180 || longitudeValue > 180) {
+    return res.status(400).json({ success: false, message: 'Invalid latitude or longitude values.' });
+  }
+
+  // Update location coordinates
+   req.body.location = {
+    type: 'Point',
+    coordinates: [longitudeValue, latitudeValue],
+  };
+
   req.body.createdBy = req.user.id
   req.body.userId = req.user.id
 
@@ -62,7 +80,7 @@ exports.registerShop = catchAsyncError(async (req, res, next) => {
 })
 
 exports.registerShopByAdmin = catchAsyncError(async (req, res, next) => {
-  const {userId} = req.body;
+  const {userId, latitude, longitude} = req.body;
 
   const existUser = await userModel.findById(userId).exec()
   if (!existUser) {
@@ -77,6 +95,24 @@ exports.registerShopByAdmin = catchAsyncError(async (req, res, next) => {
   if (getShop) {
     return next(new ErrorHandler('Shop Alredy Exist ! You can create one shop'))
   }
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({ success: false, message: 'Latitude and longitude are required.' });
+  }
+
+  const longitudeValue = parseFloat(longitude);
+  const latitudeValue = parseFloat(latitude);
+
+  // Validate latitude and longitude
+  if (isNaN(latitudeValue) || isNaN(longitudeValue) || latitudeValue < -90 || latitudeValue > 90 || longitudeValue < -180 || longitudeValue > 180) {
+    return res.status(400).json({ success: false, message: 'Invalid latitude or longitude values.' });
+  }
+
+  // Update location coordinates
+   req.body.location = {
+    type: 'Point',
+    coordinates: [longitudeValue, latitudeValue],
+  };
 
   req.body.createdBy = userId
   req.body.userId = userId
