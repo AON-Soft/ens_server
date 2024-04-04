@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const notificationModelSchema = new mongoose.Schema({
+const notificationSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -8,22 +8,20 @@ const notificationModelSchema = new mongoose.Schema({
     orderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'orderedProducts', 
-        required: true
     },
-    title: {
-        type: String,
-        required: [true, 'Please Enter Title'],
-        trim: true,
+    campaignId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Campaign', 
     },
-    message: {
-        type: String,
-        required: [true, 'Please Enter Message'],
-        trim: true,
+    status: { 
+        type: String, 
+        default: 'in_queue', 
+        enum: ['success', 'failed', 'in_queue']
     },
     notificationType: {
         type: String,
         default: 'order',
-        enum: ['order', 'cash_in', 'cash_out'],
+        enum: ['order', 'campaign']
     },
     isRead: {
         type: Boolean,
@@ -36,4 +34,4 @@ const notificationModelSchema = new mongoose.Schema({
   
 });
 
-module.exports = mongoose.model("Notification", notificationModelSchema);
+module.exports = mongoose.model("Notification", notificationSchema);

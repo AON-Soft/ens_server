@@ -1,6 +1,6 @@
 const express = require('express')
 const { isAuthenticated, isAuthorizeRoles } = require('../middleware/auth')
-const { sendNotification, createFcmtoken, selfNotification, allNotification, markRead } = require('../controllers/notificationController')
+const { sendOrderNotification, createFcmtoken, selfNotification, allNotification, markRead, sendCampaignNotification } = require('../controllers/notificationController')
 const router = express.Router()
 
 router
@@ -9,7 +9,11 @@ router
 
 router
   .route('/notification/send')
-  .post(isAuthenticated, sendNotification)
+  .post(isAuthenticated, sendOrderNotification)
+
+router
+  .route('/notification/campagin/send')
+  .post(isAuthenticated, sendCampaignNotification)
 
 router
   .route('/notification/self')

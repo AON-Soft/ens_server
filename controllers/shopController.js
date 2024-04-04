@@ -256,7 +256,7 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
   const longitude = parseFloat(req.query.longitude);
   const latitude = parseFloat(req.query.latitude);
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10; // Default limit is 10
+  const limit = parseInt(req.query.limit) || 10; 
   const searchQuery = req.query.search;
 
   if (isNaN(longitude) || isNaN(latitude)) {
@@ -266,12 +266,13 @@ exports.getNearbyShops = catchAsyncError(async (req, res, next) => {
   const startIndex = (page - 1) * limit;
 
   // Define the geospatial query
-  const geoQuery = {
+   const geoQuery = {
     location: {
       $geoWithin: {
         $centerSphere: [[longitude, latitude], 5 / 6378.1], // 5km radius
       },
     },
+    status: 'Approved' // Add this condition for approved status
   };
 
   if (searchQuery) {

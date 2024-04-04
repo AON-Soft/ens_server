@@ -1,17 +1,10 @@
 const { default: mongoose } = require('mongoose')
-const axios = require('axios')
 const catchAsyncError = require('../middleware/catchAsyncError')
-const admin = require('firebase-admin');
 const ErrorHandler = require('../utils/errorhander')
 const notificationModel = require('../models/notificationModel');
 const userModel = require('../models/userModel');
-const serviceAccount = require('../serviceAccountKey.json'); 
 const ApiFeatures = require('../utils/apifeature');
-const { FCM_SERVER_KEY } = require('../constant');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+const sendNotification = require('../utils/sendNotification');
 
 exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
   const {fcmToken} = req.body
@@ -36,77 +29,45 @@ exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
 
 })
 
-exports.sendNotification = catchAsyncError(async (req, res, next) => {
+exports.sendOrderNotification = catchAsyncError(async (req, res, next) => {
   const { title, subtitle, message, fcmToken, orderId } = req.body;
   const userId = req.user.id;
-  const data = {
-      "to": `${fcmToken}`,
-      "notification": {
-        "body": message,
-        "OrganizationId": "2",
-        "content_available": true,
-        "priority": "high",
-        "subtitle": subtitle || "Ensellers Notification", 
-        "title": title
-      },
-      "data": {
-        "priority": "high",
-        "sound": "app_sound.wav",
-        "content_available": true,
-        "bodyText": message,
-        "organization": "Ensellers.com"
-      }
-    }
-
-    try {
-     const response = await axios.post('https://fcm.googleapis.com/fcm/send', data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `${FCM_SERVER_KEY}`
-        }
-      });
-
-      if (response.status === 200) {
-        const result = await notificationModel.create({ userId, orderId, title, message });
-        return res.status(200).json({ success: true, message: 'Notification sent successfully', data: result || [] });
-      } else {
-        if (response.data.error && response.data.error.code === 'messaging/registration-token-not-registered') {
-          return next(new ErrorHandler('FCM Token is not registered', 500));
-        } else {
-          console.error('FCM Notification Error:', response.data);
-          return next(new ErrorHandler('An error occurred while sending the notification', 500));
-        }
-      }
+  const payload = {
+    title, 
+    subtitle, 
+    message, 
+    fcmToken, 
+    userId, 
+    orderId
+  }
+   try {
+        const result = await sendNotification(payload);
+        res.status(200).json(result);
     } catch (error) {
-       console.error('FCM Notification Error:', error);
-      return next(new ErrorHandler('An error occurred while sending the notification', 500));
+        next(new ErrorHandler(error.message, 500));
     }
 
-  // try {
-  //   const payload = {
-  //     notification: {
-  //       title: title,
-  //       body: message
-  //     },
-  //     token: fcmToken,
-  //   };
-
-  //   const response = await admin.messaging().send(payload);
-  //   if (response) {
-  //     const result = await notificationModel.create({ userId, orderId, title, message });
-  //     return res.status(200).json({ success: true, message: 'Notification sent successfully', data: result || [] });
-  //   }
-  // } catch (error) {
-  //   if (error.code === 'messaging/registration-token-not-registered') {
-  //     return next(new ErrorHandler('FCM Token is not registered', 500));
-  //   } else {
-  //     console.error('FCM Notification Error:', error);
-  //     return next(error);
-  //   }
-  // }
 });
 
+exports.sendCampaignNotification = catchAsyncError(async (req, res, next) => {
+  const { title, subtitle, message, fcmToken, orderId } = req.body;
+  const userId = req.user.id;
+  const payload = {
+    title, 
+    subtitle, 
+    message, 
+    fcmToken, 
+    userId, 
+    orderId
+  }
+   try {
+        const result = await sendNotification(payload);
+        res.status(200).json(result);
+    } catch (error) {
+        next(new ErrorHandler(error.message, 500));
+    }
 
+});
 
 exports.selfNotification = catchAsyncError(async (req, res, next) => {
   try {
@@ -118,13 +79,10 @@ exports.selfNotification = catchAsyncError(async (req, res, next) => {
       const count = await notificationModel.countDocuments({userId: req.user.id})
       const apiFeature = new ApiFeatures(
         notificationModel.find({userId: req.user.id}).select('-__v')
-        .populate({
-          path: 'orderId',
-          model: 'orderedProducts',
-        })
+        .populate('orderId')
+        .populate('campaignId')
         .populate({
           path: 'userId',
-          model: 'User',
           select: 'avatar name email mobile'
         })
         .sort({ createdAt: -1 }),
@@ -159,13 +117,10 @@ exports.allNotification = catchAsyncError(async (req, res, next) => {
       const count = await notificationModel.countDocuments()
       const apiFeature = new ApiFeatures(
         notificationModel.find().select('-__v')
-        .populate({
-          path: 'orderId',
-          model: 'orderedProducts',
-        })
+        .populate('orderId')
+        .populate('campaignId')
         .populate({
           path: 'userId',
-          model: 'User',
           select: 'avatar name email mobile'
         })
         .sort({ createdAt: -1 }),
