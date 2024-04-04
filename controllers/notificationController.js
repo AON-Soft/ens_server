@@ -1,10 +1,13 @@
 const { default: mongoose } = require('mongoose')
+const axios = require('axios');
 const catchAsyncError = require('../middleware/catchAsyncError')
 const ErrorHandler = require('../utils/errorhander')
 const notificationModel = require('../models/notificationModel');
 const userModel = require('../models/userModel');
 const ApiFeatures = require('../utils/apifeature');
 const sendNotification = require('../utils/sendNotification');
+const { FCM_SERVER_KEY } = require('../constant');
+const campaignModel = require('../models/campaignModel');
 
 exports.createFcmtoken = catchAsyncError(async (req, res, next)=>{
   const {fcmToken} = req.body
@@ -68,6 +71,98 @@ exports.sendCampaignNotification = catchAsyncError(async (req, res, next) => {
     }
 
 });
+
+
+exports.sendCampaignNotification = async (req, res, next) => {
+  try {
+    const { campaignTitle, title, body, payload } = req.body;
+
+    // Create the campaign
+    const newCampaign = await campaignModel.create({
+      campaignTitle: campaignTitle,
+      title: title,
+      body: body,
+      payload: payload,
+    });
+
+    // Fetch all users and their FCM tokens in batches
+    const batchSize = 100; 
+    let offset = 0;
+    let usersBatch = await userModel.find({ fcmToken: { $exists: true } }, 'fcmToken').skip(offset).limit(batchSize);
+
+    // Prepare notification payload
+    const notificationPayload = {
+      "notification": {
+        "body": body,
+        "OrganizationId": "2",
+        "content_available": true,
+        "priority": "high",
+        "subtitle": payload.subtitle || "Ensellers Notification",
+        "title": title
+      },
+      "data": {
+        "priority": "high",
+        "sound": "app_sound.wav",
+        "content_available": true,
+        "bodyText": campaignTitle,
+        "organization": "Ensellers.com"
+      }
+    };
+
+    // Send notifications and update campaign stats
+    const notifications = [];
+    while (usersBatch.length > 0) {
+      const notificationRequests = usersBatch.map(user => {
+        return axios.post('https://fcm.googleapis.com/fcm/send', 
+          { ...notificationPayload, to: user.fcmToken }, 
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': FCM_SERVER_KEY 
+            }
+          }
+        );
+      });
+
+      // Send notification requests in parallel
+      const responses = await Promise.all(notificationRequests);
+
+      // Update campaign stats
+      const totalSent = responses.filter(response => response.status === 200).length;
+      const totalFailed = responses.length - totalSent;
+      const totalProcessed = responses.length;
+
+      // Update campaign document with new stats
+      await campaignModel.findByIdAndUpdate(newCampaign._id, {
+        $inc: { total: totalProcessed, total_sent: totalSent, total_failed: totalFailed }
+      });
+
+      // Save data to Notification model
+      for (let i = 0; i < responses.length; i++) {
+        const user = usersBatch[i];
+        const response = responses[i];
+        const notification = await notificationModel.create({
+          userId: user._id,
+          campaignId: newCampaign._id, 
+          status: response.status === 200 ? 'success' : 'failed',
+          notificationType: 'campaign',
+        });
+        notifications.push(notification);
+      }
+
+      // Fetch next batch of users
+      offset += batchSize;
+      usersBatch = await userModel.find({ fcmToken: { $exists: true } }).skip(offset).limit(batchSize);
+    }
+
+    res.status(200).json({ success: true, message: 'Campaign created and notifications sent successfully', notifications });
+  } catch (error) {
+    console.error('Error sending campaign notifications:', error);
+    next(error);
+  }
+};
+
+
 
 exports.selfNotification = catchAsyncError(async (req, res, next) => {
   try {
@@ -162,5 +257,37 @@ exports.markRead = catchAsyncError(async (req, res, next)=>{
     return res.status(200).json({ success: true, message: 'Notification marked as read' });
   } catch (error) {
    next(error)
+  }
+})
+
+exports.allCampaign = catchAsyncError(async (req, res, next) => {
+  try {
+      let resultPerPage;  
+      if (req.query.limit) {
+        resultPerPage = parseInt(req.query.limit);
+      }
+      
+      const count = await campaignModel.countDocuments()
+      const apiFeature = new ApiFeatures(
+        campaignModel.find().select('-__v')
+        .sort({ createdAt: -1 }),
+        req.query,
+        )
+        .search()
+        .filter()
+        .pagination(resultPerPage)
+
+      let result = await apiFeature.query
+      let filteredCount = result.length
+
+      res.status(200).json({
+        success: true,
+        data: result || [],
+        count,
+        resultPerPage,
+        filteredCount,
+      })
+  } catch (error) {
+    return next(error)
   }
 })

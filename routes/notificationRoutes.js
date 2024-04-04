@@ -1,6 +1,6 @@
 const express = require('express')
 const { isAuthenticated, isAuthorizeRoles } = require('../middleware/auth')
-const { sendOrderNotification, createFcmtoken, selfNotification, allNotification, markRead, sendCampaignNotification } = require('../controllers/notificationController')
+const { sendOrderNotification, createFcmtoken, selfNotification, allNotification, markRead, sendCampaignNotification, allCampaign } = require('../controllers/notificationController')
 const router = express.Router()
 
 router
@@ -26,5 +26,10 @@ router
 router
   .route('/notification/mark-read/:id')
   .put(isAuthenticated, markRead)
+
+router
+  .route('/campaign/all')
+  .get(isAuthenticated, allCampaign)
+
 
 module.exports = router
