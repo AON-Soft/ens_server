@@ -625,10 +625,15 @@ exports.shopSerch = catchAsyncError(async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Query parameter is required' });
     }
     const result = await Shop.find({
-      $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { info: { $regex: query, $options: 'i' } },
-      ]
+      $and: [
+      {
+        $or: [
+          { name: { $regex: query, $options: 'i' } },
+          { info: { $regex: query, $options: 'i' } },
+        ]
+      },
+      { status: 'Approved' }
+    ]
     }).populate({
       path: 'category',
       select: 'name image'
