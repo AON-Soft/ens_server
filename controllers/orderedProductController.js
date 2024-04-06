@@ -443,13 +443,12 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Order not found.', 400));
     }
 
-    if (existOrder.orderStatus === 'order_confirm') {
-      await session.abortTransaction();
-      session.endSession();
-      return next(new ErrorHandler('Order has already been confirm.', 400));
-    }
-
     if (orderStatus === 'order_confirm') {
+      if (existOrder.orderStatus === 'order_confirm' ||  existOrder.orderStatus === 'on_delivery' || existOrder.orderStatus === 'order_done') {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler(`Order has already been ${existOrder.orderStatus}`, 400));
+      }
       const updateOrder = await Order.findByIdAndUpdate(
         orderId,
         { orderStatus: orderStatus },
