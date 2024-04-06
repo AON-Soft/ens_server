@@ -236,7 +236,7 @@ exports.placeOrderV2 = catchAsyncError(async (req, res, next) => {
 
     await Card.findByIdAndDelete(cardID);
 
-    res.status(200).json({success: true, message: "Order placed successfully", data: balanceData});
+    res.status(200).json({success: true, message: "Order placed successfully", data: order});
 
   } catch (error) {
     next(error);
@@ -443,6 +443,12 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Order not found.', 400));
     }
 
+    if (existOrder.orderStatus === 'canceled') {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order has already been canceled.', 400));
+    }
+
     if (orderStatus === 'order_confirm') {
       if (existOrder.orderStatus === 'order_confirm' ||  existOrder.orderStatus === 'on_delivery' || existOrder.orderStatus === 'order_done') {
         await session.abortTransaction();
@@ -594,14 +600,17 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       }
       next();
     }
+    else if (orderStatus === 'canceled') {
+      if (existOrder.orderStatus === 'pending') {
+        const order = await Order.findByIdAndUpdate( orderId,  { orderStatus: orderStatus }, { new: true } ).session(session);
+        if (!order) {
+          return next(new ErrorHandler('No order found', 404));
+        }
+        await session.commitTransaction();
+        session.endSession();
+        res.status(200).json({ success: true, message: 'Order status updated successfully', data: order });
+      }
 
-    if (existOrder.orderStatus === 'canceled') {
-      await session.abortTransaction();
-      session.endSession();
-      return next(new ErrorHandler('Order has already been canceled.', 400));
-    }
-
-    if (orderStatus === 'canceled') {
       const updateOrder = await Order.findByIdAndUpdate(
         orderId,
         { orderStatus: orderStatus },
@@ -732,18 +741,23 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       }
 
       next();
-    } 
-
-    const order = await Order.findByIdAndUpdate( orderId,  { orderStatus: orderStatus }, { new: true } ).session(session);
-
-    if (!order) {
-      return next(new ErrorHandler('No order found', 404));
     }
+    else{
+      if (existOrder.orderStatus === 'pending') {
+        return next(new ErrorHandler('Please order confirm first', 404));  
+      }
 
-    await session.commitTransaction();
-    session.endSession();
+      const order = await Order.findByIdAndUpdate( orderId,  { orderStatus: orderStatus }, { new: true } ).session(session);
 
-    res.status(200).json({ success: true, message: 'Order status updated successfully', data: order });
+      if (!order) {
+        return next(new ErrorHandler('No order found', 404));
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(200).json({ success: true, message: 'Order status updated successfully', data: order });
+    }
   } catch (error) {
     if (session) {
       await session.abortTransaction();
