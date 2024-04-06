@@ -18,6 +18,7 @@ const catchAsyncError = require('../middleware/catchAsyncError.js')
 const ApiFeatures = require('../utils/apifeature.js');
 const sendEmail = require('../utils/sendEmail.js');
 const createLog = require('../utils/createLogs.js');
+const orderBalanceModel = require('../models/orderBalanceModel.js');
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
@@ -887,3 +888,13 @@ exports.getSingleChildrens = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, user });
 });
+
+exports.getOrderBalances = catchAsyncError(async (req, res, next) => {
+  const result = await orderBalanceModel.find().exec();
+
+  if (!result) {
+    return next(new ErrorHandler(`Not found`, 400))
+  }
+
+  res.status(200).json({ success: true, data: result })
+})

@@ -26,6 +26,7 @@ const {
   updateAdminAgentPassword,
   getLastSevenDaysUsers,
   getSingleChildrens,
+  getOrderBalances,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -33,6 +34,7 @@ const {
   isAuthenticatedUserTemp,
   isAuthenticated,
 } = require('../middleware/auth')
+const orderBalanceModel = require('../models/orderBalanceModel')
 
 const router = express.Router()
 
@@ -98,5 +100,20 @@ router.route('/upload').post(imageUpload)
 router.route('/admin/agent/update/:id').put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateAdminAgentPassword)
 
 router.route('/user/seven-days-order').get(getLastSevenDaysUsers)
+
+router.route('/order/balances').get(isAuthenticatedUser, getOrderBalances)
+
+router.route('/balance/all/delete/:id').delete((req, res) => {
+  orderBalanceModel.deleteOne({ _id: req.params.id })
+    .then(() => {
+      console.log('Document deleted successfully');
+      res.status(200).json({ success: true, message: 'Document deleted successfully' });
+    })
+    .catch((err) => {
+      console.error('Error deleting document:', err);
+      res.status(500).json({ success: false, message: 'Error deleting document' });
+    });
+});
+
 
 module.exports = router

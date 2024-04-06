@@ -9,6 +9,7 @@ const orderedProductModel = require('../models/orderedProductModel')
 const ApiFeatures = require('../utils/apifeature')
 const transactionModel = require('../models/transactionModel')
 const shopModel = require('../models/shopModel')
+const orderBalanceModel = require('../models/orderBalanceModel')
 
 exports.placeOrder = catchAsyncError(async (req, _, next) => {
   const { session } = req;
@@ -163,6 +164,84 @@ exports.placeOrder = catchAsyncError(async (req, _, next) => {
     session.endSession();
     return next(new ErrorHandler('An error occurred while placing the order.', 500));
   }
+});
+
+exports.placeOrderV2 = catchAsyncError(async (req, res, next) => {
+  const cardID = new mongoose.Types.ObjectId(req.params.id)
+  const userID = new mongoose.Types.ObjectId(req.user.id);
+  
+  const { address, discount, deliveryCharge, paymentStatus, totalBill, totalCommissionBill } = req.body;
+  try {
+
+    const card = await Card.findOne({ _id: req.params.id });
+
+    if (!card) {
+      return next(new ErrorHandler('Card not found', 400));
+    }
+
+    const shop = await shopModel.findOne({ _id: card.shopID });
+
+    if (!shop) {
+      return next(new ErrorHandler('Card not found', 400));
+    }
+
+    const user = await userModel.findById(userID);
+    if (!user) {
+      return next(new ErrorHandler('Card not found', 400));
+    }
+
+    if (user.balance < totalBill) {
+      return next(new ErrorHandler('Insufficient balance', 400));
+    }
+
+    const UniqOrderID = uniqueTransactionID();
+    const generateorderID = `ORD${UniqOrderID}`;
+
+    // order data
+    const orderData = {
+      userId: userID,
+      shopID: card.shopID,
+      cardId: cardID,
+      cardProducts: card.cardProducts,
+      shippingAddress: address,
+      orderID: generateorderID,
+      discount,
+      deliveryCharge,
+      paymentStatus,
+      totalBill,
+      totalCommissionBill
+    };
+
+    const order = await Order.create(orderData);
+
+    if (!order) {
+      return next(new ErrorHandler('Order is not created.', 400));
+    }
+
+    const balanceData = {
+      amount: totalBill,
+      commision: totalCommissionBill,
+      cardId: cardID,
+      shopId: card.shopID,
+      user: userID,
+      shopKeeper: shop.userId,
+      orderId: order._id,
+    };
+
+    const orderBalance = await orderBalanceModel.create(balanceData);
+
+    if (!orderBalance) {
+      return next(new ErrorHandler('Faild to balance transfer', 400));
+    }
+
+    await Card.findByIdAndDelete(cardID);
+
+    res.status(200).json({success: true, message: "Order placed successfully", data: balanceData});
+
+  } catch (error) {
+    next(error);
+  }
+  
 });
 
 // get all order of shop by shop
@@ -364,6 +443,159 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler('Order not found.', 400));
     }
 
+    if (existOrder.orderStatus === 'order_confirm') {
+      await session.abortTransaction();
+      session.endSession();
+      return next(new ErrorHandler('Order has already been confirm.', 400));
+    }
+
+    if (orderStatus === 'order_confirm') {
+      const updateOrder = await Order.findByIdAndUpdate(
+        orderId,
+        { orderStatus: orderStatus },
+        { new: true }
+      ).session(session);
+
+      const balanceInfo = await orderBalanceModel.findOne({orderId: req.params.id}).session(session);
+      
+      if (!balanceInfo) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('Balance info not found', 403))
+      }
+      const sender = await userModel.findById(balanceInfo.user).session(session)
+      if (!sender) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('Sender not found', 403))
+      }
+
+      const shopKeeper = await userModel.findById(balanceInfo.shopKeeper).session(session)
+      if (!shopKeeper) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('ShopKeeper not found', 403))
+      }
+
+      const admin = await userModel.findOne({ role: 'super_admin' }).session(session)
+      if (!admin) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('super_admin not found', 403))
+      }
+      
+      const trnxID = uniqueTransactionID()
+      const generatePaymentTranactionID = `OP${trnxID}`
+      const adminTrxID = `OPA${trnxID}`
+      sender.balance -= balanceInfo.amount
+      shopKeeper.balance += balanceInfo.amount - (balanceInfo.commision/2)
+
+      await sender.save();
+      await shopKeeper.save();
+
+      req.transactionID = generatePaymentTranactionID
+      req.adminTrxID = adminTrxID
+      req.admin = admin
+      req.sender = sender
+      req.receiver = shopKeeper
+      req.transactionAmount = balanceInfo.amount - (balanceInfo.commision/2)
+      req.serviceCharge = 0
+      req.transactionType = 'payment'
+      req.paymentType = 'points'
+      req.senderTransactionHeading = 'Order Payment Sent'
+      req.receiverTransactionHeading = 'Order Payment Received'
+
+      req.session = session;
+      req.order = updateOrder;
+    
+      let existUser = await userModel.findById(balanceInfo.user).session(session);
+
+      if (!existUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new ErrorHandler('User not found', 400));
+      }
+
+      // give commission upto top 5 label generation
+      let commissionAmount = (balanceInfo.commision/2)
+      const shareAmount = commissionAmount / 5;
+
+      for (let i = 0; i < 5; i++) {
+        if (!existUser.parent) {
+          break;
+        }
+
+        const receiver  = await userModel.findByIdAndUpdate(existUser.parent._id, { $inc: { bonusBalance: shareAmount } }, { session });
+        
+        commissionAmount -= shareAmount;
+
+        const transaction = new transactionModel({
+          transactionID: uniqueTransactionID(),
+          transactionAmount: shareAmount,
+          serviceCharge: 0,
+          sender: {
+            user: sender._id,
+            name: sender.name,
+            email: sender.email,
+            flag: 'Debit',
+            transactionHeading: 'Referral Bonus Sent',
+          },
+          receiver: {
+            user: receiver._id,
+            name: receiver.name,
+            email: receiver.email,
+            flag: 'Credit',
+            transactionHeading: 'Referral Bonus Received',
+          },
+          transactionType: 'referal_bonus',
+          paymentType: 'bonus_points',
+          transactionRelation: `${sender.role}-To-${receiver.role}`,
+        });
+
+        await transaction.save();
+        
+
+        existUser = await userModel.findById(existUser.parent._id).session(session);
+      
+      }
+
+      if (commissionAmount > 0) {
+        const superAdmin = await userModel.findOne({ role: 'super_admin' }).session(session);
+        if (superAdmin) {
+        await userModel.findByIdAndUpdate(superAdmin._id, { $inc: { balance: commissionAmount } }, { session });
+      
+        const transaction = new transactionModel({
+          transactionID: uniqueTransactionID(),
+          transactionAmount: commissionAmount,
+          serviceCharge: 0,
+          sender: {
+            user: sender._id,
+            name: sender.name,
+            email: sender.email,
+            flag: 'Debit',
+            transactionHeading: 'Referral Bonus Sent',
+          },
+          receiver: {
+            user: superAdmin._id,
+            name: superAdmin.name,
+            email: superAdmin.email,
+            flag: 'Credit',
+            transactionHeading: 'Referral Bonus Received',
+          },
+          transactionType: 'referal_bonus',
+          paymentType: 'bonus_points',
+          transactionRelation: `${sender.role}-To-${superAdmin.role}`,
+        });
+
+        await transaction.save();
+
+        commissionAmount -= shareAmount;
+
+        }
+      }
+      next();
+    }
+
     if (existOrder.orderStatus === 'canceled') {
       await session.abortTransaction();
       session.endSession();
@@ -400,7 +632,7 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler('Shop Keeper not found', 400));
       }
       
-      if (shopKeeper.balance < totalBill) {
+      if (shopKeeper.balance < totalBill - (totalCommissionBill/2)) {
         await session.abortTransaction();
         session.endSession();
         return next(new ErrorHandler('Insufficient balance.', 400));
@@ -501,22 +733,18 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       }
 
       next();
-    } else {
-      const order = await Order.findByIdAndUpdate(
-        orderId,
-        { orderStatus: orderStatus },
-        { new: true }
-      ).session(session);
+    } 
 
-      if (!order) {
-        return next(new ErrorHandler('No order found', 404));
-      }
+    const order = await Order.findByIdAndUpdate( orderId,  { orderStatus: orderStatus }, { new: true } ).session(session);
 
-      await session.commitTransaction();
-      session.endSession();
-
-      res.status(200).json({ success: true, message: 'Order status updated successfully', data: order });
+    if (!order) {
+      return next(new ErrorHandler('No order found', 404));
     }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({ success: true, message: 'Order status updated successfully', data: order });
   } catch (error) {
     if (session) {
       await session.abortTransaction();

@@ -31,16 +31,22 @@ const {
   orderSerch,
   getTopSellingProduct,
   getLastSevenDaysOrder,
+  placeOrderV2,
 } = require('../controllers/orderedProductController')
-const { sendPayments } = require('../middleware/sendPayments')
+// const { sendPayments } = require('../middleware/sendPayments')
 const { createTransaction } = require('../controllers/transactionController')
 
 const router = express.Router()
 
 // place order by user
+// router
+//   .route('/place/order/card/:id')
+//   .post(isAuthenticated, sendPayments, placeOrder, createTransaction)
+
+// place order by user
 router
   .route('/place/order/card/:id')
-  .post(isAuthenticated, sendPayments, placeOrder, createTransaction)
+  .post(isAuthenticated, placeOrderV2)
 
 // all order
 router
