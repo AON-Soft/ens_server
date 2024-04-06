@@ -167,7 +167,7 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
-  let resultPerPage = 10;  
+  let resultPerPage;  
 
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit);
