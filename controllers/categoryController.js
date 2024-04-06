@@ -258,17 +258,17 @@ exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
     resultPerPage = parseInt(req.query.limit);
   }
 
-  const shop = await Shops.findById(req.params.id)
+  // const shop = await Shops.findById(req.params.id)
 
   const categoryCount = await Categories.countDocuments({
-    $or: [{ shopCategory: shop.category }, { shopID: req.params.id }],
+    shopID: req.params.id 
   })
   const apiFeature = new ApiFeatures(
     Categories.find({
-      $or: [{ shopCategory: shop.category }, { shopID: req.params.id }],
+     shopID: req.params.id
     }),
     req.query,
-  )
+    )
     .search()
     .filter()
     .pagination(resultPerPage)
