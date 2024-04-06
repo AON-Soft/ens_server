@@ -648,7 +648,7 @@ exports.changeOrderStatus = catchAsyncError(async (req, res, next) => {
       req.transactionID = generatePaymentTranactionID;
       req.sender = shopKeeper;
       req.receiver = user;
-      req.transactionAmount = totalBill;
+      req.transactionAmount = totalBill - (totalCommissionBill/2);
       req.serviceCharge = 0;
       req.transactionType = 'payment';
       req.paymentType = 'points';
