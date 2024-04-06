@@ -173,13 +173,9 @@ exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
     resultPerPage = parseInt(req.query.limit);
   }
 
-  const categoryCount = await Categories.countDocuments({
-    $or: [{ shopCategory: req.shop.category }, { shopID: req.shop.id }],
-  })
+  const categoryCount = await Categories.countDocuments({ shopID: req.shop.id })
   const apiFeature = new ApiFeatures(
-    Categories.find({
-      $or: [{ shopCategory: req.shop.category }, { shopID: req.shop.id }],
-    }),
+    Categories.find({ shopID: req.shop.id }),
     req.query,
   )
     .search()

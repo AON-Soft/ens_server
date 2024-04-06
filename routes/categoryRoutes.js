@@ -36,7 +36,7 @@ router
   
 router
   .route('/shop/categories')
-  .get(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), isAuthenticatedShop, getAllCategoriesByshop)
+  .get(isAuthenticated, isAuthorizeRoles('shop_keeper'), isAuthenticatedShop, getAllCategoriesByshop)
 
 
 router
