@@ -11,10 +11,10 @@ module.exports.JWT_SECRET = process.env.JWT_SECRET
   : "fjhhIOHfjkflsjagju0fujljldfgl";
 module.exports.JWT_EXPIRE = process.env.JWT_EXPIRE
   ? process.env.JWT_EXPIRE
-  : "5d";
+  : "365d";
 module.exports.COOKIE_EXPIRE = process.env.COOKIE_EXPIRE
   ? process.env.COOKIE_EXPIRE
-  : "2";
+  : "365";
 module.exports.SMPT_SERVICE = process.env.SMPT_SERVICE
   ? process.env.SMPT_SERVICE
   : "gmail";
