@@ -56,17 +56,18 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
 
 exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
 
-   const { name, userId, description, price, points, images, categoryId, stockUnit, availableStock, commission, unit, tags } = req.body;
+   const { name, userId: UserID, description, price, points, images, categoryId, stockUnit, availableStock, commission, unit, tags } = req.body;
 
-    if (!name || !description || !price || !points || !userId || !stockUnit || !availableStock || !images || !categoryId || !commission) {
+    if (!name || !UserID || !description || !price || !points || !stockUnit || !availableStock || !images || !categoryId || !commission) {
       return next(new ErrorHandler('Please provide all required fields', 400));
     }
 
   try {
-    const userID = new mongoose.Types.ObjectId(userId);
+    const userId = new mongoose.Types.ObjectId(UserID);
 
     // Find the shop associated with the user
-    const shop = await Shop.findOne({ userId: userID });
+    const shop = await Shop.findOne({ userId: UserID });
+
     if (!shop) {
       return next(new ErrorHandler('Shop not found', 404));
     }
@@ -82,7 +83,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
       stockUnit: stockUnit,
       availableStock: availableStock,
       commission: commission || 0,
-      user: userID,
+      user: userId,
       shop: shop._id,
     };
 
@@ -95,7 +96,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
 
     const product = await Product.create(productData);
 
-    await createLog('product_add', req.user, 'Add Product', 'New product addded');
+    await createLog('product_add', userId, 'Add Product', 'Product add successfully');
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     next(error);
