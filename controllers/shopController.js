@@ -220,6 +220,68 @@ exports.updateShopProfile = catchAsyncError(async (req, res) => {
 });
 
 
+exports.updateShopProfileByAdmin = catchAsyncError(async (req, res) => {
+  const shop = await Shop.findById(req.params.id);
+
+  // check if shop lat and long
+  if (req.body.latitude && req.body.longitude) {
+    req.body.location = {
+      type: 'Point',
+      coordinates: [req.body.longitude, req.body.latitude],
+    };
+  }
+
+  if (req.files && req.files.banner) {
+    const bannerImageId = shop.banner.public_id;
+    await cloudinary.v2.uploader.destroy(bannerImageId);
+    const tempFilePath = `temp1_${Date.now()}.jpg`;
+    await fs.writeFile(tempFilePath, req.files.banner.data);
+
+    // Upload the new banner image to Cloudinary
+    const myCloud = await cloudinary.v2.uploader.upload(req.files.banner.path, {
+      folder: 'shopBanners',
+      crop: 'scale',
+    });
+
+    req.body.banner = {
+      public_id: myCloud.public_id,
+      url: myCloud.secure_url,
+    };
+
+    await fs.unlink(tempFilePath);
+    
+  }
+
+  if (req.files && req.files.logo) {
+    const logoImageId = shop.logo.public_id;
+    await cloudinary.v2.uploader.destroy(logoImageId);
+    const tempFilePath1 = `temp1_${Date.now()}.jpg`;
+    await fs.writeFile(tempFilePath1, req.files.logo.data);
+
+    const myCloudForlogo = await cloudinary.v2.uploader.upload(tempFilePath1, {
+      folder: 'shopLogos',
+      crop: 'scale',
+    });
+    req.body.logo = {
+      public_id: myCloudForlogo.public_id,
+      url: myCloudForlogo.secure_url,
+    };
+    await fs.unlink(tempFilePath1);
+  }
+
+  // Update shop details except the banner
+  const updatedShop = await Shop.findByIdAndUpdate(shop._id, req.body, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  // Return updated shop
+  await createLog('shop_edit', req.user.id, 'Update Shop', 'Shop Update Success');
+  res.status(201).json({ success: true, data:updatedShop });
+});
+
+
 exports.updateShopLocation = catchAsyncError(async (req, res, next) => {
   const { latitude, longitude } = req.body
   const shop = await Shop.findById(req.shop.id)

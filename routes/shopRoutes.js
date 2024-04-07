@@ -21,6 +21,7 @@ const {
   shopSerch,
   registerShopByAdmin,
   getShopsByShopID,
+  updateShopProfileByAdmin,
 } = require('../controllers/shopController')
 
 const router = express.Router()
@@ -31,7 +32,7 @@ router.route('/shop/admin/create-shop').post(isAuthenticated, isAuthorizeRoles('
 
 router
   .route('/shop/update')
-  .put(isAuthenticated, isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), isAuthenticatedShop, updateShopProfile)
+  .put(isAuthenticated, isAuthorizeRoles('shop_keeper'), isAuthenticatedShop, updateShopProfile)
 
 router
   .route('/shop/location/update')
@@ -72,6 +73,10 @@ router
 router
   .route('/admin/update-shop/status/:id')
   .put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateShopStatus)
+
+router
+  .route('/admin/shop/update/:id')
+  .put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateShopProfileByAdmin)
 
 
 router.route('/shop/search').get(shopSerch)
