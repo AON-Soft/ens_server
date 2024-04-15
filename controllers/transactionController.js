@@ -382,6 +382,9 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
       $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
     },
     {
+      $sort: { createdAt: -1 }
+    },
+    {
       $group: {
         _id: null,
         totalEarnings: {
