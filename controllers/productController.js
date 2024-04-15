@@ -10,7 +10,7 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
 
    const { name, description, price, points, images, categoryId, stockUnit, availableStock, commission, unit, tags } = req.body;
 
-    if (!name || !description || !price || !points || !stockUnit || !availableStock || !images || !categoryId || !commission) {
+    if (!name || !description || !price  || !stockUnit || !availableStock || !images || !categoryId || !commission) {
       return next(new ErrorHandler('Please provide all required fields', 400));
     }
 
@@ -58,7 +58,7 @@ exports.createProductByAdmin = catchAsyncError(async (req, res, next) => {
 
    const { name, userId: UserID, description, price, points, images, categoryId, stockUnit, availableStock, commission, unit, tags } = req.body;
 
-    if (!name || !UserID || !description || !price || !points || !stockUnit || !availableStock || !images || !categoryId || !commission) {
+    if (!name || !UserID || !description || !price || !stockUnit || !availableStock || !images || !categoryId || !commission) {
       return next(new ErrorHandler('Please provide all required fields', 400));
     }
 
@@ -217,8 +217,8 @@ exports.getAllProductsByShop = catchAsyncError(async (req, res) => {
       select: 'name'
     })
     .sort({ createdAt: -1 }),
-    req.query,
-  )
+      req.query,
+    )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -269,8 +269,8 @@ exports.adminGetAllProductsByShop = catchAsyncError(async (req, res) => {
       select: 'name'
     })
     .sort({ createdAt: -1 }),
-    req.query,
-  )
+      req.query,
+    )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -321,8 +321,8 @@ exports.getAllProductsByUser = catchAsyncError(async (req, res) => {
       select: 'name'
     })
     .sort({ createdAt: -1 }),
-    req.query,
-  )
+      req.query,
+    )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -412,8 +412,8 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
       select: 'name'
     })
     .sort({ createdAt: -1 }),
-    req.query,
-  )
+      req.query,
+    )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -464,8 +464,8 @@ exports.getAllProductsByAdmin = catchAsyncError(async (req, res) => {
       select: 'name'
     })
     .sort({ createdAt: -1 }),
-    req.query,
-  )
+      req.query,
+    )
     .search()
     .filter()
     .pagination(resultPerPage)

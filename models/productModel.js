@@ -13,12 +13,18 @@ const productSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: [true, 'Please Enter Product Price'],
-    maxLength: [8, "Price can't exceed 8 Characters"],
   },
   points: {
     type: Number,
-    required: [true, 'Please Enter Product Price'],
-    maxLength: [8, "Price can't exceed 8 Characters"],
+    default: 0,
+  },
+  commission: {
+    type: Number,
+    required: [true, 'Please Enter Product commission'],
+  },
+  finalPrice: {
+    type: Number,
+    default: 0,
   },
   ratings: {
     type: Number,
@@ -74,10 +80,6 @@ const productSchema = new mongoose.Schema({
       },
     },
   ],
-  commission: {
-    type: Number,
-    default: 0,
-  },
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
@@ -107,8 +109,13 @@ const productSchema = new mongoose.Schema({
   },
 })
 
+// productSchema.pre('save', function(next) {
+//   this.price += this.commission;
+//   next();
+// });
+
 productSchema.pre('save', function(next) {
-  this.price += this.commission;
+  this.finalPrice = this.price + this.commission;
   next();
 });
 
