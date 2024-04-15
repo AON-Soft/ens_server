@@ -107,4 +107,9 @@ const productSchema = new mongoose.Schema({
   },
 })
 
+productSchema.pre('save', function(next) {
+  this.price += this.commission;
+  next();
+});
+
 module.exports = mongoose.model('Products', productSchema)
