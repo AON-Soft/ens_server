@@ -6,7 +6,7 @@ const {
   isAuthenticatedUser,
 } = require('../middleware/auth')
 const {
-  placeOrder,
+  // placeOrder,
   getAllPendingOrderByShop,
   getSingleOrderDetails,
   getAllPendingOrderByUser,
@@ -44,17 +44,10 @@ const router = express.Router()
 //   .post(isAuthenticated, sendPayments, placeOrder, createTransaction)
 
 // place order by user
-router
-  .route('/place/order/card/:id')
-  .post(isAuthenticated, placeOrderV2)
+router.route('/place/order/card/:id').post(isAuthenticated, placeOrderV2)
 
 // all order
-router
-  .route('/all/order')
-  .get(
-    isAuthenticated,
-    getAllOrders,
-  )
+router.route('/all/order').get(isAuthenticated, getAllOrders)
 
 // all order by shop
 router
@@ -67,43 +60,31 @@ router
   )
 
 // all order by user
-router
-  .route('/shop/all/order/user')
-  .get(
-    isAuthenticated,
-    getAllOrderByUser,
-  )
+router.route('/shop/all/order/user').get(isAuthenticated, getAllOrderByUser)
 
 // all order by ID
 router
   .route('/shop/all/order/user/:id')
-  .get(
-    isAuthenticated,
-    getAllOrderByUserId,
-  )
+  .get(isAuthenticated, getAllOrderByUserId)
 
 // get single oder details
-router
-  .route('/details/order/:id')
-  .get(isAuthenticated, getSingleOrderDetails)
+router.route('/details/order/:id').get(isAuthenticated, getSingleOrderDetails)
 
 // delete single oder
-router
-  .route('/delete/order/:id')
-  .delete(isAuthenticated, deleteSingleOrder)
+router.route('/delete/order/:id').delete(isAuthenticated, deleteSingleOrder)
 
 // change order status
 router
   .route('/shop/order/status/:id')
-  .put(isAuthenticated,  isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'), changeOrderStatus, createTransaction)
+  .put(
+    isAuthenticated,
+    isAuthorizeRoles('shop_keeper', 'admin', 'super_admin'),
+    changeOrderStatus,
+    createTransaction,
+  )
 
 // all invoice
-router
-  .route('/invoice/all')
-  .get(
-    isAuthenticated,
-    getAllInvoice,
-  )
+router.route('/invoice/all').get(isAuthenticated, getAllInvoice)
 
 // all invoice by shop
 router
@@ -116,12 +97,7 @@ router
   )
 
 // get invoice details
-router
-  .route('/invoice/details/:id')
-  .get(
-    isAuthenticated,
-    getSingleInvoice,
-  )
+router.route('/invoice/details/:id').get(isAuthenticated, getSingleInvoice)
 
 // change invoice payment status
 router
@@ -133,8 +109,6 @@ router
   )
 router.route('/self/order-chart').get(isAuthenticatedUser, getOrderChart)
 
-
-
 // pending all order by shop
 router
   .route('/shop/pending/order')
@@ -145,7 +119,7 @@ router
     getAllPendingOrderByShop,
   )
 
-  // confirm all order by shop
+// confirm all order by shop
 router
   .route('/shop/confirm/order')
   .get(
@@ -188,60 +162,32 @@ router
 // pending oder by user
 router
   .route('/shop/pending/order/user')
-  .get(
-    isAuthenticated,
-    isAuthorizeRoles('user'),
-    getAllPendingOrderByUser,
-  )
+  .get(isAuthenticated, isAuthorizeRoles('user'), getAllPendingOrderByUser)
 
 // confirm oder by user
 router
   .route('/shop/confirm/order/user')
-  .get(
-    isAuthenticated,
-    isAuthorizeRoles('user'),
-    getAllConfirmOrderByUser,
-  )
+  .get(isAuthenticated, isAuthorizeRoles('user'), getAllConfirmOrderByUser)
 // on delivery oder by user
 router
   .route('/shop/delivery/order/user')
-  .get(
-    isAuthenticated,
-    isAuthorizeRoles('user'),
-    getAllOnDeliveryOrderByUser,
-  )
+  .get(isAuthenticated, isAuthorizeRoles('user'), getAllOnDeliveryOrderByUser)
 
 // done oder by user
 router
   .route('/shop/done/order/user')
-  .get(
-    isAuthenticated,
-    isAuthorizeRoles('user'),
-    getAllDoneOrderByUser,
-  )
+  .get(isAuthenticated, isAuthorizeRoles('user'), getAllDoneOrderByUser)
 
 // cancel oder by user
 router
   .route('/shop/cancel/order/user')
-  .get(
-    isAuthenticated,
-    isAuthorizeRoles('user'),
-    getAllCancelOrderByUser,
-  )
-
+  .get(isAuthenticated, isAuthorizeRoles('user'), getAllCancelOrderByUser)
 
 // cancel oder by user
-router
-  .route('/order/search')
-  .get(orderSerch)
+router.route('/order/search').get(orderSerch)
 
+router.route('/order/top-selling').get(getTopSellingProduct)
 
-router
-  .route('/order/top-selling')
-  .get(getTopSellingProduct)
-
-router
-  .route('/order/seven-days-order')
-  .get(getLastSevenDaysOrder)
+router.route('/order/seven-days-order').get(getLastSevenDaysOrder)
 
 module.exports = router
