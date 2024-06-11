@@ -3,7 +3,7 @@ const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const bcrypt = require('bcryptjs')
 const otpGenerator = require('otp-generator')
-const { validate } = require('email-validator');
+const { validate } = require('email-validator')
 const User = require('../models/userModel')
 const Otp = require('../models/otpModel.js')
 const Shop = require('../models/shopModel.js')
@@ -15,39 +15,39 @@ const sendTempToken = require('../utils/TempJwtToken.js')
 const ErrorHandler = require('../utils/errorhander.js')
 
 const catchAsyncError = require('../middleware/catchAsyncError.js')
-const ApiFeatures = require('../utils/apifeature.js');
-const sendEmail = require('../utils/sendEmail.js');
-const createLog = require('../utils/createLogs.js');
-const orderBalanceModel = require('../models/orderBalanceModel.js');
+const ApiFeatures = require('../utils/apifeature.js')
+const sendEmail = require('../utils/sendEmail.js')
+const createLog = require('../utils/createLogs.js')
+const orderBalanceModel = require('../models/orderBalanceModel.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  var { name, email, password, token, role } = req.body;
+  var { name, email, password, token, role } = req.body
 
   // Verify if the role is 'user' and token is provided
-  let isValidToken = null;
+  let isValidToken = null
   if (role === 'user' && token) {
-    isValidToken = await Token.findOne({ token: token, isUsed: false });
+    isValidToken = await Token.findOne({ token: token, isUsed: false })
   }
 
   // Check if the token is not valid or used
   if (!isValidToken && role === 'user' && token !== 'admin') {
-    return next(new ErrorHandler('The token is not valid or used.', 404));
+    return next(new ErrorHandler('The token is not valid or used.', 404))
   }
 
   try {
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email });
+    const existingUser = await User.findOne({ email: email })
 
     if (existingUser) {
       if (existingUser.status === 'active') {
-        return next(new ErrorHandler(`${email} is already registered`, 401));
+        return next(new ErrorHandler(`${email} is already registered`, 401))
       }
-      return next(new ErrorHandler(`${email} is already registered`, 401));
+      return next(new ErrorHandler(`${email} is already registered`, 401))
     }
 
     // Check if user has existing OTP
-    let getUser = await Otp.findOne({ email: email });
+    let getUser = await Otp.findOne({ email: email })
 
     // Generate OTP
     const otp = otpGenerator.generate(4, {
@@ -55,47 +55,63 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       lowerCaseAlphabets: false,
       upperCaseAlphabets: false,
       specialChars: false,
-    });
+    })
 
     // Hash password
-    const salt = await bcrypt.genSalt(10);
-    password = await bcrypt.hash(password, salt);
+    const salt = await bcrypt.genSalt(10)
+    password = await bcrypt.hash(password, salt)
 
-    let createdUser = null;
+    let createdUser = null
 
     if (!getUser) {
       // If user does not have OTP, create new OTP and user
-      await Otp.create({ email, otp, getOtp: otp });
-      createdUser = await User.create({ name, email, password, role });
+      await Otp.create({ email, otp, getOtp: otp })
+      createdUser = await User.create({ name, email, password, role })
+
+      try {
+        await sendEmail({
+          name: name,
+          email: email,
+          otp: otp,
+          subject: 'Account activation OTP',
+          message: `<p>You are receiving this email because you created your account.</p> 
+                    <p>Please use the following OTP:</p>`,
+        })
+      } catch (error) {
+        return next(new ErrorHandler('Failed to send OTP', 500))
+      }
     } else {
       // If user already has OTP, update OTP and user details
-      getUser.otp = otp;
-      getUser.getOtp = otp;
-      await getUser.save();
-      
-      createdUser = await User.findOneAndUpdate({ email }, { name, email, password, role });
+      getUser.otp = otp
+      getUser.getOtp = otp
+      await getUser.save()
+
+      createdUser = await User.findOneAndUpdate(
+        { email },
+        { name, email, password, role },
+      )
     }
 
-      // Update parent and children fields based on token
+    // Update parent and children fields based on token
     if (isValidToken) {
       // Update parent field of the new user with the userId associated with the token
-      createdUser.parent = isValidToken.userId;
-      await createdUser.save();
+      createdUser.parent = isValidToken.userId
+      await createdUser.save()
 
       // Update children field of the token owner
-      const tokenOwner = await User.findById(isValidToken.userId);
-      tokenOwner.children.push(createdUser._id);
-      await tokenOwner.save();
+      const tokenOwner = await User.findById(isValidToken.userId)
+      tokenOwner.children.push(createdUser._id)
+      await tokenOwner.save()
 
       // Mark the token as used
-      isValidToken.isUsed = true;
-      await isValidToken.save();
+      isValidToken.isUsed = true
+      await isValidToken.save()
     }
 
     // Fetch token owner's details
-    let tokenOwnerDetails = null;
+    let tokenOwnerDetails = null
     if (isValidToken) {
-      tokenOwnerDetails = await User.findById(isValidToken.userId);
+      tokenOwnerDetails = await User.findById(isValidToken.userId)
     }
 
     // Prepare response payload including token owner's details
@@ -107,13 +123,13 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       isVerified: false,
       token: isValidToken,
       parent: tokenOwnerDetails ? tokenOwnerDetails.parent : null,
-    };
+    }
 
-    sendTempToken(responsePayload, 201, res);
+    sendTempToken(responsePayload, 201, res)
   } catch (error) {
-    return next(new ErrorHandler(error.message, 500));
+    return next(new ErrorHandler(error.message, 500))
   }
-});
+})
 
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body
@@ -209,13 +225,23 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select('+password')
   if (!user) {
-    await createLog('login:failed', null, `Invalid login attempt by ${email}`, 'Login attempt failed');
+    await createLog(
+      'login:failed',
+      null,
+      `Invalid login attempt by ${email}`,
+      'Login attempt failed',
+    )
     return next(new ErrorHandler('Invalid Email & Password', 401))
   }
   const isPasswordMatched = await user.comparePassword(password)
 
   if (!isPasswordMatched) {
-    await createLog('login:failed', null, `Invalid login attempt by ${email}`, 'Login attempt failed');
+    await createLog(
+      'login:failed',
+      null,
+      `Invalid login attempt by ${email}`,
+      'Login attempt failed',
+    )
     return next(new ErrorHandler('Invalid Email & Password !', 401))
   }
   if (user.role === 'shop_keeper') {
@@ -226,7 +252,12 @@ exports.loginUser = catchAsyncError(async (req, res, next) => {
     console.log(isRegisteredShop)
   }
 
-  await createLog('login:success', user._id, 'User logged in successfully', 'User logged in');
+  await createLog(
+    'login:success',
+    user._id,
+    'User logged in successfully',
+    'User logged in',
+  )
 
   sendToken(user, 200, res, isRegisteredShop)
 })
@@ -242,7 +273,9 @@ exports.logout = catchAsyncError(async (_, res) => {
 
 //forgot password
 exports.forgotPassword = catchAsyncError(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email }).select('status name')
+  const user = await User.findOne({ email: req.body.email }).select(
+    'status name',
+  )
 
   if (!user) {
     return next(new ErrorHandler('User not found', 404))
@@ -268,23 +301,22 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
       name: user.name,
       email: req.body.email,
       otp: getOtp,
-      subject: "Forgot Password OTP",
+      subject: 'Forgot Password OTP',
       message: `<p>You are receiving this email because you requested to reset your password.</p> 
-                <p>Please use the following OTP:</p>`
-    });
+                <p>Please use the following OTP:</p>`,
+    })
 
     // Save OTP to database
-    await Otp.deleteOne({ email: req.body.email });
-    await Otp.create({ email: req.body.email, otp, getOtp, otpVerified: false });
+    await Otp.deleteOne({ email: req.body.email })
+    await Otp.create({ email: req.body.email, otp, getOtp, otpVerified: false })
 
     return res.json({
       success: true,
-      message: "OTP sent successfully",
-    });
+      message: 'OTP sent successfully',
+    })
   } catch (error) {
-    return next(new ErrorHandler("Failed to send OTP", 500));
+    return next(new ErrorHandler('Failed to send OTP', 500))
   }
-
 })
 
 //Reset password
@@ -308,10 +340,10 @@ exports.forgotPasswordverifyOtp = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler('User not active', 404))
   }
 
-   // Verify OTP
-  const isOtpValid = await OtpData.compareOtp(otp);
+  // Verify OTP
+  const isOtpValid = await OtpData.compareOtp(otp)
   if (!isOtpValid) {
-    return next(new ErrorHandler("OTP doesn't match", 401));
+    return next(new ErrorHandler("OTP doesn't match", 401))
   }
 
   // Verify OTP
@@ -337,13 +369,13 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 
   // check otp with email and if it is true then update password to new password
   const OtpData = await Otp.findOne({ email }).select('otp')
-  
+
   if (!OtpData) {
     return next(new ErrorHandler('OTP is Expired', 403))
   }
 
   const user = await User.findOne({ email })
-  
+
   // check user
   if (!user) {
     return next(new ErrorHandler('User not found', 404))
@@ -354,9 +386,9 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
   }
 
   // Verify OTP
-  const isOtpValid = await OtpData.compareOtp(otp);
+  const isOtpValid = await OtpData.compareOtp(otp)
   if (!isOtpValid) {
-    return next(new ErrorHandler("OTP doesn't match", 401));
+    return next(new ErrorHandler("OTP doesn't match", 401))
   }
 
   // update otp as varified
@@ -388,8 +420,9 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
 //Get User Details
 exports.getUserDetails = catchAsyncError(async (req, res) => {
   const user = await User.findById(req.user.id)
-    .populate('parent', 'name email createdAt avatar') 
-    .populate('children', 'name email createdAt avatar').exec() 
+    .populate('parent', 'name email createdAt avatar')
+    .populate('children', 'name email createdAt avatar')
+    .exec()
 
   res.status(200).json({ success: true, user })
 })
@@ -466,48 +499,50 @@ exports.updateProfile = catchAsyncError(async (req, res, _) => {
 
 //Update admin agent password
 exports.updateAdminAgentPassword = catchAsyncError(async (req, res, next) => {
-   const {name, email, mobile, oldPassword, newPassword, confirmPassword} = req.body
+  const { name, email, mobile, oldPassword, newPassword, confirmPassword } =
+    req.body
 
   const user = await User.findById(req.params.id).select('+password')
   if (oldPassword) {
-    const isPasswordMatched = await user.comparePassword(oldPassword);
+    const isPasswordMatched = await user.comparePassword(oldPassword)
 
     if (!isPasswordMatched) {
-      return next(new ErrorHandler('Old Password is incorrect', 400));
+      return next(new ErrorHandler('Old Password is incorrect', 400))
     }
 
     if (newPassword !== confirmPassword) {
-      return next(new ErrorHandler("Password doesn't match", 400));
+      return next(new ErrorHandler("Password doesn't match", 400))
     }
 
-    user.password = newPassword;
+    user.password = newPassword
   }
 
-  if (name) user.name = name;
-  if (email) user.email = email;
-  if (mobile) user.mobile = mobile;
+  if (name) user.name = name
+  if (email) user.email = email
+  if (mobile) user.mobile = mobile
 
   await user.save()
 
   const result = await User.findById(req.params.id).exec()
 
-  res.status(200).json({ success: true, data:result })
+  res.status(200).json({ success: true, data: result })
 })
 
 //Get All Users(admin)
-exports.getAllUsers = catchAsyncError(async (req, res) => {   
-  let resultPerPage = 10;  
+exports.getAllUsers = catchAsyncError(async (req, res) => {
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
   const count = await User.countDocuments({ role: 'user' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'user' })
-    .populate('parent', 'name email createdAt avatar') 
-    .populate('children', 'name email createdAt avatar')
-    .sort({ createdAt: -1 }),
-    req.query)
+      .populate('parent', 'name email createdAt avatar')
+      .populate('children', 'name email createdAt avatar')
+      .sort({ createdAt: -1 }),
+    req.query,
+  )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -525,19 +560,20 @@ exports.getAllUsers = catchAsyncError(async (req, res) => {
 })
 
 //Get All Admin(admin)
-exports.getAllAdmins = catchAsyncError(async (req, res) => { 
-  let resultPerPage = 10;  
+exports.getAllAdmins = catchAsyncError(async (req, res) => {
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
   const count = await User.countDocuments({ role: 'admin' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'admin' })
-    .populate('parent', 'name email createdAt avatar') 
-    .populate('children', 'name email createdAt avatar')
-    .sort({ createdAt: -1 }),
-    req.query)
+      .populate('parent', 'name email createdAt avatar')
+      .populate('children', 'name email createdAt avatar')
+      .sort({ createdAt: -1 }),
+    req.query,
+  )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -556,18 +592,19 @@ exports.getAllAdmins = catchAsyncError(async (req, res) => {
 
 //Get All Agents (admin)
 exports.getAllAgents = catchAsyncError(async (req, res) => {
-let resultPerPage = 10;  
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
   const count = await User.countDocuments({ role: 'agent' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'agent' })
-    .populate('parent', 'name email createdAt avatar') 
-    .populate('children', 'name email createdAt avatar')
-    .sort({ createdAt: -1 }),
-    req.query)
+      .populate('parent', 'name email createdAt avatar')
+      .populate('children', 'name email createdAt avatar')
+      .sort({ createdAt: -1 }),
+    req.query,
+  )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -586,18 +623,19 @@ let resultPerPage = 10;
 
 //Get All Shopkeeper (admin)
 exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
-  let resultPerPage ;  
+  let resultPerPage
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
   const count = await User.countDocuments({ role: 'shop_keeper' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'shop_keeper' })
-    .populate('parent', 'name email createdAt avatar') 
-    .populate('children', 'name email createdAt avatar')
-    .sort({ createdAt: -1 }),
-    req.query)
+      .populate('parent', 'name email createdAt avatar')
+      .populate('children', 'name email createdAt avatar')
+      .sort({ createdAt: -1 }),
+    req.query,
+  )
     .search()
     .filter()
     .pagination(resultPerPage)
@@ -617,9 +655,9 @@ exports.getAllShopKeepers = catchAsyncError(async (req, res) => {
 //Get Single Users(admin)
 exports.getSingleUser = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.params.id)
-    .populate('parent', 'name email createdAt avatar') 
+    .populate('parent', 'name email createdAt avatar')
     .populate('children', 'name email createdAt avatar')
-    .exec();
+    .exec()
   if (!user) {
     return next(
       new ErrorHandler(`User doesn't exist with Id: ${req.params.id}`, 400),
@@ -657,7 +695,7 @@ exports.updateUserStatus = catchAsyncError(async (req, res, _) => {
     useFindAndModify: false,
   })
 
-   const user = await User.findById(req.params.id)
+  const user = await User.findById(req.params.id)
 
   res.status(200).json({ success: true, data: user })
 })
@@ -703,8 +741,8 @@ exports.getBalance = catchAsyncError(async (req, res, next) => {
 })
 
 exports.addBalance = catchAsyncError(async (req, res, next) => {
-  const {balance, bonusBalance} = req.body
- 
+  const { balance, bonusBalance } = req.body
+
   const user = await User.findById(req.params.id)
 
   if (!user) {
@@ -713,15 +751,15 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
 
   // Update main balance if provided
   if (balance !== 'undefined') {
-    user.balance = (user.balance || 0) + balance;
+    user.balance = (user.balance || 0) + balance
   }
 
   // Update bonus balance if provided
   if (bonusBalance !== 'undefined') {
-    user.bonusBalance = (user.bonusBalance || 0) + bonusBalance;
+    user.bonusBalance = (user.bonusBalance || 0) + bonusBalance
   }
 
-  await user.save();
+  await user.save()
 
   const response = {
     balance: user.balance,
@@ -734,125 +772,137 @@ exports.addBalance = catchAsyncError(async (req, res, next) => {
 exports.imageUpload = catchAsyncError(async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: 'No images uploaded' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'No images uploaded' })
     }
 
-    let images = req.files.images; 
+    let images = req.files.images
 
     // Check if images is not an array
     if (!Array.isArray(images)) {
-      images = [images];
+      images = [images]
     }
 
     if (!images || images.length === 0) {
-      return next(new ErrorHandler('Images not found', 404));
+      return next(new ErrorHandler('Images not found', 404))
     }
 
-    const uploadedImages = [];
+    const uploadedImages = []
     for (const image of images) {
       // Ensure 'image' object and 'name' property are defined before accessing
       if (image && image.name) {
-        const tempFilePath = `temp_${Date.now()}_${image.name}`;
-        await image.mv(tempFilePath);
+        const tempFilePath = `temp_${Date.now()}_${image.name}`
+        await image.mv(tempFilePath)
 
         const myCloudImage = await cloudinary.v2.uploader.upload(tempFilePath, {
           folder: 'images',
           crop: 'scale',
-        });
+        })
 
         uploadedImages.push({
           public_id: myCloudImage.public_id,
           url: myCloudImage.secure_url,
-        });
+        })
 
-        await fs.unlink(tempFilePath);
+        await fs.unlink(tempFilePath)
       } else {
-        console.error('Image or image name is undefined:', image);
+        console.error('Image or image name is undefined:', image)
       }
     }
 
-    res.status(200).json({ success: true, imageUrls: uploadedImages });
-  } catch (error) {
-    next(error);
-  }
-});
-
-
-exports.userSerchByEmail = catchAsyncError(async (req, res, next) => {
-  const { email } = req.query;
-  try {
-    if (!email || !validate(email)) {
-      return next(new ErrorHandler('Email is invalid or not found', 400));
-    }
-    const result = await User.findOne({email: { $regex: new RegExp(email, 'i') }});
-
-    if(!result){
-      return next(new ErrorHandler('User not found', 400));
-    }
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, imageUrls: uploadedImages })
   } catch (error) {
     next(error)
   }
 })
 
-exports.getLastSevenDaysUsers = catchAsyncError(async(_, res, next)=>{
-   try {
-        //  const today = new Date();
-
-        // const data = {
-        //     labels: [],
-        //     userCounts: Array(7).fill(0),
-        // };
-
-        // const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-        // for (let i = 0; i < 7; i++) {
-        //     const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
-        //     const users = await User.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
-
-        //     data.labels.unshift(dayLabels[currentDate.getDay()]);
-        //     data.userCounts[i] = users.length; 
-        // }
-
-        // // data.labels.reverse();
-        // // data.userCounts.reverse();
-        const today = new Date();
-
-        const data = {
-            labels: [],
-            userCounts: Array(7).fill(0),
-        };
-
-        const dayLabels = ['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-        for (let i = 0; i < 7; i++) {
-            const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
-            const users = await User.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
-
-            data.labels.push(dayLabels[currentDate.getDay()]);
-
-            users.forEach(order => {
-                data.userCounts[i]++;
-            });
-        }
-
-        data.labels.reverse();
-        data.userCounts.reverse();
-       
-        res.status(200).json({ success: true, data });
-    } catch (error) {
-        next(error);
+exports.userSerchByEmail = catchAsyncError(async (req, res, next) => {
+  const { email } = req.query
+  try {
+    if (!email || !validate(email)) {
+      return next(new ErrorHandler('Email is invalid or not found', 400))
     }
+    const result = await User.findOne({
+      email: { $regex: new RegExp(email, 'i') },
+    })
+
+    if (!result) {
+      return next(new ErrorHandler('User not found', 400))
+    }
+    res.status(200).json({ success: true, data: result })
+  } catch (error) {
+    next(error)
+  }
+})
+
+exports.getLastSevenDaysUsers = catchAsyncError(async (_, res, next) => {
+  try {
+    //  const today = new Date();
+
+    // const data = {
+    //     labels: [],
+    //     userCounts: Array(7).fill(0),
+    // };
+
+    // const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    // for (let i = 0; i < 7; i++) {
+    //     const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    //     const users = await User.find({ createdAt: { $gte: currentDate, $lt: new Date(currentDate.getTime() + 86400000) } }); // Add 1 day to currentDate
+
+    //     data.labels.unshift(dayLabels[currentDate.getDay()]);
+    //     data.userCounts[i] = users.length;
+    // }
+
+    // // data.labels.reverse();
+    // // data.userCounts.reverse();
+    const today = new Date()
+
+    const data = {
+      labels: [],
+      userCounts: Array(7).fill(0),
+    }
+
+    const dayLabels = ['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - i,
+      )
+      const users = await User.find({
+        createdAt: {
+          $gte: currentDate,
+          $lt: new Date(currentDate.getTime() + 86400000),
+        },
+      }) // Add 1 day to currentDate
+
+      data.labels.push(dayLabels[currentDate.getDay()])
+
+      users.forEach((order) => {
+        data.userCounts[i]++
+      })
+    }
+
+    data.labels.reverse()
+    data.userCounts.reverse()
+
+    res.status(200).json({ success: true, data })
+  } catch (error) {
+    next(error)
+  }
 })
 
 //Get Single Children Users(admin)
 exports.getSingleChildrens = catchAsyncError(async (req, res, next) => {
-  const { email } = req.query;
+  const { email } = req.query
 
   const user = await User.findOne({ email })
     .populate({
       path: 'parent',
-      select: 'name email createdAt avatar'
+      select: 'name email createdAt avatar',
     })
     .populate({
       path: 'children',
@@ -871,26 +921,26 @@ exports.getSingleChildrens = catchAsyncError(async (req, res, next) => {
               select: 'name -_id',
               populate: {
                 path: 'children',
-                select: 'name -_id'
-              }
-            }
-          }
-        }
-      }
+                select: 'name -_id',
+              },
+            },
+          },
+        },
+      },
     })
-    .exec();
+    .exec()
 
   if (!user) {
     return next(
-      new ErrorHandler(`User doesn't exist with email: ${email}`, 400)
-    );
+      new ErrorHandler(`User doesn't exist with email: ${email}`, 400),
+    )
   }
 
-  res.status(200).json({ success: true, user });
-});
+  res.status(200).json({ success: true, user })
+})
 
 exports.getOrderBalances = catchAsyncError(async (req, res, next) => {
-  const result = await orderBalanceModel.find().exec();
+  const result = await orderBalanceModel.find().exec()
 
   if (!result) {
     return next(new ErrorHandler(`Not found`, 400))
