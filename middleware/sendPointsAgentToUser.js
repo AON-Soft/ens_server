@@ -6,40 +6,40 @@ const ErrorHandler = require('../utils/errorhander.js')
 const serviceChargeModel = require('../models/serviceChargeModel.js')
 
 exports.sendPointsAgentToUser = catchAsyncError(async (req, res, next) => {
-  const { receiverEmail, amount } = req.body;
-  const transactionAmount = parseFloat(amount);
+  const { receiverEmail, amount } = req.body
+  const transactionAmount = parseFloat(amount)
 
   const session = await mongoose.startSession()
   session.startTransaction()
 
   try {
-    const charge = await serviceChargeModel.findOne().session(session);
+    const charge = await serviceChargeModel.findOne().session(session)
 
     if (!charge) {
       return next(new ErrorHandler('Service charge not found', 403))
     }
-    
-    const serviceCharge = charge.sendMoneyCharge;
+
+    // const serviceCharge = charge.sendMoneyCharge;
     // const percentage = 5
 
     const sender = await User.findOne({ _id: req.user.id }).session(session)
     if (!sender) {
-      await session.abortTransaction();
-      session.endSession();
+      await session.abortTransaction()
+      session.endSession()
       return next(new ErrorHandler('Sender not found', 403))
     }
     const receiver = await User.findOne({ email: receiverEmail }).session(
       session,
     )
     if (!receiver) {
-      await session.abortTransaction();
-      session.endSession();
+      await session.abortTransaction()
+      session.endSession()
       return next(new ErrorHandler('Receiver not found', 403))
     }
     const admin = await User.findOne({ role: 'super_admin' }).session(session)
     if (!admin) {
-      await session.abortTransaction();
-      session.endSession();
+      await session.abortTransaction()
+      session.endSession()
       return next(new ErrorHandler('super_admin not found', 403))
     }
     // const serviceCharge = await calculateServiceCharge(amount, percentage)
