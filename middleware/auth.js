@@ -80,10 +80,10 @@ exports.isAuthenticatedUser = catchAsyncError(async (req, _, next) => {
 })
 
 exports.isAuthorizeRoles = (...roles) => {
-    return (req, _, next) => {
-    const userRole = req.user.role;
+  return (req, _, next) => {
+    const userRole = req.user.role
 
-    const isAuthorized = roles.some((role) => userRole === role);
+    const isAuthorized = roles.some((role) => userRole === role)
 
     if (!isAuthorized) {
       return next(
@@ -91,9 +91,9 @@ exports.isAuthorizeRoles = (...roles) => {
           `Role: ${userRole} is not allowed to access this resource`,
           403,
         ),
-      );
+      )
     }
 
-    next(); 
-  };
+    next()
+  }
 }
