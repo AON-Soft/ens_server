@@ -2,7 +2,7 @@ const fs = require('fs').promises
 const cloudinary = require('cloudinary')
 const catchAsyncError = require('../middleware/catchAsyncError')
 const Categories = require('../models/categoryModel')
-const Shops = require('../models/shopModel')
+// const Shops = require('../models/shopModel')
 const ApiFeatures = require('../utils/apifeature')
 const ErrorHandler = require('../utils/errorhander')
 const createLog = require('../utils/createLogs')
@@ -38,7 +38,12 @@ exports.createCategoryByAdmin = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
-  await createLog('category_add', req.user.id, 'Add Category', 'New Category Added');
+  await createLog(
+    'category_add',
+    req.user.id,
+    'Add Category',
+    'New Category Added',
+  )
   res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
@@ -80,7 +85,12 @@ exports.createCategoryByShop = catchAsyncError(async (req, res, next) => {
   const categoryWithout__v = category.toObject()
   delete categoryWithout__v.__v
 
-  await createLog('category_add', req.user.id, 'Add Category', 'New Category Added');
+  await createLog(
+    'category_add',
+    req.user.id,
+    'Add Category',
+    'New Category Added',
+  )
   res.status(201).json({ success: true, data: categoryWithout__v })
 })
 
@@ -101,7 +111,8 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
   }
 
   if (
-    req.user.role === 'admin' || req.user.role === 'super_admin' ||
+    req.user.role === 'admin' ||
+    req.user.role === 'super_admin' ||
     req.user.id.toString() === category.createdBy.toString()
   ) {
     if (req.files && req.files.image) {
@@ -131,13 +142,15 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     const categoryWithout__v = category.toObject()
     delete categoryWithout__v.__v
 
-    await createLog('category_edit', req.user.id, 'Update Category', 'Category Update Suceess');
+    await createLog(
+      'category_edit',
+      req.user.id,
+      'Update Category',
+      'Category Update Suceess',
+    )
     res.status(200).json({ success: true, data: categoryWithout__v })
   } else {
-    return next(
-      new ErrorHandler('You are not authorized'),
-      404,
-    )
+    return next(new ErrorHandler('You are not authorized'), 404)
   }
 })
 
@@ -149,15 +162,19 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
   }
 
   if (
-    req.user.role === 'admin' || req.user.role === 'super_admin' ||
+    req.user.role === 'admin' ||
+    req.user.role === 'super_admin' ||
     req.user.id.toString() === category.createdBy.toString()
   ) {
     await Categories.deleteOne({ _id: req.params.id })
 
-    await createLog('category_delete', req.user.id, 'Delete Category', 'Category Delete Suceess');
-    res
-      .status(200)
-      .json({ success: true, message: 'Deleted sucesfully' })
+    await createLog(
+      'category_delete',
+      req.user.id,
+      'Delete Category',
+      'Category Delete Suceess',
+    )
+    res.status(200).json({ success: true, message: 'Deleted sucesfully' })
   } else {
     return next(
       new ErrorHandler('You are not Authorized to Delete this category'),
@@ -167,10 +184,10 @@ exports.deleteCategory = catchAsyncError(async (req, res, next) => {
 })
 
 exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
-  let resultPerPage;  
+  let resultPerPage
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
 
   const categoryCount = await Categories.countDocuments({ shopID: req.shop.id })
@@ -190,8 +207,8 @@ exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
       categoryCount: 0,
       resultPerPage,
       filteredCategoriesCount: 0,
-      categories: []
-    });
+      categories: [],
+    })
   }
 
   let filteredCategoriesCount = categories.length
@@ -207,10 +224,10 @@ exports.getAllCategoriesByshop = catchAsyncError(async (req, res) => {
 
 exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
   const shopCategory = req.params.id
-  let resultPerPage = 10;  
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
 
   const categoryCount = await Categories.countDocuments({
@@ -232,8 +249,8 @@ exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
       categoryCount: 0,
       resultPerPage,
       filteredCategoriesCount: 0,
-      categories: []
-    });
+      categories: [],
+    })
   }
 
   let filteredCategoriesCount = categories.length
@@ -248,63 +265,21 @@ exports.getAllCategoriesByAdmin = catchAsyncError(async (req, res) => {
 })
 
 exports.getAllCategoriesByUser = catchAsyncError(async (req, res) => {
-  let resultPerPage;
+  let resultPerPage
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
 
   // const shop = await Shops.findById(req.params.id)
 
   const categoryCount = await Categories.countDocuments({
-    shopID: req.params.id 
+    shopID: req.params.id,
   })
   const apiFeature = new ApiFeatures(
     Categories.find({
-     shopID: req.params.id
+      shopID: req.params.id,
     }),
-    req.query,
-    )
-    .search()
-    .filter()
-    .pagination(resultPerPage)
-
-  let categories = await apiFeature.query
-
-  if (!categories || categories.length === 0) {
-    return res.status(200).json({
-      success: true,
-      categoryCount: 0,
-      resultPerPage,
-      filteredCategoriesCount: 0,
-      categories: []
-    });
-  }
-
-  let filteredCategoriesCount = categories.length
-
-  res.status(200).json({
-    success: true,
-    categoryCount,
-    resultPerPage,
-    filteredCategoriesCount,
-    categories,
-  })
-})
-
-exports.getAllCategory = catchAsyncError(async (req, res) => {
-  let resultPerPage; 
-
-  if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
-  }
-
-  const categoryCount = await Categories.countDocuments()
-  const apiFeature = new ApiFeatures(
-    Categories.find()
-    .populate('shopID')
-    .populate('shopCategory')
-    .sort({ createdAt: -1 }),
     req.query,
   )
     .search()
@@ -319,8 +294,50 @@ exports.getAllCategory = catchAsyncError(async (req, res) => {
       categoryCount: 0,
       resultPerPage,
       filteredCategoriesCount: 0,
-      categories: []
-    });
+      categories: [],
+    })
+  }
+
+  let filteredCategoriesCount = categories.length
+
+  res.status(200).json({
+    success: true,
+    categoryCount,
+    resultPerPage,
+    filteredCategoriesCount,
+    categories,
+  })
+})
+
+exports.getAllCategory = catchAsyncError(async (req, res) => {
+  let resultPerPage
+
+  if (req.query.limit) {
+    resultPerPage = parseInt(req.query.limit)
+  }
+
+  const categoryCount = await Categories.countDocuments()
+  const apiFeature = new ApiFeatures(
+    Categories.find()
+      .populate('shopID')
+      .populate('shopCategory')
+      .sort({ createdAt: -1 }),
+    req.query,
+  )
+    .search()
+    .filter()
+    .pagination(resultPerPage)
+
+  let categories = await apiFeature.query
+
+  if (!categories || categories.length === 0) {
+    return res.status(200).json({
+      success: true,
+      categoryCount: 0,
+      resultPerPage,
+      filteredCategoriesCount: 0,
+      categories: [],
+    })
   }
 
   let filteredCategoriesCount = categories.length
