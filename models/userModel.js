@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  address: {
+    type: String,
+    default: '',
+  },
   password: {
     type: String,
     required: [true, 'Please Enter your Password'],
@@ -97,7 +101,7 @@ const userSchema = new mongoose.Schema({
     enum: ['pending', 'active', 'hold', 'rejected'],
   },
   fcmToken: {
-      type: String, 
+    type: String,
   },
   createdAt: {
     type: Date,

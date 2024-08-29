@@ -22,7 +22,7 @@ const orderBalanceModel = require('../models/orderBalanceModel.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  var { name, email, password, token, role } = req.body
+  var { name, email, password, token, role, mobile, address } = req.body
 
   // Verify if the role is 'user' and token is provided
   let isValidToken = null
@@ -66,7 +66,14 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     if (!getUser) {
       // If user does not have OTP, create new OTP and user
       await Otp.create({ email, otp, getOtp: otp })
-      createdUser = await User.create({ name, email, password, role })
+      createdUser = await User.create({
+        name,
+        email,
+        password,
+        role,
+        mobile,
+        address,
+      })
 
       try {
         await sendEmail({
