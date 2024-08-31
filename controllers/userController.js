@@ -542,6 +542,9 @@ exports.getAllUsers = catchAsyncError(async (req, res) => {
   if (req.query.limit) {
     resultPerPage = parseInt(req.query.limit)
   }
+  // Get total count of all users (including admins, agents, etc.)
+  const totalMemberCount = await User.countDocuments()
+
   const count = await User.countDocuments({ role: 'user' })
   const apiFeature = new ApiFeatures(
     User.find({ role: 'user' })
@@ -563,6 +566,7 @@ exports.getAllUsers = catchAsyncError(async (req, res) => {
     count,
     resultPerPage,
     filteredCount,
+    totalMemberCount,
   })
 })
 
