@@ -33,8 +33,11 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
   await transaction.save({ session })
 
   //============= super admin transaction history ==================
-  if((req.transactionType === 'send_points' || req.transactionType === 'points_out') && 
-  (req.sender.role === 'user') ){
+  if (
+    (req.transactionType === 'send_points' ||
+      req.transactionType === 'points_out') &&
+    req.sender.role === 'user'
+  ) {
     const superAdminTransaction = new Transaction({
       transactionID: req.adminTrxID,
       transactionAmount: req.serviceCharge,
@@ -47,7 +50,7 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
         transactionHeading: req.senderTransactionHeading,
       },
       receiver: {
-        user: req.admin._id, 
+        user: req.admin._id,
         name: req.admin.name,
         email: req.admin.email,
         flag: 'Credit',
@@ -65,58 +68,72 @@ exports.createTransaction = catchAsyncError(async (req, res) => {
   session.endSession()
 
   if (req.token) {
-    await createLog(`${req.sender.role}-To-${req.receiver.role}`, req.sender._id, 'Create Token', 'Token created successful');
+    await createLog(
+      `${req.sender.role}-To-${req.receiver.role}`,
+      req.sender._id,
+      'Create Token',
+      'Token created successful',
+    )
     res.status(200).json({
       success: true,
       message: 'Token created successful',
       data: req.token,
-    });
+    })
   } else if (req.order) {
-    await createLog(`${req.sender.role}-To-${req.receiver.role}`, req.sender._id, 'Create Order', 'Order created successful');
+    await createLog(
+      `${req.sender.role}-To-${req.receiver.role}`,
+      req.sender._id,
+      'Create Order',
+      'Order created successful',
+    )
     res.status(200).json({
       success: true,
       message: 'Order placed successfully',
       data: req.order,
-    });
+    })
   } else {
-    await createLog(`${req.sender.role}-To-${req.receiver.role}`, req.sender._id, req.senderTransactionHeading, 'Transaction successful');
+    await createLog(
+      `${req.sender.role}-To-${req.receiver.role}`,
+      req.sender._id,
+      req.senderTransactionHeading,
+      'Transaction successful',
+    )
     res.status(200).json({
       success: true,
       message: 'Transaction successful',
-      transaction: transaction, 
-    });
+      transaction: transaction,
+    })
   }
-
 })
 
 exports.transactionHistory = catchAsyncError(async (req, res) => {
-  let userId = req.user.id;
-  userId = new mongoose.Types.ObjectId(userId);
+  let userId = req.user.id
+  userId = new mongoose.Types.ObjectId(userId)
 
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
-  let resultPerPage = 10;  
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
-  const page = req.query.page ? parseInt(req.query.page) : 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1
 
-  const skip = (page - 1) * resultPerPage;
+  const skip = (page - 1) * resultPerPage
 
-  const keyword = req.query.keyword;
+  const keyword = req.query.keyword
 
-  let matchStage = {};
+  let matchStage = {}
   if (keyword && keyword.trim() !== '') {
-      matchStage = {
-          $match: {
-              $or: [
-                  { 'sender.name': { $regex: keyword, $options: 'i' } },
-                  { 'receiver.name': { $regex: keyword, $options: 'i' } }
-              ]
-          }
-      };
+    matchStage = {
+      $match: {
+        $or: [
+          { 'sender.name': { $regex: keyword, $options: 'i' } },
+          { 'receiver.name': { $regex: keyword, $options: 'i' } },
+        ],
+      },
+    }
   }
 
   const transactionPipeline = [
@@ -128,7 +145,7 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
     },
     {
       $lookup: {
-        from: 'users', 
+        from: 'users',
         let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
         pipeline: [
           {
@@ -155,13 +172,23 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
       $addFields: {
         sender: {
           $mergeObjects: [
-            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$sender.user'] },
+              ],
+            },
             '$sender',
           ],
         },
         receiver: {
           $mergeObjects: [
-            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$receiver.user'] },
+              ],
+            },
             '$receiver',
           ],
         },
@@ -171,14 +198,18 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
       $unset: ['userInfo'],
     },
     {
-      $sort: { createdAt: -1 }
+      $sort: { createdAt: -1 },
     },
     {
       $group: {
         _id: null,
         totalUpcomingPoints: {
           $sum: {
-            $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
+            $cond: [
+              { $eq: ['$receiver.user', userId] },
+              '$transactionAmount',
+              0,
+            ],
           },
         },
         totalOutgoingPoints: {
@@ -192,7 +223,11 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
             transactionType: '$transactionType',
             transactionAmount: '$transactionAmount',
             flag: {
-              $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
+              $cond: [
+                { $eq: ['$sender.user', userId] },
+                '$sender.flag',
+                '$receiver.flag',
+              ],
             },
             transactionHeading: {
               $cond: [
@@ -213,25 +248,29 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
       $project: {
         totalUpcomingPoints: 1,
         totalOutgoingPoints: 1,
-        transactionsHistory: { $slice: ['$transactionsHistory', skip, resultPerPage] },
+        transactionsHistory: {
+          $slice: ['$transactionsHistory', skip, resultPerPage],
+        },
       },
-    }
-  ];
+    },
+  ]
 
-  const filteredPipeline = transactionPipeline.filter(stage => Object.keys(stage).length > 0);
+  const filteredPipeline = transactionPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
 
-  const transactionResult = await Transaction.aggregate(filteredPipeline);
+  const transactionResult = await Transaction.aggregate(filteredPipeline)
 
   if (transactionResult.length === 0) {
     return res.status(200).json({
       success: true,
       message: 'No transactions found for the user in the last 6 months.',
       transactionsHistory: transactionResult,
-    });
+    })
   }
 
   const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
-    transactionResult[0];
+    transactionResult[0]
 
   // Count total number of transactions
   const countPipeline = [
@@ -242,26 +281,28 @@ exports.transactionHistory = catchAsyncError(async (req, res) => {
       },
     },
     {
-      $count: 'count'
-    }
-  ];
+      $count: 'count',
+    },
+  ]
 
-  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
-  const countResult = await Transaction.aggregate(filteredCountPipeline);
-  const count = countResult.length > 0 ? countResult[0].count : 0;
+  const filteredCountPipeline = countPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+  const countResult = await Transaction.aggregate(filteredCountPipeline)
+  const count = countResult.length > 0 ? countResult[0].count : 0
 
   res.status(200).json({
     success: true,
     totalUpcomingPoints,
     totalOutgoingPoints,
     transactionsHistory,
-    count, 
+    count,
     resultPerPage,
     currentPage: page,
     totalPages: Math.ceil(count / resultPerPage),
-    filteredCount: transactionsHistory.length 
-  });
-});
+    filteredCount: transactionsHistory.length,
+  })
+})
 
 exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
   const pipeline = [
@@ -315,30 +356,30 @@ exports.getUsersBasedOnLastPointsOut = catchAsyncError(async (_, res) => {
 })
 
 exports.earningHistory = catchAsyncError(async (req, res) => {
-  const userId = new mongoose.Types.ObjectId(req.user.id);
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const userId = new mongoose.Types.ObjectId(req.user.id)
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
-  let resultPerPage = 10;  
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
 
-  const page = req.query.page ? parseInt(req.query.page) : 1; 
-  const skip = (page - 1) * resultPerPage;
-  const keyword = req.query.keyword;
+  const page = req.query.page ? parseInt(req.query.page) : 1
+  const skip = (page - 1) * resultPerPage
+  const keyword = req.query.keyword
 
-  let matchStage = {};
+  let matchStage = {}
   if (keyword && keyword.trim() !== '') {
     matchStage = {
       $match: {
         $or: [
           { 'sender.name': { $regex: keyword, $options: 'i' } },
-          { 'receiver.name': { $regex: keyword, $options: 'i' } }
-        ]
-      }
-    };
+          { 'receiver.name': { $regex: keyword, $options: 'i' } },
+        ],
+      },
+    }
   }
 
   const earningPipeline = [
@@ -352,8 +393,8 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
         $or: [
           { transactionRelation: 'user-To-user' },
           { transactionRelation: 'user-To-admin' },
-          { transactionRelation: 'user-To-super_admin' }
-        ]
+          { transactionRelation: 'user-To-super_admin' },
+        ],
       },
     },
     {
@@ -379,10 +420,15 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
       },
     },
     {
-      $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
+      $unset: [
+        'senderInfo',
+        'receiverInfo',
+        'sender.password',
+        'receiver.password',
+      ],
     },
     {
-      $sort: { createdAt: -1 }
+      $sort: { createdAt: -1 },
     },
     {
       $group: {
@@ -422,21 +468,23 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
         totalEarnings: 1,
         earningHistory: { $slice: ['$earningHistory', skip, resultPerPage] },
       },
-    }  
-  ];
+    },
+  ]
 
-  const filteredPipeline = earningPipeline.filter(stage => Object.keys(stage).length > 0);
-  const earningResult = await Transaction.aggregate(filteredPipeline);
+  const filteredPipeline = earningPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+  const earningResult = await Transaction.aggregate(filteredPipeline)
 
   if (earningResult.length === 0) {
     return res.status(200).json({
       success: true,
       message: 'No earnings found for the user in the last 6 months.',
       earningHistory: earningResult,
-    });
+    })
   }
 
-  const { totalEarnings, earningHistory } = earningResult[0];
+  const { totalEarnings, earningHistory } = earningResult[0]
 
   // Count total number of earnings
   const countPipeline = [
@@ -450,53 +498,55 @@ exports.earningHistory = catchAsyncError(async (req, res) => {
         $or: [
           { transactionRelation: 'user-To-user' },
           { transactionRelation: 'user-To-admin' },
-          { transactionRelation: 'user-To-super_admin' }
-        ]
+          { transactionRelation: 'user-To-super_admin' },
+        ],
       },
     },
     {
-      $count: 'count'
-    }
-  ];
+      $count: 'count',
+    },
+  ]
 
-  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
-  const countResult = await Transaction.aggregate(filteredCountPipeline);
-  const count = countResult.length > 0 ? countResult[0].count : 0;
+  const filteredCountPipeline = countPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+  const countResult = await Transaction.aggregate(filteredCountPipeline)
+  const count = countResult.length > 0 ? countResult[0].count : 0
 
   res.status(200).json({
     success: true,
     totalEarnings,
     earningHistory,
-    count, 
+    count,
     resultPerPage,
-    filteredCount: earningHistory.length
-  });
-});
+    filteredCount: earningHistory.length,
+  })
+})
 
 exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
-  const userId = new mongoose.Types.ObjectId(req.params.id);
-  
-  let resultPerPage = 10;  
+  const userId = new mongoose.Types.ObjectId(req.params.id)
+
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
-  const page = req.query.page ? parseInt(req.query.page) : 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1
 
-  const skip = (page - 1) * resultPerPage;
+  const skip = (page - 1) * resultPerPage
 
-  const keyword = req.query.keyword;
+  const keyword = req.query.keyword
 
-  let matchStage = {};
+  let matchStage = {}
   if (keyword && keyword.trim() !== '') {
-      matchStage = {
-          $match: {
-              $or: [
-                  { 'sender.name': { $regex: keyword, $options: 'i' } },
-                  { 'receiver.name': { $regex: keyword, $options: 'i' } }
-              ]
-          }
-      };
+    matchStage = {
+      $match: {
+        $or: [
+          { 'sender.name': { $regex: keyword, $options: 'i' } },
+          { 'receiver.name': { $regex: keyword, $options: 'i' } },
+        ],
+      },
+    }
   }
 
   const transactionPipeline = [
@@ -508,7 +558,7 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
     },
     {
       $lookup: {
-        from: 'users', 
+        from: 'users',
         let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
         pipeline: [
           {
@@ -535,13 +585,23 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
       $addFields: {
         sender: {
           $mergeObjects: [
-            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$sender.user'] },
+              ],
+            },
             '$sender',
           ],
         },
         receiver: {
           $mergeObjects: [
-            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$receiver.user'] },
+              ],
+            },
             '$receiver',
           ],
         },
@@ -551,14 +611,18 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
       $unset: ['userInfo'],
     },
     {
-      $sort: { createdAt: -1 }
+      $sort: { createdAt: -1 },
     },
     {
       $group: {
         _id: null,
         totalUpcomingPoints: {
           $sum: {
-            $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
+            $cond: [
+              { $eq: ['$receiver.user', userId] },
+              '$transactionAmount',
+              0,
+            ],
           },
         },
         totalOutgoingPoints: {
@@ -572,7 +636,11 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
             transactionType: '$transactionType',
             transactionAmount: '$transactionAmount',
             flag: {
-              $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
+              $cond: [
+                { $eq: ['$sender.user', userId] },
+                '$sender.flag',
+                '$receiver.flag',
+              ],
             },
             transactionHeading: {
               $cond: [
@@ -593,27 +661,31 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
       $project: {
         totalUpcomingPoints: 1,
         totalOutgoingPoints: 1,
-        transactionsHistory: { $slice: ['$transactionsHistory', skip, resultPerPage] },
+        transactionsHistory: {
+          $slice: ['$transactionsHistory', skip, resultPerPage],
+        },
       },
-    }
-  ];
+    },
+  ]
 
-  const filteredPipeline = transactionPipeline.filter(stage => Object.keys(stage).length > 0);
+  const filteredPipeline = transactionPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
 
-  const transactionResult = await Transaction.aggregate(filteredPipeline);
+  const transactionResult = await Transaction.aggregate(filteredPipeline)
 
   if (transactionResult.length === 0) {
     return res.status(200).json({
       success: true,
       message: 'No transactions found for the user in the last 6 months.',
       transactionsHistory: transactionResult,
-    });
+    })
   }
 
   const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
-    transactionResult[0];
+    transactionResult[0]
 
-  // Count total number of transactions 
+  // Count total number of transactions
   const countPipeline = [
     matchStage,
     {
@@ -622,225 +694,253 @@ exports.transactionHistoryByUserId = catchAsyncError(async (req, res) => {
       },
     },
     {
-      $count: 'count'
-    }
-  ];
+      $count: 'count',
+    },
+  ]
 
-  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
-  const countResult = await Transaction.aggregate(filteredCountPipeline);
-  const count = countResult.length > 0 ? countResult[0].count : 0;
+  const filteredCountPipeline = countPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+  const countResult = await Transaction.aggregate(filteredCountPipeline)
+  const count = countResult.length > 0 ? countResult[0].count : 0
 
   res.status(200).json({
     success: true,
     totalUpcomingPoints,
     totalOutgoingPoints,
     transactionsHistory,
-    count, 
+    count,
     resultPerPage,
     currentPage: page,
     totalPages: Math.ceil(count / resultPerPage),
-    filteredCount: transactionsHistory.length 
-  });
-});
+    filteredCount: transactionsHistory.length,
+  })
+})
 
 exports.allTransactionHistory = catchAsyncError(async (req, res) => {
-  let resultPerPage = 10;  
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
 
-  const page = req.query.page ? parseInt(req.query.page) : 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1
 
-  const skip = (page - 1) * resultPerPage;
+  const skip = (page - 1) * resultPerPage
 
-  const keyword = req.query.keyword;
+  const keyword = req.query.keyword
 
-  let matchStage = {};
+  let matchStage = {}
   if (keyword && keyword.trim() !== '') {
-      matchStage = {
-          $match: {
-              $or: [
-                  { 'sender.name': { $regex: keyword, $options: 'i' } },
-                  { 'receiver.name': { $regex: keyword, $options: 'i' } }
-              ]
-          }
-      };
+    matchStage = {
+      $match: {
+        $or: [
+          { 'sender.name': { $regex: keyword, $options: 'i' } },
+          { 'receiver.name': { $regex: keyword, $options: 'i' } },
+        ],
+      },
+    }
   }
 
   //  transaction pipeline
   const transactionPipeline = [
     matchStage,
     {
-        $lookup: {
-            from: 'users', 
-            let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
-            pipeline: [
-                {
-                    $match: {
-                        $expr: {
-                            $in: ['$_id', ['$$senderUserId', '$$receiverUserId']],
-                        },
-                    },
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        name: 1,
-                        email: 1,
-                        flag: 1,
-                        transactionHeading: 1,
-                    },
-                },
-            ],
-            as: 'userInfo',
+      $lookup: {
+        from: 'users',
+        let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ['$_id', ['$$senderUserId', '$$receiverUserId']],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+              email: 1,
+              flag: 1,
+              transactionHeading: 1,
+            },
+          },
+        ],
+        as: 'userInfo',
+      },
+    },
+    {
+      $addFields: {
+        sender: {
+          $mergeObjects: [
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$sender.user'] },
+              ],
+            },
+            '$sender',
+          ],
         },
-    },
-    {
-        $addFields: {
-            sender: {
-                $mergeObjects: [
-                    { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
-                    '$sender',
-                ],
+        receiver: {
+          $mergeObjects: [
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$receiver.user'] },
+              ],
             },
-            receiver: {
-                $mergeObjects: [
-                    { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
-                    '$receiver',
-                ],
-            },
+            '$receiver',
+          ],
         },
+      },
     },
     {
-        $unset: ['userInfo'],
+      $unset: ['userInfo'],
     },
     {
-        $sort: { createdAt: -1 }
+      $sort: { createdAt: -1 },
     },
     {
-        $group: {
-            _id: null,
-            totalUpcomingPoints: {
-                $sum: '$transactionAmount',
-            },
-            totalOutgoingPoints: {
-                $sum: '$transactionAmount',
-            },
-            transactionsHistory: {
-                $push: {
-                    transactionID: '$transactionID',
-                    transactionType: '$transactionType',
-                    transactionAmount: '$transactionAmount',
-                    flag: '$sender.flag', // Assuming sender flag is used for both incoming and outgoing transactions
-                    transactionHeading: '$sender.transactionHeading', // Assuming sender transaction heading is used for both incoming and outgoing transactions
-                    date: '$createdAt',
-                    sender: '$sender',
-                    receiver: '$receiver',
-                    transactionRelation: '$transactionRelation',
-                },
-            },
+      $group: {
+        _id: null,
+        totalUpcomingPoints: {
+          $sum: '$transactionAmount',
         },
+        totalOutgoingPoints: {
+          $sum: '$transactionAmount',
+        },
+        transactionsHistory: {
+          $push: {
+            transactionID: '$transactionID',
+            transactionType: '$transactionType',
+            transactionAmount: '$transactionAmount',
+            flag: '$sender.flag', // Assuming sender flag is used for both incoming and outgoing transactions
+            transactionHeading: '$sender.transactionHeading', // Assuming sender transaction heading is used for both incoming and outgoing transactions
+            date: '$createdAt',
+            sender: '$sender',
+            receiver: '$receiver',
+            transactionRelation: '$transactionRelation',
+          },
+        },
+      },
     },
     {
-        $project: {
-            totalUpcomingPoints: 1,
-            totalOutgoingPoints: 1,
-            transactionsHistory: { $slice: ['$transactionsHistory', skip, resultPerPage] },
+      $project: {
+        totalUpcomingPoints: 1,
+        totalOutgoingPoints: 1,
+        transactionsHistory: {
+          $slice: ['$transactionsHistory', skip, resultPerPage],
         },
-    }
-  ];
+      },
+    },
+  ]
 
-  const filteredPipeline = transactionPipeline.filter(stage => Object.keys(stage).length > 0);
-  
-  const transactionResult = await Transaction.aggregate(filteredPipeline);
+  const filteredPipeline = transactionPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+
+  const transactionResult = await Transaction.aggregate(filteredPipeline)
 
   if (transactionResult.length === 0) {
     return res.status(200).json({
       success: true,
       message: 'No transactions found for the user in the last 6 months.',
-      transactionsHistory:transactionResult,
-    });
+      transactionsHistory: transactionResult,
+    })
   }
 
   const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
-    transactionResult[0];
+    transactionResult[0]
 
   // Count total number of transactions
   const countPipeline = [
     matchStage,
     {
-      $count: 'count'
-    }
-  ];
+      $count: 'count',
+    },
+  ]
 
-  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
+  const filteredCountPipeline = countPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
 
-  const countResult = await Transaction.aggregate(filteredCountPipeline);
-  const count = countResult.length > 0 ? countResult[0].count : 0;
+  const countResult = await Transaction.aggregate(filteredCountPipeline)
+  const count = countResult.length > 0 ? countResult[0].count : 0
 
   res.status(200).json({
     success: true,
     totalUpcomingPoints,
     totalOutgoingPoints,
     transactionsHistory,
-    count, 
+    count,
     resultPerPage,
     currentPage: page,
     totalPages: Math.ceil(count / resultPerPage),
-    filteredCount: transactionsHistory.length 
-  });
-});
+    filteredCount: transactionsHistory.length,
+  })
+})
 
 exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
-  const superAdmin = await userModel.findOne({ role: 'super_admin' }).exec();
-  
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const superAdmin = await userModel.findOne({ role: 'super_admin' }).exec()
 
-  let resultPerPage = 10;  
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
 
-  const page = req.query.page ? parseInt(req.query.page) : 1; 
-  const skip = (page - 1) * resultPerPage;
-  const keyword = req.query.keyword;
+  const page = req.query.page ? parseInt(req.query.page) : 1
+  const skip = (page - 1) * resultPerPage
+  const keyword = req.query.keyword
+  const senderRole = req.query.sender_role
 
-  let matchStage = {};
+  let matchStage = {}
   if (keyword && keyword.trim() !== '') {
     matchStage = {
       $match: {
         $or: [
           { 'sender.name': { $regex: keyword, $options: 'i' } },
-          { 'receiver.name': { $regex: keyword, $options: 'i' } }
-        ]
-      }
-    };
+          { 'receiver.name': { $regex: keyword, $options: 'i' } },
+        ],
+      },
+    }
+  }
+
+  let matchRoleStage = {}
+  if (senderRole !== 'all') {
+    matchRoleStage = {
+      $match: {
+        'sender.role': senderRole,
+      },
+    }
   }
 
   const earningPipeline = [
     matchStage,
-      {
+    {
       $match: {
-      'receiver.user': superAdmin._id,
-      'receiver.flag': 'Credit',
-      // $or: [
-      //   { paymentType: 'points' },
-      //   { paymentType: 'bonus_points' },
-      //   { transactionType: 'points_in'},
-      //   { transactionType: 'payment'},
-      //   { transactionType: 'send_points'},
-      //   { transactionType: 'points_out'},
-      //   { transactionType: 'referal_bonus'},
-      //   { transactionType: 'received_bonus'},
-      //   { transactionType: 'token_charge'},
-      //   { transactionRelation: 'user-To-super_admin' },
-      //   { transactionRelation: 'agent-To-super_admin' },
-      //   { transactionRelation: 'admin-To-super_admin' },
-      // ],
-    },
+        'receiver.user': superAdmin._id,
+        'receiver.flag': 'Credit',
+        // $or: [
+        //   { paymentType: 'points' },
+        //   { paymentType: 'bonus_points' },
+        //   { transactionType: 'points_in'},
+        //   { transactionType: 'payment'},
+        //   { transactionType: 'send_points'},
+        //   { transactionType: 'points_out'},
+        //   { transactionType: 'referal_bonus'},
+        //   { transactionType: 'received_bonus'},
+        //   { transactionType: 'token_charge'},
+        //   { transactionRelation: 'user-To-super_admin' },
+        //   { transactionRelation: 'agent-To-super_admin' },
+        //   { transactionRelation: 'admin-To-super_admin' },
+        // ],
+      },
     },
     {
       $lookup: {
@@ -865,10 +965,16 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
       },
     },
     {
-      $unset: ['senderInfo', 'receiverInfo', 'sender.password', 'receiver.password'],
+      $unset: [
+        'senderInfo',
+        'receiverInfo',
+        'sender.password',
+        'receiver.password',
+      ],
     },
+    matchRoleStage,
     {
-      $sort: { createdAt: -1 }
+      $sort: { createdAt: -1 },
     },
     {
       $group: {
@@ -907,93 +1013,98 @@ exports.earningHistoryByAdmin = catchAsyncError(async (req, res) => {
       $project: {
         totalEarnings: 1,
         earningHistory: { $slice: ['$earningHistory', skip, resultPerPage] },
+        totalCount: { $size: '$earningHistory' },
       },
-    }  
-  ];
+    },
+  ]
 
-  const filteredPipeline = earningPipeline.filter(stage => Object.keys(stage).length > 0);
-  const earningResult = await Transaction.aggregate(filteredPipeline);
+  const filteredPipeline = earningPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+  const earningResult = await Transaction.aggregate(filteredPipeline)
 
   if (earningResult.length === 0) {
     return res.status(200).json({
       success: false,
       message: 'No earnings found for the user in the last 6 months.',
       earningHistory: earningResult,
-    });
+    })
   }
 
-  const { totalEarnings, earningHistory } = earningResult[0];
+  const { totalEarnings, earningHistory, totalCount } = earningResult[0]
 
   // Count total number of earnings
-  const countPipeline = [
-    matchStage,
-    {
-      $match: {
-      'receiver.user': superAdmin._id,
-      'receiver.flag': 'Credit',
-      // $or: [
-      //   { paymentType: 'points' },
-      //   { paymentType: 'bonus_points' },
-      //   { transactionType: 'payment'},
-      //   { transactionType: 'points_in'},
-      //   { transactionType: 'send_points'},
-      //   { transactionType: 'points_out'},
-      //   { transactionType: 'referal_bonus'},
-      //   { transactionType: 'received_bonus'},
-      //   { transactionType: 'token_charge'},
-      //   { transactionRelation: 'user-To-super_admin' },
-      //   { transactionRelation: 'agent-To-super_admin' },
-      //   { transactionRelation: 'admin-To-super_admin' },
-      // ],
-      },
-    },
-    {
-      $count: 'count'
-    }
-  ];
+  // const countPipeline = [
+  //   matchStage,
+  //   {
+  //     $match: {
+  //       'receiver.user': superAdmin._id,
+  //       'receiver.flag': 'Credit',
+  //       // $or: [
+  //       //   { paymentType: 'points' },
+  //       //   { paymentType: 'bonus_points' },
+  //       //   { transactionType: 'payment'},
+  //       //   { transactionType: 'points_in'},
+  //       //   { transactionType: 'send_points'},
+  //       //   { transactionType: 'points_out'},
+  //       //   { transactionType: 'referal_bonus'},
+  //       //   { transactionType: 'received_bonus'},
+  //       //   { transactionType: 'token_charge'},
+  //       //   { transactionRelation: 'user-To-super_admin' },
+  //       //   { transactionRelation: 'agent-To-super_admin' },
+  //       //   { transactionRelation: 'admin-To-super_admin' },
+  //       // ],
+  //     },
+  //   },
+  //   {
+  //     $count: 'count',
+  //   },
+  // ]
 
-  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
-  const countResult = await Transaction.aggregate(filteredCountPipeline);
-  const count = countResult.length > 0 ? countResult[0].count : 0;
+  // const filteredCountPipeline = countPipeline.filter(
+  //   (stage) => Object.keys(stage).length > 0,
+  // )
+  // const countResult = await Transaction.aggregate(filteredCountPipeline)
+  // const count = countResult.length > 0 ? countResult[0].count : 0
 
   res.status(200).json({
     success: true,
     totalEarnings,
     earningHistory,
-    count, 
+    count: totalCount,
     resultPerPage,
-    filteredCount: earningHistory.length
-  });
-});
+    filteredCount: earningHistory.length,
+  })
+})
 
 exports.pointOutHistory = catchAsyncError(async (req, res) => {
-  let userId = req.user.id;
-  userId = new mongoose.Types.ObjectId(userId);
+  let userId = req.user.id
+  userId = new mongoose.Types.ObjectId(userId)
 
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
-  let resultPerPage = 10;  
+  let resultPerPage = 10
 
   if (req.query.limit) {
-    resultPerPage = parseInt(req.query.limit);
+    resultPerPage = parseInt(req.query.limit)
   }
-  const page = req.query.page ? parseInt(req.query.page) : 1; 
+  const page = req.query.page ? parseInt(req.query.page) : 1
 
-  const skip = (page - 1) * resultPerPage;
+  const skip = (page - 1) * resultPerPage
 
-  const keyword = req.query.keyword;
+  const keyword = req.query.keyword
 
-  let matchStage = {};
+  let matchStage = {}
   if (keyword && keyword.trim() !== '') {
-      matchStage = {
-          $match: {
-              $or: [
-                  { 'sender.name': { $regex: keyword, $options: 'i' } },
-                  { 'receiver.name': { $regex: keyword, $options: 'i' } }
-              ]
-          }
-      };
+    matchStage = {
+      $match: {
+        $or: [
+          { 'sender.name': { $regex: keyword, $options: 'i' } },
+          { 'receiver.name': { $regex: keyword, $options: 'i' } },
+        ],
+      },
+    }
   }
 
   const transactionPipeline = [
@@ -1002,14 +1113,14 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
       $match: {
         $and: [
           { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] },
-          { transactionType: 'points_out' }, 
-          { paymentType: 'points' }
+          { transactionType: 'points_out' },
+          { paymentType: 'points' },
         ],
       },
     },
     {
       $lookup: {
-        from: 'users', 
+        from: 'users',
         let: { senderUserId: '$sender.user', receiverUserId: '$receiver.user' },
         pipeline: [
           {
@@ -1036,13 +1147,23 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
       $addFields: {
         sender: {
           $mergeObjects: [
-            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$sender.user'] }] },
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$sender.user'] },
+              ],
+            },
             '$sender',
           ],
         },
         receiver: {
           $mergeObjects: [
-            { $arrayElemAt: ['$userInfo', { $indexOfArray: ['$userInfo._id', '$receiver.user'] }] },
+            {
+              $arrayElemAt: [
+                '$userInfo',
+                { $indexOfArray: ['$userInfo._id', '$receiver.user'] },
+              ],
+            },
             '$receiver',
           ],
         },
@@ -1052,14 +1173,18 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
       $unset: ['userInfo'],
     },
     {
-      $sort: { createdAt: -1 }
+      $sort: { createdAt: -1 },
     },
     {
       $group: {
         _id: null,
         totalUpcomingPoints: {
           $sum: {
-            $cond: [{ $eq: ['$receiver.user', userId] }, '$transactionAmount', 0],
+            $cond: [
+              { $eq: ['$receiver.user', userId] },
+              '$transactionAmount',
+              0,
+            ],
           },
         },
         totalOutgoingPoints: {
@@ -1073,7 +1198,11 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
             transactionType: '$transactionType',
             transactionAmount: '$transactionAmount',
             flag: {
-              $cond: [{ $eq: ['$sender.user', userId] }, '$sender.flag', '$receiver.flag'],
+              $cond: [
+                { $eq: ['$sender.user', userId] },
+                '$sender.flag',
+                '$receiver.flag',
+              ],
             },
             transactionHeading: {
               $cond: [
@@ -1094,25 +1223,29 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
       $project: {
         totalUpcomingPoints: 1,
         totalOutgoingPoints: 1,
-        transactionsHistory: { $slice: ['$transactionsHistory', skip, resultPerPage] },
+        transactionsHistory: {
+          $slice: ['$transactionsHistory', skip, resultPerPage],
+        },
       },
-    }
-  ];
+    },
+  ]
 
-  const filteredPipeline = transactionPipeline.filter(stage => Object.keys(stage).length > 0);
+  const filteredPipeline = transactionPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
 
-  const transactionResult = await Transaction.aggregate(filteredPipeline);
+  const transactionResult = await Transaction.aggregate(filteredPipeline)
 
   if (transactionResult.length === 0) {
     return res.status(200).json({
       success: true,
       message: 'No transactions found for the user in the last 6 months.',
       transactionsHistory: transactionResult,
-    });
+    })
   }
 
   const { totalUpcomingPoints, totalOutgoingPoints, transactionsHistory } =
-    transactionResult[0];
+    transactionResult[0]
 
   // Count total number of transactions
   const countPipeline = [
@@ -1121,29 +1254,31 @@ exports.pointOutHistory = catchAsyncError(async (req, res) => {
       $match: {
         $and: [
           { $or: [{ 'sender.user': userId }, { 'receiver.user': userId }] },
-          { transactionType: 'points_out' }, 
-          { paymentType: 'points' }
+          { transactionType: 'points_out' },
+          { paymentType: 'points' },
         ],
       },
     },
     {
-      $count: 'count'
-    }
-  ];
+      $count: 'count',
+    },
+  ]
 
-  const filteredCountPipeline = countPipeline.filter(stage => Object.keys(stage).length > 0);
-  const countResult = await Transaction.aggregate(filteredCountPipeline);
-  const count = countResult.length > 0 ? countResult[0].count : 0;
+  const filteredCountPipeline = countPipeline.filter(
+    (stage) => Object.keys(stage).length > 0,
+  )
+  const countResult = await Transaction.aggregate(filteredCountPipeline)
+  const count = countResult.length > 0 ? countResult[0].count : 0
 
   res.status(200).json({
     success: true,
     totalUpcomingPoints,
     totalOutgoingPoints,
     transactionsHistory,
-    count, 
+    count,
     resultPerPage,
     currentPage: page,
     totalPages: Math.ceil(count / resultPerPage),
-    filteredCount: transactionsHistory.length 
-  });
-});
+    filteredCount: transactionsHistory.length,
+  })
+})
