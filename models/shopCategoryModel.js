@@ -16,6 +16,15 @@ const shopCategorySchema = new mongoose.Schema({
       default: '',
     },
   },
+  parent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'shop_categories',
+    default: null,
+  },
+  level: {
+    type: Number,
+    default: 0,
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
