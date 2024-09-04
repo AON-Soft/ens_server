@@ -3,7 +3,7 @@ module.exports.PORT = process.env.PORT || 5000
 module.exports.MONGO_URI =
   process.env.NODE_ENV == 'production'
     ? process.env.MONGO_URI
-    : 'mongodb+srv://yamin:1234567890@cluster0.r4doz.mongodb.net/ens_server'
+    : 'mongodb+srv://admin:admin@cluster0.xklu8.mongodb.net/ens_server'
 
 module.exports.JWT_SECRET = process.env.JWT_SECRET
   ? process.env.JWT_SECRET
