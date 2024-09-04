@@ -11,10 +11,13 @@ const {
   allTransactionHistory,
   earningHistoryByAdmin,
   pointOutHistory,
-} = require('../controllers/transactionController')
-const {
+  shopKeeperToAgentTransfer,
   userToAgentPointsOut,
-} = require('../middleware/user-to-agent-points-out')
+  userToShopKeeperTransfer,
+} = require('../controllers/transactionController')
+// const {
+//   userToAgentPointsOut,
+// } = require('../middleware/user-to-agent-points-out')
 const { sendPointsAgentToUser } = require('../middleware/sendPointsAgentToUser')
 const {
   sendPointAdminToAdminAgent,
@@ -35,14 +38,33 @@ router
     createTransaction,
   )
 
-router
-  .route('/user/agent/pointsOut')
-  .post(
-    isAuthenticated,
-    isAuthorizeRoles('shop_keeper', 'user'),
-    userToAgentPointsOut,
-    createTransaction,
-  )
+// router
+//   .route('/user/agent/pointsOut')
+//   .post(
+//     isAuthenticated,
+//     isAuthorizeRoles('shop_keeper', 'user'),
+//     userToAgentPointsOut,
+//     createTransaction,
+//   )
+
+router.post(
+  '/shopkeeper/agent/transfer',
+  isAuthenticated,
+  isAuthorizeRoles('shop_keeper'),
+  shopKeeperToAgentTransfer,
+)
+router.post(
+  '/user/agent/pointsOut',
+  isAuthenticated,
+  isAuthorizeRoles('user'),
+  userToAgentPointsOut,
+)
+router.post(
+  '/user/shopkeeper/transfer',
+  isAuthenticated,
+  isAuthorizeRoles('user'),
+  userToShopKeeperTransfer,
+)
 
 router
   .route('/self/transaction-history')

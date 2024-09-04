@@ -10,21 +10,21 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     required: true,
     validate: {
-      validator: function(value) {
-        return !isNaN(parseFloat(value)) && isFinite(value);
+      validator: function (value) {
+        return !isNaN(parseFloat(value)) && isFinite(value)
       },
-      message: 'Transaction amount must be a valid number.'
-    }
+      message: 'Transaction amount must be a valid number.',
+    },
   },
   serviceCharge: {
     type: Number,
     required: true,
     validate: {
-      validator: function(value) {
-        return !isNaN(parseFloat(value)) && isFinite(value);
+      validator: function (value) {
+        return !isNaN(parseFloat(value)) && isFinite(value)
       },
-      message: 'Service charge must be a valid number.'
-    }
+      message: 'Service charge must be a valid number.',
+    },
   },
   sender: {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -58,6 +58,9 @@ const transactionSchema = new mongoose.Schema({
       'referal_bonus',
       'received_bonus',
       'token_charge',
+      'service_charge',
+      'bonus_transfer',
+      'commission',
     ],
     required: true,
   },
@@ -86,6 +89,8 @@ const transactionSchema = new mongoose.Schema({
       'super_admin-To-super_admin',
       'shop_keeper-To-user',
       'admin-To-shop_keeper',
+      'shop_keeper-To-agent',
+      'user-To-shop_keeper',
     ],
   },
   createdAt: {
