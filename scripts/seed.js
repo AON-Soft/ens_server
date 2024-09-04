@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
+const { MONGO_URI } = require('../constant')
 
 // Import all models
 const User = require('../models/userModel')
@@ -21,14 +22,9 @@ const Log = require('../models/logModel')
 const ServiceCharge = require('../models/serviceChargeModel')
 
 const seedDatabase = async () => {
-  await mongoose.connect(
-    'mongodb+srv://yamin:1234567890@cluster0.r4doz.mongodb.net/ens_server',
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000, // 30 seconds
-    },
-  )
+  await mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 30000, // 30 seconds
+  })
   console.log('MongoDB connected')
 
   // Clear existing data
