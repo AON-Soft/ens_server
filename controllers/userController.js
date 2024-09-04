@@ -19,10 +19,11 @@ const ApiFeatures = require('../utils/apifeature.js')
 const sendEmail = require('../utils/sendEmail.js')
 const createLog = require('../utils/createLogs.js')
 const orderBalanceModel = require('../models/orderBalanceModel.js')
+const transactionModel = require('../models/transactionModel.js')
 
 //Register a User: /api/v1/register
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  var { name, email, password, token, role, mobile, address } = req.body
+  const { name, email, password, token, role, mobile, address } = req.body
 
   // Verify if the role is 'user' and token is provided
   let isValidToken = null
@@ -46,10 +47,52 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler(`${email} is already registered`, 401))
     }
 
-    // Check if user has existing OTP
-    let getUser = await Otp.findOne({ email: email })
+    // Get total number of users
+    const totalUsers = await User.getTotalUsers()
 
-    // Generate OTP
+    // Hash password
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(password, salt)
+
+    // Create new user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      mobile,
+      address,
+    })
+
+    // Apply joining fee and referral bonus if total users > 500
+    if (totalUsers > 500) {
+      newUser.balance = 20 // 20 points in main account for new user
+
+      if (isValidToken) {
+        // Find referrer and update their bonus balance
+        const referrer = await User.findById(isValidToken.userId)
+        if (referrer) {
+          referrer.bonusBalance += 20 // 20 points in bonus account for referrer
+          referrer.directReferrals += 1
+          if (referrer.directReferrals >= 3) {
+            referrer.isEarningEnabled = true
+          }
+          await referrer.save()
+        }
+      }
+    }
+
+    // Save the new user
+    await newUser.save()
+
+    // Update token if valid
+    if (isValidToken) {
+      isValidToken.isUsed = true
+      isValidToken.tokenUsedBy = newUser._id
+      await isValidToken.save()
+    }
+
+    // Generate OTP and send email
     const otp = otpGenerator.generate(4, {
       digits: true,
       lowerCaseAlphabets: false,
@@ -57,79 +100,29 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
       specialChars: false,
     })
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10)
-    password = await bcrypt.hash(password, salt)
+    await Otp.create({ email, otp, getOtp: otp })
 
-    let createdUser = null
-
-    if (!getUser) {
-      // If user does not have OTP, create new OTP and user
-      await Otp.create({ email, otp, getOtp: otp })
-      createdUser = await User.create({
-        name,
-        email,
-        password,
-        role,
-        mobile,
-        address,
+    try {
+      await sendEmail({
+        name: name,
+        email: email,
+        otp: otp,
+        subject: 'Account activation OTP',
+        message: `<p>You are receiving this email because you created your account.</p> 
+                  <p>Please use the following OTP:</p>`,
       })
-
-      try {
-        await sendEmail({
-          name: name,
-          email: email,
-          otp: otp,
-          subject: 'Account activation OTP',
-          message: `<p>You are receiving this email because you created your account.</p> 
-                    <p>Please use the following OTP:</p>`,
-        })
-      } catch (error) {
-        return next(new ErrorHandler('Failed to send OTP', 500))
-      }
-    } else {
-      // If user already has OTP, update OTP and user details
-      getUser.otp = otp
-      getUser.getOtp = otp
-      await getUser.save()
-
-      createdUser = await User.findOneAndUpdate(
-        { email },
-        { name, email, password, role },
-      )
+    } catch (error) {
+      return next(new ErrorHandler('Failed to send OTP', 500))
     }
 
-    // Update parent and children fields based on token
-    if (isValidToken) {
-      // Update parent field of the new user with the userId associated with the token
-      createdUser.parent = isValidToken.userId
-      await createdUser.save()
-
-      // Update children field of the token owner
-      const tokenOwner = await User.findById(isValidToken.userId)
-      tokenOwner.children.push(createdUser._id)
-      await tokenOwner.save()
-
-      // Mark the token as used
-      isValidToken.isUsed = true
-      await isValidToken.save()
-    }
-
-    // Fetch token owner's details
-    let tokenOwnerDetails = null
-    if (isValidToken) {
-      tokenOwnerDetails = await User.findById(isValidToken.userId)
-    }
-
-    // Prepare response payload including token owner's details
+    // Prepare response payload
     const responsePayload = {
-      id: createdUser._id,
-      name: createdUser.name,
-      email: createdUser.email,
-      role: createdUser.role,
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
       isVerified: false,
       token: isValidToken,
-      parent: tokenOwnerDetails ? tokenOwnerDetails.parent : null,
     }
 
     sendTempToken(responsePayload, 201, res)
@@ -140,82 +133,61 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
 
 exports.verifyOTP = catchAsyncError(async (req, res, next) => {
   const { otp } = req.body
-
   const { email, id, token } = req.user
-
-  let user = null
 
   const otpInfo = await Otp.findOne({ email }).select('otp')
 
-  // test otp for Development
-  if (otp === '1234') {
-    // this otp from development and no need to be checked
-  } else {
-    if (!otpInfo) {
-      return next(new ErrorHandler('OTP is Expired', 403))
-    }
-    if (otpInfo.otpVerified) {
-      return next(new ErrorHandler('OTP is already verified', 400))
-    }
-
-    const isOtpMatched = await otpInfo.compareOtp(otp)
-    if (!isOtpMatched) {
-      return next(new ErrorHandler("OTP doesn't matched", 401))
-    }
+  if (!otpInfo) {
+    return next(new ErrorHandler('OTP is Expired', 403))
+  }
+  if (otpInfo.otpVerified) {
+    return next(new ErrorHandler('OTP is already verified', 400))
   }
 
-  // user user status will update be active
-  if (token === null) {
-    user = await User.findByIdAndUpdate(
-      id,
-      { status: 'active' },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      },
-    )
-  } else {
-    user = await User.findByIdAndUpdate(
-      id,
-      { status: 'active', parent: token.userId },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      },
-    )
+  const isOtpMatched = await otpInfo.compareOtp(otp)
+  if (!isOtpMatched) {
+    return next(new ErrorHandler("OTP doesn't matched", 401))
   }
 
-  const newOtpVerified = {
-    otpVerified: true,
-  }
-  if (otpInfo) {
-    await Otp.findByIdAndUpdate(otpInfo._id, newOtpVerified, {
+  // Verify OTP
+  await Otp.findByIdAndUpdate(
+    otpInfo._id,
+    { otpVerified: true },
+    {
       new: true,
       runValidators: true,
       useFindAndModify: false,
-    })
-  }
-  if (token !== null) {
-    await Token.findByIdAndUpdate(
-      token._id,
-      { isUsed: true, tokenUsedBy: id },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      },
-    )
-    await User.findByIdAndUpdate(
-      token.userId,
-      { $push: { children: user._id } },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      },
-    )
+    },
+  )
+
+  // Update user status
+  const user = await User.findByIdAndUpdate(
+    id,
+    { status: 'active' },
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    },
+  )
+
+  // Check total users and apply new rules if applicable
+  const totalUsers = await User.getTotalUsers()
+  if (totalUsers > 500) {
+    if (token) {
+      const referrer = await User.findById(token.userId)
+      if (referrer) {
+        referrer.directReferrals += 1
+        if (referrer.directReferrals >= 3) {
+          referrer.isEarningEnabled = true
+        }
+        await referrer.save()
+      }
+    }
+  } else {
+    // For first 500 users, enable earning by default
+    user.isEarningEnabled = true
+    await user.save()
   }
 
   sendToken(user, 200, res)
@@ -959,3 +931,67 @@ exports.getOrderBalances = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({ success: true, data: result })
 })
+
+// 3. Update userController.js
+exports.setRenewalFee = async (req, res) => {
+  const { fee } = req.body
+  const user = await User.findById(req.user.id)
+  if (!user) return res.status(404).json({ message: 'User not found' })
+
+  user.renewalFee = fee
+  await user.save()
+  res.status(200).json({ message: 'Renewal fee updated successfully', user })
+}
+
+exports.getDailyUserToUserTransferReport = async (req, res) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const report = await transactionModel.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: today },
+        transactionType: 'user-To-user',
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalPoints: { $sum: '$transactionAmount' },
+        totalFees: { $sum: 1 }, // 1 point fee per transfer
+        count: { $sum: 1 },
+      },
+    },
+  ])
+
+  res.status(200).json({
+    success: true,
+    data: report[0] || { totalPoints: 0, totalFees: 0, count: 0 },
+  })
+}
+
+exports.getEarningReport = async (req, res) => {
+  if (req.user.role === 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Admin cannot view personal earning reports',
+    })
+  }
+
+  const earnings = await transactionModel.aggregate([
+    {
+      $match: {
+        receiver: req.user.id,
+        transactionType: { $in: ['commission', 'referral_bonus'] },
+      },
+    },
+    {
+      $group: {
+        _id: '$transactionType',
+        total: { $sum: '$transactionAmount' },
+      },
+    },
+  ])
+
+  res.status(200).json({ success: true, data: earnings })
+}

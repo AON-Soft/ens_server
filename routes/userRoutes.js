@@ -27,6 +27,9 @@ const {
   getLastSevenDaysUsers,
   getSingleChildrens,
   getOrderBalances,
+  setRenewalFee,
+  getDailyUserToUserTransferReport,
+  getEarningReport,
 } = require('../controllers/userController')
 const {
   isAuthenticatedUser,
@@ -53,67 +56,121 @@ router.route('/me/update').put(isAuthenticatedUser, updateProfile)
 
 router
   .route('/admin/users')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllUsers)
+  .get(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    getAllUsers,
+  )
 
 router
   .route('/admin/admins')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAdmins)
-  
+  .get(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    getAllAdmins,
+  )
+
 router
   .route('/admin/agents')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllAgents)
+  .get(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    getAllAgents,
+  )
 
 router
   .route('/admin/shop_keepers')
-  .get(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin',), getAllShopKeepers)
+  .get(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    getAllShopKeepers,
+  )
 
 router
   .route('/admin/user/:id')
-  .delete(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), deleteUser)
+  .delete(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    deleteUser,
+  )
 
-router
-  .route('/user/details/:id')
-  .get(getSingleUser)
+router.route('/user/details/:id').get(getSingleUser)
 
-router
-  .route('/user/single')
-  .get(getSingleChildrens)
+router.route('/user/single').get(getSingleChildrens)
 
 router
   .route('/admin/user/role/:id')
-  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), updateUserRole)
+  .put(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    updateUserRole,
+  )
 
 router
   .route('/admin/user/status/:id')
-  .put(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), updateUserStatus)
+  .put(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    updateUserStatus,
+  )
 
 router.route('/getOtp').get(getOtp)
 
 router.route('/self/balance').get(isAuthenticatedUser, getBalance)
-router.route('/self/balance/add/:id').post(isAuthenticatedUser, isAuthorizeRoles('admin', 'super_admin'), addBalance)
+router
+  .route('/self/balance/add/:id')
+  .post(
+    isAuthenticatedUser,
+    isAuthorizeRoles('admin', 'super_admin'),
+    addBalance,
+  )
 
 router.route('/user/search').get(userSerchByEmail)
 
 // file upload
 router.route('/upload').post(imageUpload)
 
-router.route('/admin/agent/update/:id').put(isAuthenticated, isAuthorizeRoles('admin', 'super_admin'), updateAdminAgentPassword)
+router
+  .route('/admin/agent/update/:id')
+  .put(
+    isAuthenticated,
+    isAuthorizeRoles('admin', 'super_admin'),
+    updateAdminAgentPassword,
+  )
 
 router.route('/user/seven-days-order').get(getLastSevenDaysUsers)
 
 router.route('/order/balances').get(isAuthenticatedUser, getOrderBalances)
 
 router.route('/balance/all/delete/:id').delete((req, res) => {
-  orderBalanceModel.deleteOne({ _id: req.params.id })
+  orderBalanceModel
+    .deleteOne({ _id: req.params.id })
     .then(() => {
-      console.log('Document deleted successfully');
-      res.status(200).json({ success: true, message: 'Document deleted successfully' });
+      console.log('Document deleted successfully')
+      res
+        .status(200)
+        .json({ success: true, message: 'Document deleted successfully' })
     })
     .catch((err) => {
-      console.error('Error deleting document:', err);
-      res.status(500).json({ success: false, message: 'Error deleting document' });
-    });
-});
+      console.error('Error deleting document:', err)
+      res
+        .status(500)
+        .json({ success: false, message: 'Error deleting document' })
+    })
+})
 
+router.put(
+  '/set-renewal-fee',
+  isAuthenticated,
+  isAuthorizeRoles('admin', 'super_admin'),
+  setRenewalFee,
+)
+router.get(
+  '/daily-transfer-report',
+  isAuthenticated,
+  isAuthorizeRoles('admin', 'super_admin'),
+  getDailyUserToUserTransferReport,
+)
+router.get('/earning-report', isAuthenticated, getEarningReport)
 
 module.exports = router

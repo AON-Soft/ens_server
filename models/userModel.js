@@ -109,6 +109,24 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+
+  directReferrals: {
+    type: Number,
+    default: 0,
+  },
+  isEarningEnabled: {
+    type: Boolean,
+    default: false,
+  },
+
+  lastRenewalDate: {
+    type: Date,
+    default: Date.now
+  },
+  renewalFee: {
+    type: Number,
+    default: 10 // Default fee, can be adjusted by admin
+  },
 })
 
 userSchema.pre('save', async function (next) {
@@ -156,6 +174,16 @@ userSchema.methods.getResetPasswordToken = function () {
 
   // Return the non-hashed token (resetToken) for email purposes
   return resetToken
+}
+
+// Add a static method to get the total number of users
+userSchema.statics.getTotalUsers = async function () {
+  return await this.countDocuments()
+}
+
+// Add a method to check if the user can start earning
+userSchema.methods.canStartEarning = function () {
+  return this.directReferrals >= 3
 }
 
 module.exports = mongoose.model('User', userSchema)
