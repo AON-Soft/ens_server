@@ -61,6 +61,9 @@ const transactionSchema = new mongoose.Schema({
       'service_charge',
       'bonus_transfer',
       'commission',
+      'affiliate_bonus_added',
+      'affiliate_bonus_cashout',
+      'product_purchase_with_affiliate_bonus',
     ],
     required: true,
   },
@@ -92,6 +95,14 @@ const transactionSchema = new mongoose.Schema({
       'shop_keeper-To-agent',
       'user-To-shop_keeper',
     ],
+  },
+  affiliateBonusDetails: {
+    totalBefore: Number,
+    totalAfter: Number,
+    cashableBefore: Number,
+    cashableAfter: Number,
+    forProductsBefore: Number,
+    forProductsAfter: Number
   },
   createdAt: {
     type: Date,

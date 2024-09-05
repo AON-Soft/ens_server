@@ -22,6 +22,7 @@ const { sendPointsAgentToUser } = require('../middleware/sendPointsAgentToUser')
 const {
   sendPointAdminToAdminAgent,
 } = require('../middleware/sendPointAdminToAdminAgent')
+const { createAffiliateBonus, cashoutAffiliateBonus, purchaseProductWithAffiliateBonus } = require('../controllers/affiliateController')
 
 const router = express.Router()
 
@@ -119,5 +120,9 @@ router
   )
 
 router.route('/self/pointout-history').get(isAuthenticated, pointOutHistory)
+
+router.post('/affiliate-bonus/create', isAuthenticated, createAffiliateBonus);
+router.post('/affiliate-bonus/cashout', isAuthenticated, cashoutAffiliateBonus);
+router.post('/affiliate-bonus/purchase', isAuthenticated, purchaseProductWithAffiliateBonus);
 
 module.exports = router
