@@ -107,7 +107,7 @@ const seedDatabase = async () => {
       name: 'Electronics',
       image: {
         public_id: 'shopCategories/electronics',
-        url: 'https://example.com/electronics.jpg',
+        url: 'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       },
       level: 0,
       createdBy: users[4]._id,
@@ -116,7 +116,7 @@ const seedDatabase = async () => {
       name: 'Clothing',
       image: {
         public_id: 'shopCategories/clothing',
-        url: 'https://example.com/clothing.jpg',
+        url: 'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       },
       level: 0,
       createdBy: users[4]._id,
@@ -125,7 +125,7 @@ const seedDatabase = async () => {
       name: 'Home & Garden',
       image: {
         public_id: 'shopCategories/home-garden',
-        url: 'https://example.com/home-garden.jpg',
+        url: 'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       },
       level: 0,
       createdBy: users[4]._id,
@@ -220,7 +220,7 @@ const seedDatabase = async () => {
     {
       logo: {
         public_id: 'shops/janes-electronics',
-        url: 'https://example.com/janes-electronics-logo.jpg',
+        url: 'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       },
       userId: users[1]._id,
       name: "Jane's Electronics",
@@ -233,7 +233,7 @@ const seedDatabase = async () => {
     {
       logo: {
         public_id: 'shops/fashion-haven',
-        url: 'https://example.com/fashion-haven-logo.jpg',
+        url: 'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       },
       userId: users[1]._id,
       name: 'Fashion Haven',
@@ -321,7 +321,8 @@ const seedDatabase = async () => {
       description: 'Latest iPhone model with advanced features',
       price: 999,
       commission: 50,
-      images: 'https://example.com/iphone13.jpg',
+      images:
+        'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       categoryId: categories[0]._id,
       brandId: brands[0]._id,
       stockUnit: 'pieces',
@@ -337,7 +338,8 @@ const seedDatabase = async () => {
       description: 'Flagship Android smartphone',
       price: 899,
       commission: 45,
-      images: 'https://example.com/galaxys21.jpg',
+      images:
+        'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       categoryId: categories[0]._id,
       brandId: brands[1]._id,
       stockUnit: 'pieces',
@@ -353,7 +355,8 @@ const seedDatabase = async () => {
       description: 'Comfortable and stylish sneakers',
       price: 129,
       commission: 15,
-      images: 'https://example.com/nikeairmax.jpg',
+      images:
+        'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       categoryId: categories[2]._id,
       brandId: brands[2]._id,
       stockUnit: 'pieces',
@@ -448,7 +451,8 @@ const seedDatabase = async () => {
       campaignTitle: 'Summer Sale',
       title: 'Get 20% off on all electronics',
       body: "Don't miss our biggest sale of the year!",
-      bgImage: 'https://example.com/summer-sale-banner.jpg',
+      bgImage:
+        'https://img.freepik.com/free-photo/beautiful-shot-tree-savanna-plains-with-blue-sky_181624-21992.jpg',
       payload: { discount: 20 },
       total: 1000,
       total_sent: 500,
