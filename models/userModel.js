@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  address: {
+    type: String,
+    default: '',
+  },
   password: {
     type: String,
     required: [true, 'Please Enter your Password'],
@@ -97,7 +101,7 @@ const userSchema = new mongoose.Schema({
     enum: ['pending', 'active', 'hold', 'rejected'],
   },
   fcmToken: {
-      type: String, 
+    type: String,
   },
   createdAt: {
     type: Date,
@@ -105,6 +109,30 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+
+  directReferrals: {
+    type: Number,
+    default: 0,
+  },
+  isEarningEnabled: {
+    type: Boolean,
+    default: false,
+  },
+
+  lastRenewalDate: {
+    type: Date,
+    default: Date.now,
+  },
+  renewalFee: {
+    type: Number,
+    default: 10, // Default fee, can be adjusted by admin
+  },
+  affiliateBonus: {
+    total: { type: Number, default: 0 },
+    cashable: { type: Number, default: 0 },
+    forProducts: { type: Number, default: 0 },
+    lastCashoutDate: { type: Date },
+  },
 })
 
 userSchema.pre('save', async function (next) {
@@ -152,6 +180,45 @@ userSchema.methods.getResetPasswordToken = function () {
 
   // Return the non-hashed token (resetToken) for email purposes
   return resetToken
+}
+
+// Add a static method to get the total number of users
+userSchema.statics.getTotalUsers = async function () {
+  return await this.countDocuments()
+}
+
+// Add a method to check if the user can start earning
+userSchema.methods.canStartEarning = function () {
+  return this.directReferrals >= 3
+}
+
+userSchema.methods.addAffiliateBonus = function (amount) {
+  const bonusAdded = Math.min(amount, 1000 - this.affiliateBonus.total)
+  if (bonusAdded > 0) {
+    this.affiliateBonus.total += bonusAdded
+    this.affiliateBonus.cashable += bonusAdded / 2
+    this.affiliateBonus.forProducts += bonusAdded / 2
+  }
+  return bonusAdded
+}
+
+userSchema.methods.canCashoutAffiliateBonus = function () {
+  if (!this.affiliateBonus.lastCashoutDate) return true
+  const daysSinceLastCashout =
+    (Date.now() - this.affiliateBonus.lastCashoutDate) / (1000 * 60 * 60 * 24)
+  return daysSinceLastCashout >= 28
+}
+
+userSchema.methods.cashoutAffiliateBonus = function () {
+  if (!this.canCashoutAffiliateBonus()) {
+    throw new Error('Cannot cash out yet. Must wait 28 days between cashouts.')
+  }
+  const cashoutAmount = this.affiliateBonus.cashable
+  this.affiliateBonus.total -= cashoutAmount
+  this.affiliateBonus.cashable = 0
+  this.affiliateBonus.lastCashoutDate = Date.now()
+  this.balance += cashoutAmount
+  return cashoutAmount
 }
 
 module.exports = mongoose.model('User', userSchema)

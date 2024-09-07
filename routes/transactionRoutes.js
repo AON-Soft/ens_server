@@ -11,14 +11,18 @@ const {
   allTransactionHistory,
   earningHistoryByAdmin,
   pointOutHistory,
-} = require('../controllers/transactionController')
-const {
+  shopKeeperToAgentTransfer,
   userToAgentPointsOut,
-} = require('../middleware/user-to-agent-points-out')
+  userToShopKeeperTransfer,
+} = require('../controllers/transactionController')
+// const {
+//   userToAgentPointsOut,
+// } = require('../middleware/user-to-agent-points-out')
 const { sendPointsAgentToUser } = require('../middleware/sendPointsAgentToUser')
 const {
   sendPointAdminToAdminAgent,
 } = require('../middleware/sendPointAdminToAdminAgent')
+const { createAffiliateBonus, cashoutAffiliateBonus, purchaseProductWithAffiliateBonus } = require('../controllers/affiliateController')
 
 const router = express.Router()
 
@@ -35,14 +39,33 @@ router
     createTransaction,
   )
 
-router
-  .route('/user/agent/pointsOut')
-  .post(
-    isAuthenticated,
-    isAuthorizeRoles('shop_keeper', 'user'),
-    userToAgentPointsOut,
-    createTransaction,
-  )
+// router
+//   .route('/user/agent/pointsOut')
+//   .post(
+//     isAuthenticated,
+//     isAuthorizeRoles('shop_keeper', 'user'),
+//     userToAgentPointsOut,
+//     createTransaction,
+//   )
+
+router.post(
+  '/shopkeeper/agent/transfer',
+  isAuthenticated,
+  isAuthorizeRoles('shop_keeper'),
+  shopKeeperToAgentTransfer,
+)
+router.post(
+  '/user/agent/pointsOut',
+  isAuthenticated,
+  isAuthorizeRoles('user'),
+  userToAgentPointsOut,
+)
+router.post(
+  '/user/shopkeeper/transfer',
+  isAuthenticated,
+  isAuthorizeRoles('user'),
+  userToShopKeeperTransfer,
+)
 
 router
   .route('/self/transaction-history')
@@ -97,5 +120,9 @@ router
   )
 
 router.route('/self/pointout-history').get(isAuthenticated, pointOutHistory)
+
+router.post('/affiliate-bonus/create', isAuthenticated, createAffiliateBonus);
+router.post('/affiliate-bonus/cashout', isAuthenticated, cashoutAffiliateBonus);
+router.post('/affiliate-bonus/purchase', isAuthenticated, purchaseProductWithAffiliateBonus);
 
 module.exports = router
