@@ -64,6 +64,7 @@ const transactionSchema = new mongoose.Schema({
       'affiliate_bonus_added',
       'affiliate_bonus_cashout',
       'product_purchase_with_affiliate_bonus',
+      'id_renewal',
     ],
     required: true,
   },
@@ -102,7 +103,7 @@ const transactionSchema = new mongoose.Schema({
     cashableBefore: Number,
     cashableAfter: Number,
     forProductsBefore: Number,
-    forProductsAfter: Number
+    forProductsAfter: Number,
   },
   createdAt: {
     type: Date,
