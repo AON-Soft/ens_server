@@ -25,8 +25,9 @@ const log = require('./routes/logRoutes.js')
 
 const errorMiddleware = require('./middleware/error')
 const { API_PREFIX } = require('./constant.js')
+require('./utils/cronJobs.js')
 
-app.use(cors());
+app.use(cors())
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -56,7 +57,6 @@ app.use(`${API_PREFIX}/api/v1`, tag)
 app.use(`${API_PREFIX}/api/v1`, unit)
 app.use(`${API_PREFIX}/api/v1`, serviceCharge)
 app.use(`${API_PREFIX}/api/v1`, log)
-
 
 app.use(errorMiddleware)
 
