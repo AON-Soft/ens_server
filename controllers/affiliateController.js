@@ -89,7 +89,7 @@ exports.cashoutAffiliateBonus = catchAsyncError(async (req, res, next) => {
     const sender = await User.findById(req.user.id).session(session)
     const receiver = await User.findOne({
       email: receiverEmail,
-      role: 'agent' || 'admin' || 'shop_keeper',
+      role: 'shop_keeper',
     }).session(session)
 
     if (!sender || !receiver) {
